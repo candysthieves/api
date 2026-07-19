@@ -1,13 +1,12 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module.js';
-import { ConfigService } from '@nestjs/config';
+import { AppConfig } from './app.config.js';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  const configService = app.get(ConfigService);
+  const appConfig = app.get<AppConfig>(AppConfig);
   app.setGlobalPrefix('api');
-  const port = configService.get('PORT') || 3000;
-  await app.listen(port);
-  console.log('Server started on port: ' + port);
+  await app.listen(appConfig.port);
+  console.log('Server started on port: ' + appConfig.port);
 }
 bootstrap();
