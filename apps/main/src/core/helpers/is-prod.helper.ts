@@ -1,2 +1,2 @@
 export const isProdHelper = (): boolean =>
-  (process.env.NODE_ENV || 'production') === 'production';
+  process.env.NODE_ENV === 'production';

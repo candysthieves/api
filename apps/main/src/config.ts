@@ -1,10 +1,9 @@
 import { ConfigModule } from '@nestjs/config';
+import { loadEnvironment } from './env/load-env.js';
 
-const envFilePath = process.env.ENV_FILE_PATH?.trim();
+loadEnvironment();
 
 export const configModule = ConfigModule.forRoot({
-  envFilePath: envFilePath
-    ? [envFilePath]
-    : [`apps/main/src/env/.env.${process.env.NODE_ENV ?? 'development'}`],
+  ignoreEnvFile: true,
   isGlobal: true,
 });
