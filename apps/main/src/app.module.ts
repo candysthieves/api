@@ -4,7 +4,7 @@ import { Module } from '@nestjs/common';
 import { UserAccountsModule } from './modules/user-accounts/user-accounts.module.js';
 import { AppController } from './app.controller.js';
 import { PrismaService } from './infrastructure/prisma/prisma.service.js';
-import { FilesModule } from '../../files/src/files.module.js';
+import { FilesModule } from './modules/files/files.module.js';
 import { AppConfig } from './app.config.js';
 
 @Module({
