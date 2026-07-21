@@ -6,6 +6,8 @@ import { UserAccountsModule } from './modules/user-accounts/user-accounts.module
 import { AppController } from './app.controller.js';
 import { PrismaService } from './infrastructure/prisma/prisma.service.js';
 import { CoreModule } from './core/core.module.js';
+import { ConfigModule } from '@nestjs/config';
+import { AppConfig } from './app.config.js';
 
 @Module({
   imports: [
