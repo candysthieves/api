@@ -4,23 +4,12 @@ import { configModule } from './config.js';
 import { Module } from '@nestjs/common';
 import { UserAccountsModule } from './modules/user-accounts/user-accounts.module.js';
 import { AppController } from './app.controller.js';
-import { PrismaService } from './infrastructure/prisma/prisma.service.js';
 import { CoreModule } from './core/core.module.js';
-import { ConfigModule } from '@nestjs/config';
 import { AppConfig } from './app.config.js';
 
 @Module({
-  imports: [
-    configModule,
-    CoreModule,
-    CqrsModule.forRoot(),
-    ConfigModule.forRoot({
-      isGlobal: true,
-      envFilePath: ['.env'],
-    }),
-    UserAccountsModule,
-  ],
+  imports: [configModule, CoreModule, CqrsModule.forRoot(), UserAccountsModule],
   controllers: [AppController],
-  providers: [PrismaService, AppConfig],
+  providers: [AppConfig],
 })
 export class AppModule {}

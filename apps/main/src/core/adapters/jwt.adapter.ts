@@ -1,4 +1,8 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { JwtService, JwtSignOptions } from '@nestjs/jwt';
 import { JwtRefreshPayload } from '../types/jwt-payload.type.js';
 
@@ -31,9 +35,9 @@ export class JwtAdapter {
     }
   }
 
-  async createRefreshToken(userId: string) {
+  async createRefreshToken(userId: string, sessionId: string) {
     try {
-      const payload = { userId: userId.toString() };
+      const payload = { userId: userId.toString(), sessionId };
 
       return this.jwtService.signAsync(payload, {
         secret: this.jwt_secret_refresh_key,
@@ -50,7 +54,7 @@ export class JwtAdapter {
         secret: this.jwt_secret_refresh_key,
       });
     } catch {
-      throw new InternalServerErrorException('Token verification failed');
+      throw new UnauthorizedException('Invalid or expired refresh token');
     }
   }
 }

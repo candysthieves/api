@@ -6,6 +6,7 @@ export type JwtPayload = {
 
 export type JwtRefreshPayload = {
   userId: string;
+  sessionId: string;
   iat: number;
   exp: number;
 };

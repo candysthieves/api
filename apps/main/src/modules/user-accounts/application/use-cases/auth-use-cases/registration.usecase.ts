@@ -1,9 +1,9 @@
-import { ICommandHandler, CommandHandler } from '@nestjs/cqrs';
-import { RegistrationDto } from '../dto/registration.dto.js';
-import { HashAdapter } from '../../../../../core/adapters/hash.adapter.js';
-import { UsersRepository } from '../../../users/repositories/users.repository.js';
 import { BadRequestException } from '@nestjs/common';
-import { UserEntity } from '../../../users/ entities/user.entity.js';
+import { RegistrationDto } from '../../../dto/registration.dto.js';
+import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
+import { HashAdapter } from '../../../../../core/adapters/hash.adapter.js';
+import { UsersRepository } from '../../../repositories/userRepositories/users.repository.js';
+import { UserEntity } from '../../../domain/entities/user.entity.js';
 
 export class RegistrationCommand {
   constructor(public readonly dto: RegistrationDto) {}
