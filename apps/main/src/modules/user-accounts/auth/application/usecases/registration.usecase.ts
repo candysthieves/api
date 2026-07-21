@@ -19,22 +19,22 @@ export class RegistrationUseCase implements ICommandHandler<RegistrationCommand>
   async execute(command: RegistrationCommand) {
     const { dto } = command;
 
-    // Быстрая страховка для отладки
-    if (!dto) {
-      console.log('--- RECEIVED COMMAND: ---', command);
-      throw new Error('RegistrationCommand payload (dto) is undefined!');
+    if (dto.password !== dto.passwordConfirmation) {
+      throw new BadRequestException('Passwords must match');
     }
 
-    const existUser = await this.usersRepository.findByEmailOrUsername(
-      dto.email,
-      dto.username,
-    );
+    const existUser: UserEntity | null =
+      await this.usersRepository.findByEmailOrUsername(dto.email, dto.username);
 
     if (existUser) {
       if (existUser.username === dto.username) {
-        throw new BadRequestException('Username already exists');
+        throw new BadRequestException(
+          'User with this username is already registered',
+        );
       } else if (existUser.email === dto.email) {
-        throw new BadRequestException('Email already exists');
+        throw new BadRequestException(
+          'User with this email is already registered',
+        );
       }
     }
 

@@ -1,6 +1,7 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../../infrastructure/prisma/prisma.service.js';
 import { UserEntity } from '../ entities/user.entity.js';
+import { User } from '../../../../generated/prisma/client.js';
 
 @Injectable()
 export class UsersRepository {
@@ -27,5 +28,11 @@ export class UsersRepository {
     const data = user.toPersistence();
 
     return this.prismaService.user.create({ data });
+  }
+
+  async findByEmail(email: string): Promise<UserEntity | null> {
+    const user = await this.prismaService.user.findUnique({ where: { email } });
+
+    return user ? UserEntity.restore(user) : null;
   }
 }

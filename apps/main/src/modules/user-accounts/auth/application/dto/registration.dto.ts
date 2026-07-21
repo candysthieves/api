@@ -26,6 +26,10 @@ export class RegistrationDto {
   @Length(6, 20)
   @Matches(
     /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[A-Za-z\d!"#$%&'()*+,\-./:;<=>?@[\]^_{|}~]+$/,
+    {
+      message:
+        'Password must contain 0-9, a-z, A-Z, ! " # $ % & \' ( ) * + , - . / : ; < = > ? @ [ \\ ] ^ _ { | } ~ ',
+    },
   )
   password: string;
   @IsNotEmpty()
