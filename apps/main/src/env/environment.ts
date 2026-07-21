@@ -1,4 +1,4 @@
-import { IsInt, Min, Max, IsString } from 'class-validator';
+import { IsInt, Min, Max, IsNotEmpty, IsString } from 'class-validator';
 import { Type } from 'class-transformer';
 
 export enum Environment {
@@ -19,4 +19,20 @@ export class EnvironmentVariables {
 
   @IsString()
   DATABASE_URL!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  JWT_SECRET_KEY!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  JWT_SECRET_REFRESH_KEY!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  JWT_EXPIRES_IN!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  JWT_REFRESH_EXPIRES_IN!: string;
 }

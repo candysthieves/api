@@ -4,6 +4,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService, JwtSignOptions } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
 import { JwtRefreshPayload } from '../types/jwt-payload.type.js';
 
 @Injectable()
@@ -13,11 +14,18 @@ export class JwtAdapter {
   private readonly jwt_expires_in: JwtSignOptions['expiresIn'];
   private readonly jwt_refresh_expires_in: JwtSignOptions['expiresIn'];
 
-  constructor(private readonly jwtService: JwtService) {
-    this.jwt_secret_key = 'jwt-secret';
-    this.jwt_secret_refresh_key = 'jwt-refresh';
-    this.jwt_expires_in = '15m';
-    this.jwt_refresh_expires_in = '7d';
+  constructor(
+    private readonly jwtService: JwtService,
+    private readonly configService: ConfigService,
+  ) {
+    this.jwt_secret_key = this.configService.getOrThrow('JWT_SECRET_KEY');
+    this.jwt_secret_refresh_key = this.configService.getOrThrow(
+      'JWT_SECRET_REFRESH_KEY',
+    );
+    this.jwt_expires_in = this.configService.getOrThrow('JWT_EXPIRES_IN');
+    this.jwt_refresh_expires_in = this.configService.getOrThrow(
+      'JWT_REFRESH_EXPIRES_IN',
+    );
   }
 
   async createAccessToken(userId: string) {
