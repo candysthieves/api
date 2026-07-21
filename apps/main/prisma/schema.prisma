@@ -13,10 +13,17 @@ datasource db {
 }
 
 model User {
-  id    Int     @id @default(autoincrement())
-  email String  @unique
-  name  String?
-  posts Post[]
+  id       String @id @default(uuid())
+  email    String @unique
+  password String
+  username String @unique
+
+  isEmailConfirmed Boolean  @default(false) @map("is_email_confirmed")
+  // confirmationCode      String?
+  // confirmationExpiresAt DateTime?
+  termsAcceptedAt  DateTime @default(now()) @map("terms_accepted_at")
+  createdAt        DateTime @default(now()) @map("created_at")
+  posts            Post[]
 }
 
 model Post {
@@ -25,5 +32,5 @@ model Post {
   content   String?
   published Boolean? @default(false)
   author    User?    @relation(fields: [authorId], references: [id])
-  authorId  Int?
+  authorId  String?
 }

@@ -4,8 +4,15 @@ import { PrismaClient } from '../../generated/prisma/client.js';
 import { ConfigService } from '@nestjs/config';
 
 @Injectable()
-export class PrismaService extends PrismaClient implements OnModuleInit {
-  constructor(@Inject(ConfigService) private configService: ConfigService) {
+export class PrismaService extends PrismaClient {
+  constructor(private readonly configService: ConfigService) {
+    // 👈 Достаем переменную через ConfigService
+    const connectionString = configService.get<string>('DATABASE_URL');
+
+    if (!connectionString) {
+      throw new Error('DATABASE_URL is not defined in .env');
+    }
+
     const adapter = new PrismaPg({
       connectionString: configService.get('DATABASE_URL') as string,
     });
