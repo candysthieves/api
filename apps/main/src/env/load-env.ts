@@ -1,10 +1,6 @@
-// parse читает строки .env и возвращает объект с переменными.
 import { parse } from 'dotenv';
-// Эти функции проверяют наличие файла и читают его.
 import { existsSync, readFileSync } from 'node:fs';
-// Эти функции помогают получить папку файла и собрать полный путь.
 import { dirname, resolve } from 'node:path';
-// Нужна, чтобы превратить адрес текущего модуля в путь на диске.
 import { fileURLToPath } from 'node:url';
 
 /**
