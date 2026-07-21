@@ -1,19 +1,15 @@
+// импорт configModule должен быть в самом верху
+import { configModule } from './config.js';
 import { Module } from '@nestjs/common';
 import { UserAccountsModule } from './modules/user-accounts/user-accounts.module.js';
 import { AppController } from './app.controller.js';
-import { ConfigModule } from '@nestjs/config';
 import { PrismaService } from './infrastructure/prisma/prisma.service.js';
-import { FilesController } from '../../files/src/files.controller.js';
-import { AuthController } from './modules/user-accounts/auth/auth.controller.js';
+import { FilesModule } from './modules/files/files.module.js';
+import { AppConfig } from './app.config.js';
 
 @Module({
-  imports: [
-    ConfigModule.forRoot({
-      envFilePath: 'apps/main/.env',
-    }),
-    UserAccountsModule,
-  ],
-  controllers: [AppController, FilesController, AuthController],
-  providers: [PrismaService],
+  imports: [configModule, UserAccountsModule, FilesModule],
+  controllers: [AppController],
+  providers: [PrismaService, AppConfig],
 })
 export class AppModule {}
