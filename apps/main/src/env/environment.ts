@@ -1,4 +1,4 @@
-import { IsEnum, IsInt, IsUrl, Min, Max } from 'class-validator';
+import { IsInt, Min, Max, IsNotEmpty, IsString } from 'class-validator';
 import { Type } from 'class-transformer';
 
 export enum Environment {
@@ -9,22 +9,30 @@ export enum Environment {
 }
 
 export class EnvironmentVariables {
-  @IsEnum(Environment)
-  NODE_ENV!: Environment;
+  // @IsEnum(Environment)
+  // NODE_ENV!: Environment;
   @Type(() => Number)
   @IsInt()
   @Min(1)
   @Max(65535)
   PORT!: number;
 
-  @IsUrl(
-    {
-      protocols: ['postgresql', 'postgres'],
-      require_protocol: true,
-    },
-    {
-      message: 'DATABASE_URL must be a valid Prisma URL',
-    },
-  )
+  @IsString()
   DATABASE_URL!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  JWT_SECRET_KEY!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  JWT_SECRET_REFRESH_KEY!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  JWT_EXPIRES_IN!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  JWT_REFRESH_EXPIRES_IN!: string;
 }
