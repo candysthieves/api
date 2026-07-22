@@ -8,8 +8,7 @@ import { UserEntity } from '../../../domain/entities/user.entity.js';
 import { UnauthorizedException } from '@nestjs/common';
 import { SessionEntity } from '../../../domain/entities/session.entity.js';
 import { SessionsRepository } from '../../../repositories/sessionRepositories/sessions.repository.js';
-
-const REFRESH_TOKEN_LIFETIME_MS = 7 * 24 * 60 * 60 * 1000;
+import { AppConfig } from '../../../../../app.config.js';
 
 export class LoginCommand {
   constructor(
@@ -26,6 +25,7 @@ export class LoginUseCase implements ICommandHandler<LoginCommand> {
     private readonly hashAdapter: HashAdapter,
     private readonly usersRepository: UsersRepository,
     private readonly sessionsRepository: SessionsRepository,
+    private readonly config: AppConfig,
   ) {}
   async execute({
     dto,
@@ -53,7 +53,7 @@ export class LoginUseCase implements ICommandHandler<LoginCommand> {
       userId: user.id,
       ip,
       deviceName: userAgent,
-      lifetimeMs: REFRESH_TOKEN_LIFETIME_MS,
+      lifetimeMs: this.config.refreshTokenMaxAge,
     });
     await this.sessionsRepository.save(session);
 

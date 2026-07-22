@@ -6,6 +6,9 @@
     "rootDir": "./src",
     "outDir": "../../dist/apps/main"
   },
+  //  "files": [
+  //    "src/types/express.d.ts" // <-- Явно указываем TS, где лежит расширение типов
+  //  ],
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist", "test", "**/*spec.ts"]
 }
