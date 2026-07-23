@@ -17,12 +17,15 @@ export class UserEntity {
     email: string;
     username: string;
     passwordHash: string;
+    confirmationExpiresAt: Date;
   }): UserEntity {
     return new UserEntity({
       id: crypto.randomUUID(),
       email: data.email,
       username: data.username,
       password: data.passwordHash,
+      confirmationCode: crypto.randomUUID(),
+      confirmationExpiresAt: data.confirmationExpiresAt,
       isEmailConfirmed: false,
       termsAcceptedAt: new Date(),
       createdAt: new Date(),
@@ -51,5 +54,9 @@ export class UserEntity {
 
   get username(): string {
     return this.props.username;
+  }
+
+  get confirmationCode(): string {
+    return this.props.confirmationCode;
   }
 }

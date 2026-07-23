@@ -19,8 +19,8 @@ import {
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 import { RegistrationCommand } from '../application/use-cases/auth-use-cases/registration.usecase.js';
-import { RegistrationDto } from '../dto/registration.dto.js';
-import { LoginDto } from '../dto/login.dto.js';
+import { RegistrationDto } from './dto/registration.dto.js';
+import { LoginDto } from './dto/login.dto.js';
 import { AccessTokenType } from '../../../core/types/access-token.type.js';
 import { LoginCommand } from '../application/use-cases/auth-use-cases/login.usecase.js';
 import { AccessAndRefreshTokensType } from '../../../core/types/access-and-refresh-tokens.type.js';

@@ -1,5 +1,5 @@
 import { AccessAndRefreshTokensType } from '../../../../../core/types/access-and-refresh-tokens.type.js';
-import { LoginDto } from '../../../dto/login.dto.js';
+import { LoginDto } from '../../../api/dto/login.dto.js';
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { JwtAdapter } from '../../../../../core/adapters/jwt.adapter.js';
 import { HashAdapter } from '../../../../../core/adapters/hash.adapter.js';
