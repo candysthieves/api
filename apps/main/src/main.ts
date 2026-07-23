@@ -22,6 +22,7 @@ async function bootstrap() {
     .setTitle('KEKW API')
     .setDescription('Documentation for the KEKW API.')
     .setVersion('1.0')
+    .addCookieAuth('refreshToken', { type: 'apiKey' }, 'refreshToken')
     .build();
   const document = SwaggerModule.createDocument(app, swaggerConfig);
   SwaggerModule.setup('api/docs', app, document);
