@@ -10,3 +10,5 @@ export type JwtRefreshPayload = {
   iat: number;
   exp: number;
 };
+
+export type AuthUser = JwtPayload | JwtRefreshPayload;

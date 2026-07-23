@@ -6,6 +6,7 @@ import {
   HttpStatus,
   Req,
   Res,
+  UseGuards,
 } from '@nestjs/common';
 import { type Request, type Response } from 'express';
 import { CommandBus } from '@nestjs/cqrs';
@@ -23,11 +24,20 @@ import { LoginDto } from '../dto/login.dto.js';
 import { AccessTokenType } from '../../../core/types/access-token.type.js';
 import { LoginCommand } from '../application/use-cases/auth-use-cases/login.usecase.js';
 import { AccessAndRefreshTokensType } from '../../../core/types/access-and-refresh-tokens.type.js';
+import { CookieAdapter } from '../../../core/adapters/cookie.adapter.js';
+import { RefreshTokenGuard } from '../guards/refresh-token.guard.js';
+import { LogoutCommand } from '../application/use-cases/auth-use-cases/logout.usecase.js';
+import { User } from '../decorators/user.decorator.js';
+import { type AuthUser } from '../../../core/types/jwt-payload.type.js';
+import { RefreshTokenCommand } from '../application/use-cases/auth-use-cases/refresh-token,usecase.js';
 
 @ApiTags('Authentication')
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly commandBus: CommandBus) {}
+  constructor(
+    private readonly commandBus: CommandBus,
+    private readonly cookieAdapter: CookieAdapter,
+  ) {}
 
   @Post('registration')
   @HttpCode(HttpStatus.CREATED)
@@ -86,11 +96,34 @@ export class AuthController {
       ),
     );
 
-    res.cookie('refreshToken', refreshToken, {
-      httpOnly: true,
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-    });
+    this.cookieAdapter.setRefreshCookie(res, refreshToken);
 
     return { accessToken };
+  }
+
+  @Post('refresh-token')
+  @UseGuards(RefreshTokenGuard)
+  @HttpCode(HttpStatus.OK)
+  async refreshToken(
+    @Res({ passthrough: true }) res: Response,
+    @User() user: AuthUser,
+  ): Promise<AccessTokenType> {
+    const { accessToken, refreshToken } = await this.commandBus.execute<
+      RefreshTokenCommand,
+      AccessAndRefreshTokensType
+    >(new RefreshTokenCommand(user));
+
+    this.cookieAdapter.setRefreshCookie(res, refreshToken);
+
+    return { accessToken };
+  }
+
+  @Post('logout')
+  @UseGuards(RefreshTokenGuard)
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async logout(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
+    await this.commandBus.execute(new LogoutCommand());
+
+    this.cookieAdapter.clearRefreshCookie(res);
   }
 }

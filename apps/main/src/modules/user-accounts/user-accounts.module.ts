@@ -13,8 +13,15 @@ import { SessionsRepository } from './repositories/sessionRepositories/sessions.
 import { SessionsQueryRepository } from './repositories/sessionRepositories/sessions.queryRepository.js';
 import { SessionsController } from './api/sessions.controller.js';
 import { FindAllSessionsQueryHandler } from './application/query-handler/sessions/find-sessions-query-handler.js';
+import { LogoutUseCase } from './application/use-cases/auth-use-cases/logout.usecase.js';
+import { RefreshTokenUseCase } from './application/use-cases/auth-use-cases/refresh-token,usecase.js';
 
-const useCases = [RegistrationUseCase, LoginUseCase];
+const useCases = [
+  RegistrationUseCase,
+  LoginUseCase,
+  LogoutUseCase,
+  RefreshTokenUseCase,
+];
 const queryHandlers = [FindAllSessionsQueryHandler];
 
 @Module({
