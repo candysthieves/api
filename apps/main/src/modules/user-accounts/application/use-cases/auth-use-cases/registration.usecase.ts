@@ -62,7 +62,7 @@ export class RegistrationUseCase implements ICommandHandler<RegistrationCommand>
       confirmationExpiresAt,
     });
 
-    await this.usersRepository.save(newUser);
+    await this.usersRepository.create(newUser);
 
     const email: EmailTemplateType = emailTemplates.registration(
       newUser.confirmationCode,

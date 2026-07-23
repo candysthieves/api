@@ -15,12 +15,14 @@ import { SessionsController } from './api/sessions.controller.js';
 import { FindAllSessionsQueryHandler } from './application/query-handler/sessions/find-sessions-query-handler.js';
 import { LogoutUseCase } from './application/use-cases/auth-use-cases/logout.usecase.js';
 import { RefreshTokenUseCase } from './application/use-cases/auth-use-cases/refresh-token,usecase.js';
+import { ConfirmEmailUseCase } from './application/use-cases/auth-use-cases/confirm-email.usecase.js';
 
 const useCases = [
   RegistrationUseCase,
   LoginUseCase,
   LogoutUseCase,
   RefreshTokenUseCase,
+  ConfirmEmailUseCase,
 ];
 const queryHandlers = [FindAllSessionsQueryHandler];
 

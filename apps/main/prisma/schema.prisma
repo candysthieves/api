@@ -19,7 +19,7 @@ model User {
   username String @unique
 
   isEmailConfirmed      Boolean  @default(false) @map("is_email_confirmed")
-  confirmationCode      String   @map("confirmation_code")
+  confirmationCode      String   @unique @map("confirmation_code")
   confirmationExpiresAt DateTime @map("confirmation_expires_at")
 
   termsAcceptedAt DateTime  @default(now()) @map("terms_accepted_at")
