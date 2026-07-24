@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+//todo алиасы
 import { PrismaService } from '../../../../infrastructure/prisma/prisma.service.js';
 import type { Session } from '../../../../generated/prisma/client.js';
 

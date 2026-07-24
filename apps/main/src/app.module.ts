@@ -8,7 +8,7 @@ import { CoreModule } from './core/core.module.js';
 // import { AppConfig } from './app.config.js';
 
 @Module({
-  imports: [configModule, CoreModule, CqrsModule.forRoot(), UserAccountsModule],
+  imports: [CqrsModule.forRoot(), configModule, CoreModule, UserAccountsModule],
   controllers: [AppController],
   // providers: [AppConfig],
   // exports: [AppConfig],

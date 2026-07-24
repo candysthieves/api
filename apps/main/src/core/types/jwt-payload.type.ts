@@ -1,3 +1,4 @@
+//необязательные незя
 export type JwtPayload = {
   userId: string;
   iat?: number;
@@ -11,4 +12,5 @@ export type JwtRefreshPayload = {
   exp: number;
 };
 
+//нинада
 export type AuthUser = JwtPayload | JwtRefreshPayload;

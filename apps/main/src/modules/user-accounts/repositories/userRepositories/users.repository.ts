@@ -10,6 +10,7 @@ export class UsersRepository {
     email: string,
     username: string,
   ): Promise<UserEntity | null> {
+    //todo перенести в поле repo
     const raw = await this.prismaService.user.findFirst({
       where: {
         OR: [{ email }, { username }],

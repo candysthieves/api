@@ -1,5 +1,7 @@
 import { validateSync } from 'class-validator';
 
+//todo удалить?
+
 // просто утилита, даже не классом её сделали, чтобы не париться с DI и использовать её напрямую где надо нам.
 export const configValidationUtility = {
   validateConfig: (config: any) => {

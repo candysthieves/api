@@ -28,6 +28,7 @@ export class JwtAdapter {
     );
   }
 
+  //типизируем возврат методов ВСЕГДА
   async createAccessToken(userId: string) {
     const payload = {
       userId: userId.toString(),
@@ -38,6 +39,7 @@ export class JwtAdapter {
         secret: this.jwt_secret_key,
         expiresIn: this.jwt_expires_in,
       });
+      //лишние кетчи не надо
     } catch {
       throw new InternalServerErrorException('Token generation failed');
     }
