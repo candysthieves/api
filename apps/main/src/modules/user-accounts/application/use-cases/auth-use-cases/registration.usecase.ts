@@ -1,5 +1,5 @@
 import { BadRequestException } from '@nestjs/common';
-import { RegistrationDto } from '../../../api/dto/registration.dto.js';
+import { RegistrationDto } from '../../../dto/registration.dto.js';
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { HashAdapter } from '../../../../../core/adapters/hash.adapter.js';
 import { UsersRepository } from '../../../repositories/userRepositories/users.repository.js';
@@ -64,12 +64,12 @@ export class RegistrationUseCase implements ICommandHandler<RegistrationCommand>
 
     await this.usersRepository.create(newUser);
 
-    const email: EmailTemplateType = emailTemplates.registration(
+    const emailTemplate: EmailTemplateType = emailTemplates.registration(
       newUser.confirmationCode,
     );
 
     try {
-      await this.emailAdapter.sendEmail(newUser.email, email);
+      await this.emailAdapter.sendEmail(newUser.email, emailTemplate);
     } catch (e) {
       console.log(e);
     }

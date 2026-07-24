@@ -19,8 +19,8 @@ import {
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 import { RegistrationCommand } from '../application/use-cases/auth-use-cases/registration.usecase.js';
-import { RegistrationDto } from './dto/registration.dto.js';
-import { LoginDto } from './dto/login.dto.js';
+import { RegistrationDto } from '../dto/registration.dto.js';
+import { LoginDto } from '../dto/login.dto.js';
 import { AccessTokenType } from '../../../core/types/access-token.type.js';
 import { LoginCommand } from '../application/use-cases/auth-use-cases/login.usecase.js';
 import { AccessAndRefreshTokensType } from '../../../core/types/access-and-refresh-tokens.type.js';
@@ -30,8 +30,10 @@ import { LogoutCommand } from '../application/use-cases/auth-use-cases/logout.us
 import { User } from '../decorators/user.decorator.js';
 import { type AuthUser } from '../../../core/types/jwt-payload.type.js';
 import { RefreshTokenCommand } from '../application/use-cases/auth-use-cases/refresh-token,usecase.js';
-import { RegistrationConfirmationDto } from './dto/registration-confirmation.dto.js';
+import { RegistrationConfirmationDto } from '../dto/registration-confirmation.dto.js';
 import { ConfirmEmailCommand } from '../application/use-cases/auth-use-cases/confirm-email.usecase.js';
+import { ResendEmailDto } from '../dto/resend-email.dto.js';
+import { ResendEmailCommand } from '../application/use-cases/auth-use-cases/resend-email.usecase.js';
 
 @ApiTags('Authentication')
 @Controller('auth')
@@ -125,6 +127,14 @@ export class AuthController {
   async registrationConfirmation(@Body() dto: RegistrationConfirmationDto) {
     await this.commandBus.execute<ConfirmEmailCommand, void>(
       new ConfirmEmailCommand(dto.code),
+    );
+  }
+
+  @Post('resend-confirmation-email')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async resendConfirmationEmail(@Body() dto: ResendEmailDto) {
+    return this.commandBus.execute<ResendEmailCommand, void>(
+      new ResendEmailCommand(dto.email),
     );
   }
 

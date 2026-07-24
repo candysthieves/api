@@ -1,5 +1,5 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
-import { ICommandHandler } from '@nestjs/cqrs';
+import { BadRequestException } from '@nestjs/common';
+import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { UsersRepository } from '../../../repositories/userRepositories/users.repository.js';
 import { UserEntity } from '../../../domain/entities/user.entity.js';
 
@@ -7,7 +7,7 @@ export class ConfirmEmailCommand {
   constructor(public readonly code: string) {}
 }
 
-@Injectable()
+@CommandHandler(ConfirmEmailCommand)
 export class ConfirmEmailUseCase implements ICommandHandler<ConfirmEmailCommand> {
   constructor(private readonly usersRepository: UsersRepository) {}
 

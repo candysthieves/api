@@ -77,4 +77,13 @@ export class UserEntity {
     this.props.isEmailConfirmed = true;
     this.props.confirmationCode = '';
   }
+
+  public resendEmail(confirmationExpiresAt: Date): void {
+    if (this.props.isEmailConfirmed) {
+      throw new BadRequestException('Email already confirmed');
+    }
+
+    this.props.confirmationCode = crypto.randomUUID();
+    this.props.confirmationExpiresAt = confirmationExpiresAt;
+  }
 }

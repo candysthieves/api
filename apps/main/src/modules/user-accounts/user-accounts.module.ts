@@ -16,6 +16,7 @@ import { FindAllSessionsQueryHandler } from './application/query-handler/session
 import { LogoutUseCase } from './application/use-cases/auth-use-cases/logout.usecase.js';
 import { RefreshTokenUseCase } from './application/use-cases/auth-use-cases/refresh-token,usecase.js';
 import { ConfirmEmailUseCase } from './application/use-cases/auth-use-cases/confirm-email.usecase.js';
+import { ResendEmailUseCase } from './application/use-cases/auth-use-cases/resend-email.usecase.js';
 
 const useCases = [
   RegistrationUseCase,
@@ -23,6 +24,7 @@ const useCases = [
   LogoutUseCase,
   RefreshTokenUseCase,
   ConfirmEmailUseCase,
+  ResendEmailUseCase,
 ];
 const queryHandlers = [FindAllSessionsQueryHandler];
 
