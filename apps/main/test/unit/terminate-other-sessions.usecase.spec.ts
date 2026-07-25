@@ -14,7 +14,7 @@ import {
 describe('DeleteOtherSessionsUsecase', () => {
   it('terminates all sessions except the current session', async () => {
     const sessionsRepository = {
-      terminateOtherSessions: jest.fn(),
+      deleteOtherSessions: jest.fn(),
     } as unknown as SessionsRepository;
     const useCase = new DeleteOtherSessionsUseCase(sessionsRepository);
 

@@ -17,7 +17,7 @@ jest.mock(
 jest.mock(
   '../../src/modules/user-accounts/application/use-cases/sessions-use-cases/delete-other-sessions-use.case.js',
   () => ({
-    TerminateOtherSessionsCommand: class TerminateOtherSessionsCommand {
+    DeleteOtherSessionsCommand: class DeleteOtherSessionsCommand {
       constructor(
         public readonly userId: string,
         public readonly currentSessionId: string,
