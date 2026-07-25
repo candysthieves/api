@@ -15,28 +15,30 @@ import { SessionsController } from './api/sessions.controller.js';
 import { FindAllSessionsQueryHandler } from './application/query-handler/sessions/find-sessions-query-handler.js';
 import { LogoutUseCase } from './application/use-cases/auth-use-cases/logout.usecase.js';
 import { RefreshTokenUseCase } from './application/use-cases/auth-use-cases/refresh-token,usecase.js';
+import { DeleteOtherSessionsUseCase } from './application/use-cases/sessions-use-cases/delete-other-sessions-use.case.js';
 
 const useCases = [
   RegistrationUseCase,
   LoginUseCase,
   LogoutUseCase,
   RefreshTokenUseCase,
+  DeleteOtherSessionsUseCase,
 ];
 const queryHandlers = [FindAllSessionsQueryHandler];
+const repositories = [UsersRepository, SessionsRepository];
+const queryRepositories = [SessionsQueryRepository, UsersQueryRepository];
+const services = [PrismaService, UsersService, AuthService];
+const controllers = [UsersController, AuthController, SessionsController];
 
 @Module({
   imports: [CqrsModule],
-  controllers: [UsersController, AuthController, SessionsController],
+  controllers: [...controllers],
   providers: [
-    PrismaService,
     ...useCases,
     ...queryHandlers,
-    UsersService,
-    AuthService,
-    UsersRepository,
-    UsersQueryRepository,
-    SessionsRepository,
-    SessionsQueryRepository,
+    ...repositories,
+    ...queryRepositories,
+    ...services,
   ],
 })
 export class UserAccountsModule {}
