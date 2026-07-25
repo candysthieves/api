@@ -8,7 +8,7 @@ export class SessionsQueryRepository {
 
   async findSessionsForUser(userId: string): Promise<Session[]> {
     return this.prisma.session.findMany({
-      where: { userId },
+      where: { userId, deletedAt: null },
     });
   }
 }

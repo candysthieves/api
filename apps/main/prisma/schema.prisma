@@ -50,4 +50,5 @@ model Session {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  deletedAt DateTime? @map("deleted_at")
 }

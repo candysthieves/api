@@ -1,10 +1,10 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { AuthUser } from '../../../../../core/types/jwt-payload.type.js';
+import { JwtRefreshPayload } from '../../../../../core/types/jwt-payload.type.js';
 import { JwtAdapter } from '../../../../../core/adapters/jwt.adapter.js';
 import { AccessAndRefreshTokensType } from '../../../../../core/types/access-and-refresh-tokens.type.js';
 
 export class RefreshTokenCommand {
-  constructor(public readonly payload: AuthUser) {}
+  constructor(public readonly payload: JwtRefreshPayload) {}
 }
 
 @CommandHandler(RefreshTokenCommand)
@@ -19,8 +19,7 @@ export class RefreshTokenUseCase implements ICommandHandler<RefreshTokenCommand>
     );
     const refreshToken: string = await this.jwtAdapter.createRefreshToken(
       payload.userId,
-      'sessionId',
-      // НУЖНО ДОБАВИТЬ, ПОСТАВИЛ ЗАГЛУШКУ!
+      payload.sessionId,
     );
 
     return {
