@@ -69,17 +69,18 @@ export class SessionsController {
   })
   @UseGuards(RefreshTokenGuard)
   @HttpCode(HttpStatus.NO_CONTENT)
-  @Delete('devices/:deviceId')
+  @Delete('sessions/:sessionId')
   async deactivateSession(
-    @Param('deviceId') deviceId: string,
+    @Param('sessionId') sessionId: string,
     @User() user: JwtRefreshPayload,
     @Res({ passthrough: true }) res: Response,
   ): Promise<void> {
     await this.commandBus.execute<DeactivateSessionCommand, void>(
-      new DeactivateSessionCommand(user.userId, user.sessionId, deviceId),
+      new DeactivateSessionCommand(user.userId, user.sessionId, sessionId),
     );
-
-    if (deviceId === user.sessionId) {
+    // sessionId id полученная из query
+    // user.sessionId id полученная из токена
+    if (sessionId === user.sessionId) {
       this.cookieAdapter.clearRefreshCookie(res);
     }
   }

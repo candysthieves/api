@@ -37,7 +37,6 @@ const environmentFiles: Record<SupportedEnvironment, string[]> = {
   production: ['.env.production'],
   // Для development добавляем настройки разработки поверх production.
   development: ['.env.production', '.env.development'],
-  // Для локальной разработки local-файл имеет самый высокий приоритет.
   'development.local': [
     '.env.production',
     '.env.development',
