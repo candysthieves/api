@@ -7,6 +7,8 @@ import {
   Req,
   Res,
   UseGuards,
+  Get,
+  Query,
 } from '@nestjs/common';
 import { type Request, type Response } from 'express';
 import { CommandBus } from '@nestjs/cqrs';
@@ -34,6 +36,12 @@ import { RegistrationConfirmationDto } from '../dto/registration-confirmation.dt
 import { ConfirmEmailCommand } from '../application/use-cases/auth-use-cases/confirm-email.usecase.js';
 import { ResendEmailDto } from '../dto/resend-email.dto.js';
 import { ResendEmailCommand } from '../application/use-cases/auth-use-cases/resend-email.usecase.js';
+import { PasswordRecoveryDto } from '../dto/password-recovery.dto.js';
+import { PasswordRecoveryCommand } from '../application/use-cases/auth-use-cases/password-recovery.usecase.js';
+import { ValidatePasswordRecoveryCodeDto } from '../dto/validate-password-recovery-code.dto.js';
+import { ValidatePasswordRecoveryCodeCommand } from '../application/use-cases/auth-use-cases/validate-password-recovery-code.usecase.js';
+import { NewPasswordDto } from '../dto/new-password.dto.js';
+import { NewPasswordCommand } from '../application/use-cases/auth-use-cases/new-password.usecase.js';
 
 @ApiTags('Authentication')
 @Controller('auth')
@@ -135,6 +143,42 @@ export class AuthController {
   async resendConfirmationEmail(@Body() dto: ResendEmailDto) {
     return this.commandBus.execute<ResendEmailCommand, void>(
       new ResendEmailCommand(dto.email),
+    );
+  }
+
+  @Post('password-recovery')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Send a password recovery email' })
+  @ApiBadRequestResponse({
+    description: 'User with this email does not exist.',
+  })
+  async passwordRecovery(@Body() dto: PasswordRecoveryDto): Promise<void> {
+    await this.commandBus.execute<PasswordRecoveryCommand, void>(
+      new PasswordRecoveryCommand(dto.email),
+    );
+  }
+
+  @Get('password-recovery/validate')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Validate a password recovery code' })
+  @ApiBadRequestResponse({ description: 'Invalid or expired recovery code.' })
+  async validatePasswordRecoveryCode(
+    @Query() dto: ValidatePasswordRecoveryCodeDto,
+  ): Promise<void> {
+    await this.commandBus.execute<ValidatePasswordRecoveryCodeCommand, void>(
+      new ValidatePasswordRecoveryCodeCommand(dto.recoveryCode),
+    );
+  }
+
+  @Post('new-password')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Set a new password using a recovery code' })
+  @ApiBadRequestResponse({
+    description: 'Validation failed or recovery code is invalid.',
+  })
+  async newPassword(@Body() dto: NewPasswordDto): Promise<void> {
+    await this.commandBus.execute<NewPasswordCommand, void>(
+      new NewPasswordCommand(dto),
     );
   }
 

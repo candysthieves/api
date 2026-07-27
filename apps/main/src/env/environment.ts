@@ -35,4 +35,8 @@ export class EnvironmentVariables {
   @IsString()
   @IsNotEmpty()
   JWT_REFRESH_EXPIRES_IN!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  PASSWORD_RECOVERY_EXPIRES_IN!: string;
 }

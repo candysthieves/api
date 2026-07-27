@@ -44,6 +44,13 @@ export class SessionsRepository {
     });
   }
 
+  async deleteAllActiveByUserId(userId: string): Promise<void> {
+    await this.prisma.session.updateMany({
+      where: { userId, deletedAt: null },
+      data: { deletedAt: new Date() },
+    });
+  }
+
   async findById(id: string): Promise<Session | null> {
     return this.prisma.session.findUnique({ where: { id } });
   }

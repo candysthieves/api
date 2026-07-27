@@ -11,6 +11,7 @@ export class AppConfig {
   readonly refreshSecret: string;
   readonly refreshExpiresIn: string;
   readonly emailConfirmationExpiresIn: string;
+  readonly passwordRecoveryExpiresIn: string;
   readonly smtpUser: string;
   readonly smtpPassword: string;
 
@@ -27,6 +28,9 @@ export class AppConfig {
     );
     this.emailConfirmationExpiresIn = configService.getOrThrow<string>(
       'EMAIL_CONFIRMATION_EXPIRES_IN',
+    );
+    this.passwordRecoveryExpiresIn = configService.getOrThrow<string>(
+      'PASSWORD_RECOVERY_EXPIRES_IN',
     );
     this.smtpUser = configService.getOrThrow<string>('SMTP_USER');
     this.smtpPassword = configService.getOrThrow<string>('SMTP_PASSWORD');

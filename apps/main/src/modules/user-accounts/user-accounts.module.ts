@@ -19,6 +19,10 @@ import { DeleteOtherSessionsUseCase } from './application/use-cases/sessions-use
 import { DeactivateSessionUseCase } from './application/use-cases/sessions-use-cases/deactivate-session.usecase.js';
 import { ConfirmEmailUseCase } from './application/use-cases/auth-use-cases/confirm-email.usecase.js';
 import { ResendEmailUseCase } from './application/use-cases/auth-use-cases/resend-email.usecase.js';
+import { PasswordRecoveryUseCase } from './application/use-cases/auth-use-cases/password-recovery.usecase.js';
+import { ValidatePasswordRecoveryCodeUseCase } from './application/use-cases/auth-use-cases/validate-password-recovery-code.usecase.js';
+import { NewPasswordUseCase } from './application/use-cases/auth-use-cases/new-password.usecase.js';
+import { PasswordRecoveryService } from './application/password-recovery.service.js';
 
 const useCases = [
   RegistrationUseCase,
@@ -29,11 +33,19 @@ const useCases = [
   DeactivateSessionUseCase,
   ConfirmEmailUseCase,
   ResendEmailUseCase,
+  PasswordRecoveryUseCase,
+  ValidatePasswordRecoveryCodeUseCase,
+  NewPasswordUseCase,
 ];
 const queryHandlers = [FindAllSessionsQueryHandler];
 const repositories = [UsersRepository, SessionsRepository];
 const queryRepositories = [SessionsQueryRepository, UsersQueryRepository];
-const services = [PrismaService, UsersService, AuthService];
+const services = [
+  PrismaService,
+  UsersService,
+  AuthService,
+  PasswordRecoveryService,
+];
 const controllers = [UsersController, AuthController, SessionsController];
 
 @Module({
