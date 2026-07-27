@@ -11,16 +11,17 @@ import {
 import type { Response } from 'express';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import {
+  ApiTags,
   ApiCookieAuth,
   ApiNoContentResponse,
   ApiNotFoundResponse,
   ApiOperation,
   ApiParam,
-  ApiTags,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 import { FindAllSessionsQuery } from '../application/query-handler/sessions/find-sessions-query-handler.js';
 import { SessionView } from './view-types/sessions/sessionView.type.js';
+import { DeleteOtherSessionsCommand } from '../application/use-cases/sessions-use-cases/delete-other-sessions-use.case.js';
 import { RefreshTokenGuard } from '../guards/refresh-token.guard.js';
 import { User } from '../decorators/user.decorator.js';
 import type { JwtRefreshPayload } from '../../../core/types/jwt-payload.type.js';
@@ -49,6 +50,15 @@ export class SessionsController {
   ): Promise<SessionView[]> {
     return this.queryBus.execute<FindAllSessionsQuery, SessionView[]>(
       new FindAllSessionsQuery(user.userId),
+    );
+  }
+
+  @Delete('devices')
+  @UseGuards(RefreshTokenGuard)
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async deleteOtherSessions(@User() user: JwtRefreshPayload): Promise<void> {
+    await this.commandBus.execute<DeleteOtherSessionsCommand, void>(
+      new DeleteOtherSessionsCommand(user.userId, user.sessionId),
     );
   }
 

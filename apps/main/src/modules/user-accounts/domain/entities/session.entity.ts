@@ -26,6 +26,7 @@ export class SessionEntity {
       expiresAt: new Date(new Date().getTime() + data.lifetimeMs),
       createdAt: new Date(),
       updatedAt: new Date(),
+      deletedAt: null,
     });
   }
 

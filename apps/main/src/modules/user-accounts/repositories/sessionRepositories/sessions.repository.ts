@@ -11,11 +11,40 @@ export class SessionsRepository {
     await this.prisma.session.create({ data: session.toPersistence() });
   }
 
-  async findById(id: string): Promise<Session | null> {
-    return this.prisma.session.findUnique({ where: { id } });
+  async findActiveById(sessionId: string): Promise<SessionEntity | null> {
+    const session = await this.prisma.session.findFirst({
+      where: {
+        id: sessionId,
+        expiresAt: { gt: new Date() },
+        deletedAt: null,
+      },
+    });
+
+    return session ? SessionEntity.restore(session) : null;
   }
 
-  async deleteById(id: string): Promise<void> {
-    await this.prisma.session.delete({ where: { id } });
+  async deleteById(sessionId: string, userId: string): Promise<void> {
+    await this.prisma.session.update({
+      where: { id: sessionId, userId, deletedAt: null },
+      data: { deletedAt: new Date() },
+    });
+  }
+
+  async deleteOtherSessions(
+    userId: string,
+    currentSessionId: string,
+  ): Promise<void> {
+    await this.prisma.session.updateMany({
+      where: {
+        userId,
+        id: { not: currentSessionId },
+        deletedAt: null,
+      },
+      data: { deletedAt: new Date() },
+    });
+  }
+
+  async findById(id: string): Promise<Session | null> {
+    return this.prisma.session.findUnique({ where: { id } });
   }
 }
