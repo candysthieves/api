@@ -18,13 +18,14 @@ model User {
   password String
   username String @unique
 
-  isEmailConfirmed Boolean   @default(false) @map("is_email_confirmed")
-  // confirmationCode      String?
-  // confirmationExpiresAt DateTime?
-  termsAcceptedAt  DateTime  @default(now()) @map("terms_accepted_at")
-  createdAt        DateTime  @default(now()) @map("created_at")
-  posts            Post[]
-  sessions         Session[]
+  isEmailConfirmed      Boolean  @default(false) @map("is_email_confirmed")
+  confirmationCode      String   @unique @map("confirmation_code")
+  confirmationExpiresAt DateTime @map("confirmation_expires_at")
+
+  termsAcceptedAt DateTime  @default(now()) @map("terms_accepted_at")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  posts           Post[]
+  sessions        Session[]
 }
 
 model Post {
