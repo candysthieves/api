@@ -14,8 +14,10 @@ export class RefreshTokenUseCase implements ICommandHandler<RefreshTokenCommand>
   async execute({
     payload,
   }: RefreshTokenCommand): Promise<AccessAndRefreshTokensType> {
-    const accessToken = await this.jwtAdapter.createAccessToken(payload.userId);
-    const refreshToken = await this.jwtAdapter.createRefreshToken(
+    const accessToken: string = await this.jwtAdapter.createAccessToken(
+      payload.userId,
+    );
+    const refreshToken: string = await this.jwtAdapter.createRefreshToken(
       payload.userId,
       payload.sessionId,
     );

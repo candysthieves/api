@@ -1,10 +1,19 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
+import { JwtRefreshPayload } from '../../../../../core/types/jwt-payload.type.js';
+import { SessionsRepository } from '../../../repositories/sessionRepositories/sessions.repository.js';
 
 export class LogoutCommand {
-  constructor() {}
+  constructor(public readonly payload: JwtRefreshPayload) {}
 }
 
 @CommandHandler(LogoutCommand)
 export class LogoutUseCase implements ICommandHandler<LogoutCommand> {
-  async execute(command: LogoutCommand): Promise<void> {}
+  constructor(private readonly sessionsRepository: SessionsRepository) {}
+
+  async execute(command: LogoutCommand): Promise<void> {
+    await this.sessionsRepository.deleteById(
+      command.payload.sessionId,
+      command.payload.userId,
+    );
+  }
 }

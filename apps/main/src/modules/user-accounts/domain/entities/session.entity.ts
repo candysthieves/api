@@ -69,4 +69,8 @@ export class SessionEntity {
   get updatedAt(): Date {
     return this.props.updatedAt;
   }
+
+  get deletedAt(): Date | null {
+    return this.props.deletedAt;
+  }
 }

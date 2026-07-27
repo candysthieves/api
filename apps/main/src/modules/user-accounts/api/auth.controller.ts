@@ -141,8 +141,11 @@ export class AuthController {
   @Post('logout')
   @UseGuards(RefreshTokenGuard)
   @HttpCode(HttpStatus.NO_CONTENT)
-  async logout(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
-    await this.commandBus.execute(new LogoutCommand());
+  async logout(
+    @Res({ passthrough: true }) res: Response,
+    @User() user: JwtRefreshPayload,
+  ): Promise<void> {
+    await this.commandBus.execute<LogoutCommand, void>(new LogoutCommand(user));
 
     this.cookieAdapter.clearRefreshCookie(res);
   }
