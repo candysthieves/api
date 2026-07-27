@@ -23,15 +23,31 @@ export class UsersRepository {
     return UserEntity.restore(raw);
   }
 
-  async save(user: UserEntity) {
+  async create(user: UserEntity) {
     const data = user.toPersistence();
 
     return this.prismaService.user.create({ data });
+  }
+
+  async save(user: UserEntity) {
+    await this.prismaService.user.update({
+      where: {
+        id: user.id,
+      },
+      data: user.toPersistence(),
+    });
   }
 
   async findByEmail(email: string): Promise<UserEntity | null> {
     const user = await this.prismaService.user.findUnique({ where: { email } });
 
     return user ? UserEntity.restore(user) : null;
+  }
+  async findByConfirmationCode(code: string) {
+    return this.prismaService.user.findFirst({
+      where: {
+        confirmationCode: code,
+      },
+    });
   }
 }

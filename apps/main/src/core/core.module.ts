@@ -4,12 +4,20 @@ import { JwtAdapter } from './adapters/jwt.adapter.js';
 import { JwtModule } from '@nestjs/jwt';
 import { CookieAdapter } from './adapters/cookie.adapter.js';
 import { AppConfig } from '../app.config.js';
+import { EmailAdapter } from './adapters/email/email.adapter.js';
 
 //глобальный модуль для провайдеров и модулей необходимых во всех частях приложения (например LoggerService, CqrsModule, etc...)
 @Global()
 @Module({
   imports: [JwtModule.register({})],
-  providers: [AppConfig, HashAdapter, JwtAdapter, CookieAdapter],
-  exports: [AppConfig, JwtModule, HashAdapter, JwtAdapter, CookieAdapter],
+  providers: [AppConfig, HashAdapter, JwtAdapter, CookieAdapter, EmailAdapter],
+  exports: [
+    AppConfig,
+    JwtModule,
+    HashAdapter,
+    JwtAdapter,
+    CookieAdapter,
+    EmailAdapter,
+  ],
 })
 export class CoreModule {}
