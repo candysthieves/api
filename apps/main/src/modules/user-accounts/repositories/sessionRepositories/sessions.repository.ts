@@ -47,5 +47,4 @@ export class SessionsRepository {
   async findById(id: string): Promise<Session | null> {
     return this.prisma.session.findUnique({ where: { id } });
   }
-
 }

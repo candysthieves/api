@@ -28,6 +28,6 @@ export class DeactivateSessionUseCase implements ICommandHandler<DeactivateSessi
       );
     }
 
-    await this.sessionsRepository.deleteById(session.id);
+    await this.sessionsRepository.deleteById(session.id, session.userId);
   }
 }

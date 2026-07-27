@@ -28,11 +28,10 @@ import type { JwtRefreshPayload } from '../../../core/types/jwt-payload.type.js'
 import { DeactivateSessionCommand } from '../application/use-cases/sessions-use-cases/deactivate-session.usecase.js';
 import { CookieAdapter } from '../../../core/adapters/cookie.adapter.js';
 
-
 @ApiTags('Security')
 @Controller('security')
 export class SessionsController {
-    constructor(
+  constructor(
     private readonly queryBus: QueryBus,
     private readonly commandBus: CommandBus,
     private readonly cookieAdapter: CookieAdapter,
