@@ -3,8 +3,4 @@ import { JwtRefreshPayload } from './jwt-payload.type.js';
 
 export interface RequestWithUser extends Request {
   user: JwtRefreshPayload;
-  user: {
-    userId: string;
-    sessionId: string;
-  };
 }

@@ -1,3 +1,4 @@
+//TODO если что, удалить тип
 export type JwtPayload = {
   userId: string;
   iat?: number;
