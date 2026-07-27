@@ -34,21 +34,21 @@ model Post {
   content   String?
   published Boolean? @default(false)
   author    User?    @relation(fields: [authorId], references: [id])
-  authorId  String?
+  authorId  String?  @map("author_id")
 }
 
 model Session {
   id String @id @default(uuid())
 
-  userId String
+  userId String @map("user_id")
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   deviceName String @map("device_name")
   ip         String
 
-  issuedAt  DateTime
-  expiresAt DateTime
+  issuedAt  DateTime @map("issued_at")
+  expiresAt DateTime @map("expires_at")
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 }

@@ -28,7 +28,7 @@ import { CookieAdapter } from '../../../core/adapters/cookie.adapter.js';
 import { RefreshTokenGuard } from '../guards/refresh-token.guard.js';
 import { LogoutCommand } from '../application/use-cases/auth-use-cases/logout.usecase.js';
 import { User } from '../decorators/user.decorator.js';
-import { type AuthUser } from '../../../core/types/jwt-payload.type.js';
+import type { JwtRefreshPayload } from '../../../core/types/jwt-payload.type.js';
 import { RefreshTokenCommand } from '../application/use-cases/auth-use-cases/refresh-token,usecase.js';
 import { RegistrationConfirmationDto } from '../dto/registration-confirmation.dto.js';
 import { ConfirmEmailCommand } from '../application/use-cases/auth-use-cases/confirm-email.usecase.js';
@@ -110,7 +110,7 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   async refreshToken(
     @Res({ passthrough: true }) res: Response,
-    @User() user: AuthUser,
+    @User() user: JwtRefreshPayload,
   ): Promise<AccessTokenType> {
     const { accessToken, refreshToken } = await this.commandBus.execute<
       RefreshTokenCommand,
