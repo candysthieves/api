@@ -18,13 +18,14 @@ model User {
   password String
   username String @unique
 
-  isEmailConfirmed Boolean   @default(false) @map("is_email_confirmed")
-  // confirmationCode      String?
-  // confirmationExpiresAt DateTime?
-  termsAcceptedAt  DateTime  @default(now()) @map("terms_accepted_at")
-  createdAt        DateTime  @default(now()) @map("created_at")
-  posts            Post[]
-  sessions         Session[]
+  isEmailConfirmed      Boolean  @default(false) @map("is_email_confirmed")
+  confirmationCode      String   @unique @map("confirmation_code")
+  confirmationExpiresAt DateTime @map("confirmation_expires_at")
+
+  termsAcceptedAt DateTime  @default(now()) @map("terms_accepted_at")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  posts           Post[]
+  sessions        Session[]
 }
 
 model Post {
@@ -33,22 +34,22 @@ model Post {
   content   String?
   published Boolean? @default(false)
   author    User?    @relation(fields: [authorId], references: [id])
-  authorId  String?
+  authorId  String?  @map("author_id")
 }
 
 model Session {
   id String @id @default(uuid())
 
-  userId String
+  userId String @map("user_id")
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  deviceName String
+  deviceName String @map("device_name")
   ip         String
 
-  issuedAt  DateTime
-  expiresAt DateTime
+  issuedAt  DateTime @map("issued_at")
+  expiresAt DateTime @map("expires_at")
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
   deletedAt DateTime? @map("deleted_at")
 }

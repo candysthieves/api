@@ -27,14 +27,16 @@ export class RefreshTokenGuard implements CanActivate {
     const payload: JwtRefreshPayload =
       await this.jwtAdapter.verifyRefreshToken(token);
 
-    const session = await this.sessionsRepository.findActiveById(
-      payload.sessionId,
-    );
+    req.user = payload;
+    const session = await this.sessionsRepository.findById(payload.sessionId);
     if (!session || session.userId !== payload.userId) {
       throw new UnauthorizedException();
     }
 
-    req.user = payload;
+    req.user = {
+      userId: payload.userId,
+      sessionId: payload.sessionId,
+    };
 
     return true;
   }

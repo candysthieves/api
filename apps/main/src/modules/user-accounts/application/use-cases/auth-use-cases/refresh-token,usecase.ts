@@ -22,9 +22,6 @@ export class RefreshTokenUseCase implements ICommandHandler<RefreshTokenCommand>
       payload.sessionId,
     );
 
-    return {
-      accessToken,
-      refreshToken,
-    };
+    return { accessToken, refreshToken };
   }
 }
