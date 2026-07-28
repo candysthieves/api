@@ -50,4 +50,12 @@ export class UsersRepository {
       },
     });
   }
+
+  async findByPasswordRecoveryCode(code: string): Promise<UserEntity | null> {
+    const user = await this.prismaService.user.findUnique({
+      where: { passwordRecoveryCode: code },
+    });
+    // Если найден, то превращает Prisma объект, в доменную сущность UserEntity
+    return user ? UserEntity.restore(user) : null;
+  }
 }

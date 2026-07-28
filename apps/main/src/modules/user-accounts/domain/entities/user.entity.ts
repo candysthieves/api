@@ -27,6 +27,8 @@ export class UserEntity {
       password: data.passwordHash,
       confirmationCode: crypto.randomUUID(),
       confirmationExpiresAt: data.confirmationExpiresAt,
+      passwordRecoveryCode: null,
+      passwordRecoveryExpiresAt: null,
       isEmailConfirmed: false,
       termsAcceptedAt: new Date(),
       createdAt: new Date(),
@@ -85,5 +87,28 @@ export class UserEntity {
 
     this.props.confirmationCode = crypto.randomUUID();
     this.props.confirmationExpiresAt = confirmationExpiresAt;
+  }
+
+  public createPasswordRecoveryCode(expiresAt: Date): void {
+    this.props.passwordRecoveryCode = crypto.randomUUID();
+    this.props.passwordRecoveryExpiresAt = expiresAt;
+  }
+
+  public isPasswordRecoveryCodeValid(code: string): boolean {
+    return (
+      this.props.passwordRecoveryCode === code &&
+      this.props.passwordRecoveryExpiresAt !== null &&
+      this.props.passwordRecoveryExpiresAt > new Date()
+    );
+  }
+
+  public changePassword(passwordHash: string): void {
+    this.props.password = passwordHash;
+    this.props.passwordRecoveryCode = null;
+    this.props.passwordRecoveryExpiresAt = null;
+  }
+
+  get passwordRecoveryCode(): string | null {
+    return this.props.passwordRecoveryCode;
   }
 }
