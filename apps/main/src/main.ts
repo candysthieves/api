@@ -4,11 +4,13 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module.js';
 import { AppConfig } from './app.config.js';
 import cookieParser from 'cookie-parser';
+import { DomainExceptionFilter } from './core/exceptions/domain-exception.filter.js';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const appConfig = app.get<AppConfig>(AppConfig);
   app.use(cookieParser());
+  app.useGlobalFilters(new DomainExceptionFilter());
   app.setGlobalPrefix('api');
   app.useGlobalPipes(
     new ValidationPipe({

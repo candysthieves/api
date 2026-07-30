@@ -1,7 +1,7 @@
-import { BadRequestException } from '@nestjs/common';
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { UsersRepository } from '../../../repositories/userRepositories/users.repository.js';
 import { UserEntity } from '../../../domain/entities/user.entity.js';
+import { DomainExceptions } from '../../../../../core/exceptions/domain-exceptions.js';
 
 export class ConfirmEmailCommand {
   constructor(public readonly code: string) {}
@@ -15,7 +15,7 @@ export class ConfirmEmailUseCase implements ICommandHandler<ConfirmEmailCommand>
     const prismaUser = await this.usersRepository.findByConfirmationCode(code);
 
     if (!prismaUser) {
-      throw new BadRequestException('Invalid confirmation code');
+      DomainExceptions.badRequest('code', 'Invalid confirmation code');
     }
 
     const user = UserEntity.restore(prismaUser);

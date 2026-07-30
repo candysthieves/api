@@ -1,6 +1,6 @@
 // import type { UserModel } from '../../../../generated/prisma/models/User.js';
 import type { User } from '../../../../generated/prisma/client.js';
-import { BadRequestException } from '@nestjs/common';
+import { DomainExceptions } from '../../../../core/exceptions/domain-exceptions.js';
 
 // Забираем только типы полей класса UserModel, игнорируя его конструктор
 type PrismaUser = {
@@ -69,11 +69,11 @@ export class UserEntity {
 
   public confirmEmail(): void {
     if (this.props.isEmailConfirmed) {
-      throw new BadRequestException('Email already confirmed');
+      DomainExceptions.badRequest('email', 'Email already confirmed');
     }
 
     if (this.props.confirmationExpiresAt < new Date()) {
-      throw new BadRequestException('Confirmation code expired');
+      DomainExceptions.badRequest('code', 'Confirmation code expired');
     }
 
     this.props.isEmailConfirmed = true;
@@ -82,7 +82,7 @@ export class UserEntity {
 
   public resendEmail(confirmationExpiresAt: Date): void {
     if (this.props.isEmailConfirmed) {
-      throw new BadRequestException('Email already confirmed');
+      DomainExceptions.badRequest('email', 'Email already confirmed');
     }
 
     this.props.confirmationCode = crypto.randomUUID();

@@ -1,10 +1,10 @@
-import { BadRequestException } from '@nestjs/common';
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { HashAdapter } from '../../../../../core/adapters/hash.adapter.js';
 import { NewPasswordDto } from '../../../dto/new-password.dto.js';
 import { SessionsRepository } from '../../../repositories/sessionRepositories/sessions.repository.js';
 import { UsersRepository } from '../../../repositories/userRepositories/users.repository.js';
 import { PasswordRecoveryService } from '../../password-recovery.service.js';
+import { DomainExceptions } from '../../../../../core/exceptions/domain-exceptions.js';
 
 export class NewPasswordCommand {
   constructor(public readonly dto: NewPasswordDto) {}
@@ -21,7 +21,7 @@ export class NewPasswordUseCase implements ICommandHandler<NewPasswordCommand> {
 
   async execute({ dto }: NewPasswordCommand): Promise<void> {
     if (dto.newPassword !== dto.newPasswordConfirmation) {
-      throw new BadRequestException('Passwords must match');
+      DomainExceptions.badRequest('password', 'Passwords must match');
     }
 
     const user = await this.passwordRecoveryService.getUserByValidCode(

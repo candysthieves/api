@@ -2,13 +2,13 @@ import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { UsersRepository } from '../../../repositories/userRepositories/users.repository.js';
 import ms from 'ms';
 import { AppConfig } from '../../../../../app.config.js';
-import { BadRequestException } from '@nestjs/common';
 import { UserEntity } from '../../../domain/entities/user.entity.js';
 import {
   emailTemplates,
   EmailTemplateType,
 } from '../../../../../core/adapters/email/email.templates.js';
 import { EmailAdapter } from '../../../../../core/adapters/email/email.adapter.js';
+import { DomainExceptions } from '../../../../../core/exceptions/domain-exceptions.js';
 
 export class ResendEmailCommand {
   constructor(public email: string) {}
@@ -27,7 +27,10 @@ export class ResendEmailUseCase implements ICommandHandler<ResendEmailCommand> {
       await this.usersRepository.findByEmail(email);
 
     if (!user) {
-      throw new BadRequestException();
+      DomainExceptions.badRequest(
+        'email',
+        'User with this email does not exist',
+      );
     }
 
     const duration: number = ms(
@@ -44,10 +47,6 @@ export class ResendEmailUseCase implements ICommandHandler<ResendEmailCommand> {
       user.confirmationCode,
     );
 
-    try {
-      await this.emailAdapter.sendEmail(user.email, emailTemplate);
-    } catch (e) {
-      console.log(e);
-    }
+    await this.emailAdapter.sendEmail(user.email, emailTemplate);
   }
 }
