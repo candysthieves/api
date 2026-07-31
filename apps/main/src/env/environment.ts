@@ -1,4 +1,12 @@
-import { IsInt, Min, Max, IsNotEmpty, IsString } from 'class-validator';
+import {
+  IsInt,
+  IsNotEmpty,
+  IsNumber,
+  IsString,
+  Max,
+  Matches,
+  Min,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 
 export enum Environment {
@@ -39,4 +47,19 @@ export class EnvironmentVariables {
   @IsString()
   @IsNotEmpty()
   PASSWORD_RECOVERY_EXPIRES_IN!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  RECAPTCHA_SECRET_KEY!: string;
+
+  @Type(() => Number)
+  @IsNumber()
+  @Min(0)
+  @Max(1)
+  RECAPTCHA_MIN_SCORE: number = 0.5;
+
+  @IsString()
+  @IsNotEmpty()
+  @Matches(/^\s*[^,\s]+(?:\s*,\s*[^,\s]+)*\s*$/)
+  RECAPTCHA_ALLOWED_HOSTNAMES!: string;
 }

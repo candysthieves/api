@@ -19,6 +19,7 @@ import {
   ApiOperation,
   ApiTags,
   ApiUnauthorizedResponse,
+  ApiForbiddenResponse,
 } from '@nestjs/swagger';
 import { RegistrationCommand } from '../application/use-cases/auth-use-cases/registration.usecase.js';
 import { RegistrationDto } from '../dto/registration.dto.js';
@@ -42,6 +43,7 @@ import { ValidatePasswordRecoveryCodeDto } from '../dto/validate-password-recove
 import { ValidatePasswordRecoveryCodeCommand } from '../application/use-cases/auth-use-cases/validate-password-recovery-code.usecase.js';
 import { NewPasswordDto } from '../dto/new-password.dto.js';
 import { NewPasswordCommand } from '../application/use-cases/auth-use-cases/new-password.usecase.js';
+import { RecaptchaService } from '../../../core/services/recaptcha.service.js';
 
 @ApiTags('Authentication')
 @Controller('auth')
@@ -49,6 +51,7 @@ export class AuthController {
   constructor(
     private readonly commandBus: CommandBus,
     private readonly cookieAdapter: CookieAdapter,
+    private readonly recaptchaService: RecaptchaService,
   ) {}
 
   @Post('registration')
@@ -152,7 +155,9 @@ export class AuthController {
   @ApiBadRequestResponse({
     description: 'User with this email does not exist.',
   })
+  @ApiForbiddenResponse({ description: 'reCAPTCHA verification failed.' })
   async passwordRecovery(@Body() dto: PasswordRecoveryDto): Promise<void> {
+    await this.recaptchaService.verifyPasswordRecovery(dto.recaptchaToken);
     await this.commandBus.execute<PasswordRecoveryCommand, void>(
       new PasswordRecoveryCommand(dto.email),
     );

@@ -8,4 +8,12 @@ export class PasswordRecoveryDto {
   @IsNotEmpty()
   @IsEmail()
   email: string;
+
+  @ApiProperty({
+    description:
+      'reCAPTCHA v3 token created with the password_recovery action immediately before this request.',
+  })
+  @Trim()
+  @IsNotEmpty()
+  recaptchaToken: string;
 }
