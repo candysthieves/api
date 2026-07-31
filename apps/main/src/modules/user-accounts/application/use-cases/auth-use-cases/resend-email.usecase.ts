@@ -27,10 +27,7 @@ export class ResendEmailUseCase implements ICommandHandler<ResendEmailCommand> {
       await this.usersRepository.findByEmail(email);
 
     if (!user) {
-      DomainExceptions.badRequest(
-        'email',
-        'User with this email does not exist',
-      );
+      DomainExceptions.badRequest('email', 'Incorrect email');
     }
 
     const duration: number = ms(

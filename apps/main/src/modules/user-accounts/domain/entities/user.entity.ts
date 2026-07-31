@@ -2,7 +2,6 @@
 import type { User } from '../../../../generated/prisma/client.js';
 import { DomainExceptions } from '../../../../core/exceptions/domain-exceptions.js';
 
-// Забираем только типы полей класса UserModel, игнорируя его конструктор
 type PrismaUser = {
   [K in keyof User]: User[K];
 };
