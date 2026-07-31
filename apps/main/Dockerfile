@@ -4,7 +4,8 @@ ARG port
 ARG service
 ENV SERVICE=$service
 ENV PORT=$port
-# Set to a non-root built-in user `node`
+
+RUN corepack enable
 
 USER node
 
@@ -13,15 +14,12 @@ RUN mkdir -p /home/node/dist/${SERVICE}
 
 WORKDIR /home/node/dist/${SERVICE}
 
-# Install app dependencies
-# A wildcard is used to ensure both package.json AND package-lock.json are copied
-# where available (npm@5+)
+COPY --chown=node package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY --chown=node apps/main/prisma ./apps/main/prisma
+COPY --chown=node apps/main/prisma.config.ts ./apps/main/prisma.config.ts
+COPY --chown=node apps/main/src/env/load-env.ts ./apps/main/src/env/load-env.ts
 
-
-
-COPY --chown=node package*.json ./
-
-RUN pnpm install
+RUN pnpm install --frozen-lockfile
 
 # Bundle app source code
 COPY --chown=node . .
@@ -32,4 +30,4 @@ RUN pnpm run build:${SERVICE}
 
 EXPOSE ${PORT}
 
-CMD pnpm run 'start:main'
+CMD ["pnpm", "run", "start:prod"]
