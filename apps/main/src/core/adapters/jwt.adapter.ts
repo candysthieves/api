@@ -1,11 +1,8 @@
-import {
-  Injectable,
-  InternalServerErrorException,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { JwtService, JwtSignOptions } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { JwtRefreshPayload } from '../types/jwt-payload.type.js';
+import { DomainExceptions } from '../exceptions/domain-exceptions.js';
 
 @Injectable()
 export class JwtAdapter {
@@ -33,27 +30,19 @@ export class JwtAdapter {
       userId: userId.toString(),
     };
 
-    try {
-      return this.jwtService.signAsync(payload, {
-        secret: this.jwt_secret_key,
-        expiresIn: this.jwt_expires_in,
-      });
-    } catch {
-      throw new InternalServerErrorException('Token generation failed');
-    }
+    return this.jwtService.signAsync(payload, {
+      secret: this.jwt_secret_key,
+      expiresIn: this.jwt_expires_in,
+    });
   }
 
   async createRefreshToken(userId: string, sessionId: string) {
-    try {
-      const payload = { userId: userId.toString(), sessionId };
+    const payload = { userId: userId.toString(), sessionId };
 
-      return this.jwtService.signAsync(payload, {
-        secret: this.jwt_secret_refresh_key,
-        expiresIn: this.jwt_refresh_expires_in,
-      });
-    } catch {
-      throw new InternalServerErrorException('RefreshToken generation failed');
-    }
+    return this.jwtService.signAsync(payload, {
+      secret: this.jwt_secret_refresh_key,
+      expiresIn: this.jwt_refresh_expires_in,
+    });
   }
 
   async verifyRefreshToken(refreshToken: string): Promise<JwtRefreshPayload> {
@@ -62,7 +51,10 @@ export class JwtAdapter {
         secret: this.jwt_secret_refresh_key,
       });
     } catch {
-      throw new UnauthorizedException('Invalid or expired refresh token');
+      DomainExceptions.unauthorized(
+        'token',
+        'Invalid or expired refresh token',
+      );
     }
   }
 }

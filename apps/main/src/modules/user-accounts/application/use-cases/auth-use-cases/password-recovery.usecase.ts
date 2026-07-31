@@ -1,10 +1,10 @@
-import { BadRequestException } from '@nestjs/common';
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import ms from 'ms';
 import { AppConfig } from '../../../../../app.config.js';
 import { EmailAdapter } from '../../../../../core/adapters/email/email.adapter.js';
 import { emailTemplates } from '../../../../../core/adapters/email/email.templates.js';
 import { UsersRepository } from '../../../repositories/userRepositories/users.repository.js';
+import { DomainExceptions } from '../../../../../core/exceptions/domain-exceptions.js';
 
 export class PasswordRecoveryCommand {
   constructor(public readonly email: string) {}
@@ -22,7 +22,10 @@ export class PasswordRecoveryUseCase implements ICommandHandler<PasswordRecovery
     const user = await this.usersRepository.findByEmail(email);
 
     if (!user) {
-      throw new BadRequestException("User with this email doesn't exist");
+      DomainExceptions.badRequest(
+        'email',
+        "User with this email doesn't exist",
+      );
     }
 
     const duration = ms(

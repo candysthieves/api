@@ -5,10 +5,10 @@ import { JwtAdapter } from '../../../../../core/adapters/jwt.adapter.js';
 import { HashAdapter } from '../../../../../core/adapters/hash.adapter.js';
 import { UsersRepository } from '../../../repositories/userRepositories/users.repository.js';
 import { UserEntity } from '../../../domain/entities/user.entity.js';
-import { UnauthorizedException } from '@nestjs/common';
 import { SessionEntity } from '../../../domain/entities/session.entity.js';
 import { SessionsRepository } from '../../../repositories/sessionRepositories/sessions.repository.js';
 import { AppConfig } from '../../../../../app.config.js';
+import { DomainExceptions } from '../../../../../core/exceptions/domain-exceptions.js';
 
 export class LoginCommand {
   constructor(
@@ -37,7 +37,7 @@ export class LoginUseCase implements ICommandHandler<LoginCommand> {
     );
 
     if (!user) {
-      throw new UnauthorizedException();
+      DomainExceptions.unauthorized('credentials', 'Invalid email or password');
     }
 
     const isPasswordCorrect: boolean = await this.hashAdapter.compare(
@@ -46,7 +46,7 @@ export class LoginUseCase implements ICommandHandler<LoginCommand> {
     );
 
     if (!isPasswordCorrect) {
-      throw new UnauthorizedException();
+      DomainExceptions.unauthorized('credentials', 'Invalid email or password');
     }
 
     const session = SessionEntity.create({

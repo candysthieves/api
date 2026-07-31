@@ -1,6 +1,6 @@
-import { ForbiddenException, NotFoundException } from '@nestjs/common';
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { SessionsRepository } from '../../../repositories/sessionRepositories/sessions.repository.js';
+import { DomainExceptions } from '../../../../../core/exceptions/domain-exceptions.js';
 
 export class DeactivateSessionCommand {
   constructor(
@@ -20,10 +20,11 @@ export class DeactivateSessionUseCase implements ICommandHandler<DeactivateSessi
     );
 
     if (!session) {
-      throw new NotFoundException('Session not found');
+      DomainExceptions.notFound('session', 'Session not found');
     }
     if (session.userId !== command.sessionIdFromToken) {
-      throw new ForbiddenException(
+      DomainExceptions.forbidden(
+        'session',
         'You cannot deactivate another user’s session',
       );
     }

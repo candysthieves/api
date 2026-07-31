@@ -1,6 +1,7 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { UsersRepository } from '../repositories/userRepositories/users.repository.js';
 import { UserEntity } from '../domain/entities/user.entity.js';
+import { DomainExceptions } from '../../../core/exceptions/domain-exceptions.js';
 
 @Injectable()
 export class PasswordRecoveryService {
@@ -11,7 +12,7 @@ export class PasswordRecoveryService {
       await this.usersRepository.findByPasswordRecoveryCode(recoveryCode);
 
     if (!user || !user.isPasswordRecoveryCodeValid(recoveryCode)) {
-      throw new BadRequestException('Invalid or expired recovery code');
+      DomainExceptions.badRequest('code', 'Invalid or expired recovery code');
     }
 
     return user;

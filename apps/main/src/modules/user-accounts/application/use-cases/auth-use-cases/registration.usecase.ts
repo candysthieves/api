@@ -1,4 +1,3 @@
-import { BadRequestException } from '@nestjs/common';
 import { RegistrationDto } from '../../../dto/registration.dto.js';
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { HashAdapter } from '../../../../../core/adapters/hash.adapter.js';
@@ -11,6 +10,7 @@ import {
   emailTemplates,
   EmailTemplateType,
 } from '../../../../../core/adapters/email/email.templates.js';
+import { DomainExceptions } from '../../../../../core/exceptions/domain-exceptions.js';
 
 export class RegistrationCommand {
   constructor(public readonly dto: RegistrationDto) {}
@@ -29,7 +29,7 @@ export class RegistrationUseCase implements ICommandHandler<RegistrationCommand>
     const { dto } = command;
 
     if (dto.password !== dto.passwordConfirmation) {
-      throw new BadRequestException('Passwords must match');
+      DomainExceptions.badRequest('password', 'Passwords must match');
     }
 
     const existUser: UserEntity | null =
@@ -37,11 +37,10 @@ export class RegistrationUseCase implements ICommandHandler<RegistrationCommand>
 
     if (existUser) {
       if (existUser.username === dto.username) {
-        throw new BadRequestException(
-          'User with this username is already registered',
-        );
+        DomainExceptions.badRequest('username', 'Username already exists');
       } else if (existUser.email === dto.email) {
-        throw new BadRequestException(
+        DomainExceptions.badRequest(
+          'email',
           'User with this email is already registered',
         );
       }
@@ -68,10 +67,6 @@ export class RegistrationUseCase implements ICommandHandler<RegistrationCommand>
       newUser.confirmationCode,
     );
 
-    try {
-      await this.emailAdapter.sendEmail(newUser.email, emailTemplate);
-    } catch (e) {
-      console.log(e);
-    }
+    await this.emailAdapter.sendEmail(newUser.email, emailTemplate);
   }
 }
