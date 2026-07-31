@@ -11,6 +11,8 @@ import { DomainError } from './core/exceptions/domain-error.js';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const appConfig = app.get<AppConfig>(AppConfig);
+
+  console.log('deploy');
   app.use(cookieParser());
   app.useGlobalFilters(new DomainExceptionFilter());
   app.setGlobalPrefix('api');
