@@ -13,7 +13,7 @@ async function bootstrap() {
   const appConfig = app.get<AppConfig>(AppConfig);
   app.use(cookieParser());
   app.useGlobalFilters(new DomainExceptionFilter());
-  app.setGlobalPrefix('api');
+  app.setGlobalPrefix('api/v1');
   app.useGlobalPipes(
     new ValidationPipe({
       transform: true,
