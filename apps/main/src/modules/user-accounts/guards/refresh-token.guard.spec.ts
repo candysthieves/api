@@ -2,10 +2,11 @@ jest.mock('../repositories/sessionRepositories/sessions.repository.js', () => ({
   SessionsRepository: class SessionsRepository {},
 }));
 
-import { ExecutionContext, UnauthorizedException } from '@nestjs/common';
+import { ExecutionContext } from '@nestjs/common';
 import { JwtAdapter } from '../../../core/adapters/jwt.adapter.js';
+import { DomainException } from '../../../core/exceptions/domain-exception.js';
+import { DomainExceptionCode } from '../../../core/exceptions/domain-exception-code.js';
 import { RequestWithUser } from '../../../core/types/request-with-user.type.js';
-import { SessionEntity } from '../domain/entities/session.entity.js';
 import { SessionsRepository } from '../repositories/sessionRepositories/sessions.repository.js';
 import { RefreshTokenGuard } from './refresh-token.guard.js';
 
@@ -22,7 +23,7 @@ describe('RefreshTokenGuard', () => {
       verifyRefreshToken: jest.fn().mockResolvedValue(payload),
     } as unknown as JwtAdapter;
     const sessionsRepository = {
-      findActiveById: jest.fn().mockResolvedValue({ userId: payload.userId }),
+      findById: jest.fn().mockResolvedValue({ userId: payload.userId }),
     } as unknown as SessionsRepository;
     const request = { cookies: { refreshToken: 'valid-token' } } as Partial<RequestWithUser>;
 
@@ -32,30 +33,20 @@ describe('RefreshTokenGuard', () => {
       ),
     ).resolves.toBe(true);
 
-    expect(sessionsRepository.findActiveById).toHaveBeenCalledWith('session-1');
+    expect(sessionsRepository.findById).toHaveBeenCalledWith('session-1');
     expect(request.user).toEqual(payload);
   });
 
   it.each([
     ['missing token', undefined, undefined],
-    ['expired token', 'expired-token', new UnauthorizedException()],
-    ['revoked session', 'valid-token', undefined],
-    ['session owned by another user', 'valid-token', undefined],
-  ])('rejects a %s', async (scenario, token, jwtError) => {
+    ['revoked session', 'valid-token', null],
+    ['session owned by another user', 'valid-token', { userId: 'user-2' }],
+  ])('rejects a %s with an unauthorized domain exception', async (scenario, token, session) => {
     const jwtAdapter = {
-      verifyRefreshToken: jest.fn().mockImplementation(() => {
-        if (jwtError) {
-          throw jwtError;
-        }
-        return Promise.resolve(payload);
-      }),
+      verifyRefreshToken: jest.fn().mockResolvedValue(payload),
     } as unknown as JwtAdapter;
-    const session =
-      scenario === 'session owned by another user'
-        ? ({ userId: 'user-2' } as SessionEntity)
-        : null;
     const sessionsRepository = {
-      findActiveById: jest.fn().mockResolvedValue(session),
+      findById: jest.fn().mockResolvedValue(session),
     } as unknown as SessionsRepository;
     const request = { cookies: token ? { refreshToken: token } : {} } as Partial<RequestWithUser>;
 
@@ -63,6 +54,24 @@ describe('RefreshTokenGuard', () => {
       new RefreshTokenGuard(jwtAdapter, sessionsRepository).canActivate(
         createContext(request),
       ),
-    ).rejects.toBeInstanceOf(UnauthorizedException);
+    ).rejects.toMatchObject({
+      code: DomainExceptionCode.Unauthorized,
+    } as DomainException);
+  });
+
+  it('propagates an error thrown by JwtAdapter', async () => {
+    const jwtError = new Error('expired token');
+    const jwtAdapter = {
+      verifyRefreshToken: jest.fn().mockRejectedValue(jwtError),
+    } as unknown as JwtAdapter;
+    const sessionsRepository = {
+      findById: jest.fn(),
+    } as unknown as SessionsRepository;
+
+    await expect(
+      new RefreshTokenGuard(jwtAdapter, sessionsRepository).canActivate(
+        createContext({ cookies: { refreshToken: 'expired-token' } }),
+      ),
+    ).rejects.toBe(jwtError);
   });
 });
