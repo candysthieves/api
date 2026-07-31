@@ -1,5 +1,5 @@
 # Check out https://hub.docker.com/_/node to select a new base image
-FROM node:24-alpine3.24 as dependencies
+FROM node:24-alpine3.24
 WORKDIR /app
 RUN npm install -g pnpm
 RUN pnpm install --ignore-scripts && pnpm approve-builds --yes
