@@ -2,6 +2,7 @@
 FROM node:24-alpine3.24 as dependencies
 WORKDIR /app
 RUN npm install -g pnpm
+RUN pnpm install --ignore-scripts && pnpm approve-builds --yes
 
 ARG port
 ARG service
