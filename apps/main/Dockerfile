@@ -1,5 +1,8 @@
 # Check out https://hub.docker.com/_/node to select a new base image
-FROM node:20.19-alpine
+FROM node:24-alpine3.24 as dependencies
+WORKDIR /app
+RUN npm install -g pnpm
+
 ARG port
 ARG service
 ENV SERVICE=$service
