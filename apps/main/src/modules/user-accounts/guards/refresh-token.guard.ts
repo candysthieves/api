@@ -1,13 +1,9 @@
-import {
-  Injectable,
-  CanActivate,
-  ExecutionContext,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
 import { JwtAdapter } from '../../../core/adapters/jwt.adapter.js';
 import { JwtRefreshPayload } from '../../../core/types/jwt-payload.type.js';
 import { RequestWithUser } from '../../../core/types/request-with-user.type.js';
 import { SessionsRepository } from '../repositories/sessionRepositories/sessions.repository.js';
+import { DomainExceptions } from '../../../core/exceptions/domain-exceptions.js';
 
 @Injectable()
 export class RefreshTokenGuard implements CanActivate {
@@ -21,7 +17,7 @@ export class RefreshTokenGuard implements CanActivate {
     const cookies = req.cookies as { refreshToken?: string };
     const token = cookies.refreshToken;
     if (!token) {
-      throw new UnauthorizedException();
+      DomainExceptions.unauthorized();
     }
 
     const payload: JwtRefreshPayload =
@@ -30,7 +26,7 @@ export class RefreshTokenGuard implements CanActivate {
     req.user = payload;
     const session = await this.sessionsRepository.findById(payload.sessionId);
     if (!session || session.userId !== payload.userId) {
-      throw new UnauthorizedException();
+      DomainExceptions.unauthorized();
     }
 
     req.user = {

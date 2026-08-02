@@ -19,15 +19,11 @@ export class EmailAdapter {
       auth: { user: this.smtpUser, pass: this.smtpPassword },
     });
 
-    try {
-      await transporter.sendMail({
-        from: `Lumos <${this.smtpUser}>`,
-        to: email,
-        subject: message.subject,
-        html: message.html,
-      });
-    } catch (e) {
-      console.log('Send email error' + e);
-    }
+    await transporter.sendMail({
+      from: `Lumos <${this.smtpUser}>`,
+      to: email,
+      subject: message.subject,
+      html: message.html,
+    });
   }
 }
