@@ -19,7 +19,7 @@
     "prisma:generate": "cross-env NODE_ENV=development prisma generate --config apps/main/prisma.config.ts",
     "prisma:migrate": "cross-env NODE_ENV=development prisma migrate dev --name add sessions schema --config apps/main/prisma.config.ts",
     "prisma:generate:local": "cross-env NODE_ENV=development.local prisma generate --config apps/main/prisma.config.ts",
-    "prisma:migrate:local": "cross-env NODE_ENV=development.local prisma migrate dev --name init --config apps/main/prisma.config.ts",
+    "prisma:migrate:local": "cross-env NODE_ENV=development.local prisma migrate dev --name add-oauth-schema --config apps/main/prisma.config.ts",
     "postinstall": "pnpm run prisma:generate",
     "start:debug": "cross-env NODE_ENV=development nest start --debug --watch",
     "start:prod": "cross-env NODE_ENV=production node dist/apps/main/main.js",

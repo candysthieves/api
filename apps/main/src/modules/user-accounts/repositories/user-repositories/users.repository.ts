@@ -4,13 +4,16 @@ import { UserEntity } from '../../domain/entities/user.entity.js';
 
 @Injectable()
 export class UsersRepository {
-  constructor(private readonly prismaService: PrismaService) {}
+  private readonly prismaUser: PrismaService['user'];
+  constructor(private readonly prisma: PrismaService) {
+    this.prismaUser = prisma.user;
+  }
 
   async findByEmailOrUsername(
     email: string,
     username: string,
   ): Promise<UserEntity | null> {
-    const raw = await this.prismaService.user.findFirst({
+    const raw = await this.prismaUser.findFirst({
       where: {
         OR: [{ email }, { username }],
       },
@@ -23,28 +26,28 @@ export class UsersRepository {
     return UserEntity.restore(raw);
   }
 
-  async create(user: UserEntity) {
-    const data = user.toPersistence();
+  async create(userEntity: UserEntity) {
+    const data = userEntity.toPersistence();
 
-    return this.prismaService.user.create({ data });
+    return this.prismaUser.create({ data });
   }
 
-  async save(user: UserEntity) {
-    await this.prismaService.user.update({
+  async save(userEntity: UserEntity) {
+    await this.prismaUser.update({
       where: {
-        id: user.id,
+        id: userEntity.id,
       },
-      data: user.toPersistence(),
+      data: userEntity.toPersistence(),
     });
   }
 
   async findByEmail(email: string): Promise<UserEntity | null> {
-    const user = await this.prismaService.user.findUnique({ where: { email } });
+    const user = await this.prismaUser.findUnique({ where: { email } });
 
     return user ? UserEntity.restore(user) : null;
   }
   async findByConfirmationCode(code: string) {
-    return this.prismaService.user.findFirst({
+    return this.prismaUser.findFirst({
       where: {
         confirmationCode: code,
       },
@@ -52,10 +55,9 @@ export class UsersRepository {
   }
 
   async findByPasswordRecoveryCode(code: string): Promise<UserEntity | null> {
-    const user = await this.prismaService.user.findUnique({
+    const user = await this.prismaUser.findUnique({
       where: { passwordRecoveryCode: code },
     });
-    // Если найден, то превращает Prisma объект, в доменную сущность UserEntity
     return user ? UserEntity.restore(user) : null;
   }
 }

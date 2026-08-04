@@ -46,6 +46,7 @@ import { type RequestWithUser } from '../../../core/types/request-with-user.type
 import { Profile } from 'passport-google-oauth20';
 import { OAuthLoginCommand } from '../application/use-cases/auth-use-cases/oauth-login.usecase.js';
 import { OAuthProfileDto } from '../dto/oauth-profile.dto.js';
+import { GoogleStrategy } from '../strategies/google.strategy.js';
 
 @ApiTags('Authentication')
 @Controller('auth')
@@ -199,9 +200,11 @@ export class AuthController {
   }
 
   @Get('google')
+  @UseGuards(GoogleStrategy)
   googleLogin(): void {}
 
   @Get('google/callback')
+  @UseGuards(GoogleStrategy)
   async googleCallback(@Req() req: RequestWithUser<OAuthProfileDto>) {
     return this.commandBus.execute<OAuthLoginCommand, void>(
       new OAuthLoginCommand(req.user),
