@@ -45,26 +45,25 @@ jest.mock(
   () => ({ RefreshTokenGuard: class RefreshTokenGuard {} }),
 );
 
-import { ForbiddenException, Logger } from '@nestjs/common';
+import { Logger } from '@nestjs/common';
 import { CommandBus } from '@nestjs/cqrs';
 import { plainToInstance } from 'class-transformer';
 import { validate } from 'class-validator';
 import { AppConfig } from '../../src/app.config.js';
 import { RecaptchaService } from '../../src/core/services/recaptcha.service.js';
+import { DomainException } from '../../src/core/exceptions/domain-exception.js';
+import { DomainExceptionCode } from '../../src/core/exceptions/domain-exception-code.js';
 import { AuthController } from '../../src/modules/user-accounts/api/auth.controller.js';
 import { PasswordRecoveryDto } from '../../src/modules/user-accounts/dto/password-recovery.dto.js';
 
 const validGoogleResponse = {
   success: true,
-  score: 0.9,
-  action: 'password_recovery',
   hostname: 'example.com',
 };
 
 describe('RecaptchaService', () => {
   const config = {
     recaptchaSecretKey: 'secret',
-    recaptchaMinScore: 0.5,
     recaptchaAllowedHostnames: new Set(['example.com']),
   } as AppConfig;
   let fetchMock: jest.SpiedFunction<typeof fetch>;
@@ -76,7 +75,7 @@ describe('RecaptchaService', () => {
 
   afterEach(() => jest.restoreAllMocks());
 
-  it('accepts a successful response with the expected action and hostname', async () => {
+  it('accepts a successful v2 Checkbox response from an allowed hostname', async () => {
     fetchMock.mockResolvedValue(
       new Response(JSON.stringify(validGoogleResponse), { status: 200 }),
     );
@@ -92,8 +91,6 @@ describe('RecaptchaService', () => {
   });
 
   it.each([
-    ['low score', { ...validGoogleResponse, score: 0.4 }],
-    ['wrong action', { ...validGoogleResponse, action: 'login' }],
     ['wrong hostname', { ...validGoogleResponse, hostname: 'attacker.test' }],
     ['unsuccessful verification', { ...validGoogleResponse, success: false }],
   ])('rejects %s', async (_description, response) => {
@@ -103,7 +100,7 @@ describe('RecaptchaService', () => {
 
     await expect(
       new RecaptchaService(config).verifyPasswordRecovery('token'),
-    ).rejects.toBeInstanceOf(ForbiddenException);
+    ).rejects.toBeInstanceOf(DomainException);
   });
 
   it('rejects Google network errors and timeouts', async () => {
@@ -111,7 +108,18 @@ describe('RecaptchaService', () => {
 
     await expect(
       new RecaptchaService(config).verifyPasswordRecovery('token'),
-    ).rejects.toBeInstanceOf(ForbiddenException);
+    ).rejects.toBeInstanceOf(DomainException);
+  });
+
+  it.each([
+    ['a non-successful HTTP response', new Response(null, { status: 500 })],
+    ['an invalid JSON response', new Response('not json', { status: 200 })],
+  ])('rejects %s from Google', async (_description, response) => {
+    fetchMock.mockResolvedValue(response);
+
+    await expect(
+      new RecaptchaService(config).verifyPasswordRecovery('token'),
+    ).rejects.toBeInstanceOf(DomainException);
   });
 });
 
@@ -134,7 +142,9 @@ describe('password recovery CAPTCHA gate', () => {
     const verifyPasswordRecovery = jest
       .fn()
       .mockRejectedValue(
-        new ForbiddenException('reCAPTCHA verification failed.'),
+        new DomainException(DomainExceptionCode.Forbidden, [
+          { field: '', message: 'reCAPTCHA verification failed.' },
+        ]),
       );
     const recaptchaService = {
       verifyPasswordRecovery,
@@ -150,7 +160,7 @@ describe('password recovery CAPTCHA gate', () => {
         email: 'user@example.com',
         recaptchaToken: 'token',
       }),
-    ).rejects.toBeInstanceOf(ForbiddenException);
+    ).rejects.toBeInstanceOf(DomainException);
     expect(execute).not.toHaveBeenCalled();
   });
 

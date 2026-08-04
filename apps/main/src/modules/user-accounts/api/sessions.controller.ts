@@ -27,6 +27,7 @@ import { User } from '../decorators/user.decorator.js';
 import type { JwtRefreshPayload } from '../../../core/types/jwt-payload.type.js';
 import { DeactivateSessionCommand } from '../application/use-cases/sessions-use-cases/deactivate-session.usecase.js';
 import { CookieAdapter } from '../../../core/adapters/cookie.adapter.js';
+import { apiErrorResponseSchema } from '../../../core/exceptions/api-error-response.swagger.js';
 
 @ApiTags('Security')
 @Controller('security')
@@ -41,6 +42,7 @@ export class SessionsController {
   @ApiOperation({ summary: 'Get active sessions for the current user' })
   @ApiUnauthorizedResponse({
     description: 'A valid active refresh session is required.',
+    schema: apiErrorResponseSchema,
   })
   @UseGuards(RefreshTokenGuard)
   @HttpCode(HttpStatus.OK)
@@ -73,9 +75,13 @@ export class SessionsController {
   @ApiNoContentResponse({
     description: 'Device session deactivated successfully.',
   })
-  @ApiNotFoundResponse({ description: 'Device session was not found.' })
+  @ApiNotFoundResponse({
+    description: 'Device session was not found.',
+    schema: apiErrorResponseSchema,
+  })
   @ApiUnauthorizedResponse({
     description: 'A valid active refresh session is required.',
+    schema: apiErrorResponseSchema,
   })
   @UseGuards(RefreshTokenGuard)
   @HttpCode(HttpStatus.NO_CONTENT)

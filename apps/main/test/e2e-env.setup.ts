@@ -1,0 +1,13 @@
+process.env.PORT ??= '3000';
+process.env.DATABASE_URL ??=
+  'postgresql://test:test@localhost:5432/test?schema=public';
+process.env.JWT_SECRET_KEY ??= 'test-access-secret';
+process.env.JWT_SECRET_REFRESH_KEY ??= 'test-refresh-secret';
+process.env.JWT_EXPIRES_IN ??= '1h';
+process.env.JWT_REFRESH_EXPIRES_IN ??= '1h';
+process.env.EMAIL_CONFIRMATION_EXPIRES_IN ??= '1h';
+process.env.PASSWORD_RECOVERY_EXPIRES_IN ??= '1h';
+process.env.SMTP_USER ??= 'test@example.com';
+process.env.SMTP_PASSWORD ??= 'test-password';
+process.env.RECAPTCHA_SECRET_KEY ??= 'test-secret';
+process.env.RECAPTCHA_ALLOWED_HOSTNAMES ??= 'example.com';

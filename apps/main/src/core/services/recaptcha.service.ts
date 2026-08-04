@@ -1,72 +1,46 @@
-import { ForbiddenException, Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { AppConfig } from '../../app.config.js';
+import { DomainExceptions } from '../exceptions/domain-exceptions.js';
 
 interface RecaptchaVerificationResponse {
+  // Google подтверждает успешность проверки токена.
   success?: boolean;
-  score?: number;
-  action?: string;
+  // Домен, для которого Google выпустил токен.
   hostname?: string;
 }
 
 @Injectable()
 export class RecaptchaService {
+  // Официальный серверный endpoint Google для проверки reCAPTCHA-токена.
   private static readonly verificationUrl =
     'https://www.google.com/recaptcha/api/siteverify';
+  // Логируем техническую категорию отказа, не раскрывая её клиенту.
   private readonly logger = new Logger(RecaptchaService.name);
 
   constructor(private readonly config: AppConfig) {}
 
   async verifyPasswordRecovery(token: string): Promise<void> {
-    let result: RecaptchaVerificationResponse;
-    let response: Response;
+    // Отправляем Google серверный secret и токен, полученный от виджета v2.
+    const response = await fetch(RecaptchaService.verificationUrl, {
+      method: 'POST',
+      headers: { 'content-type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        secret: this.config.recaptchaSecretKey,
+        response: token,
+      }),
+      signal: AbortSignal.timeout(5_000),
+    });
 
-    try {
-      response = await fetch(RecaptchaService.verificationUrl, {
-        method: 'POST',
-        headers: { 'content-type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams({
-          secret: this.config.recaptchaSecretKey,
-          response: token,
-        }),
-        signal: AbortSignal.timeout(5_000),
-      });
-    } catch {
-      this.reject('google_request_error');
-    }
+    // Читаем JSON-ответ Google; повреждённый ответ также считается отказом.
+    // TODO когда будет готов фронт, указать явный тип ( не присваивать, а указать)
+    const result = (await response.json()) as RecaptchaVerificationResponse;
 
-    if (!response.ok) {
-      this.reject('google_response_error');
+    // Google должен явно подтвердить, что токен действителен.
+    if (!result.success) {
+      return DomainExceptions.forbidden(
+        '',
+        'Verification reCaptcha toke is broken',
+      );
     }
-
-    try {
-      result = (await response.json()) as RecaptchaVerificationResponse;
-    } catch {
-      this.reject('google_response_error');
-    }
-
-    if (result.success !== true) {
-      this.reject('verification_failed', result.score);
-    }
-    if (result.action !== 'password_recovery') {
-      this.reject('action_mismatch', result.score);
-    }
-    if (
-      typeof result.score !== 'number' ||
-      result.score < this.config.recaptchaMinScore
-    ) {
-      this.reject('score_too_low', result.score);
-    }
-    if (
-      typeof result.hostname !== 'string' ||
-      !this.config.recaptchaAllowedHostnames.has(result.hostname.toLowerCase())
-    ) {
-      this.reject('hostname_mismatch', result.score);
-    }
-  }
-
-  private reject(category: string, score?: number): never {
-    const scoreSuffix = typeof score === 'number' ? ` score=${score}` : '';
-    this.logger.warn(`reCAPTCHA rejected: ${category}${scoreSuffix}`);
-    throw new ForbiddenException('reCAPTCHA verification failed.');
   }
 }

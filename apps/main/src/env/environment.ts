@@ -1,7 +1,6 @@
 import {
   IsInt,
   IsNotEmpty,
-  IsNumber,
   IsString,
   Max,
   Matches,
@@ -17,8 +16,14 @@ export enum Environment {
 }
 
 export class EnvironmentVariables {
-  // @IsEnum(Environment)
-  // NODE_ENV!: Environment;
+  get RECAPTCHA_ALLOWED_HOSTNAMES(): string {
+    return this._RECAPTCHA_ALLOWED_HOSTNAMES;
+  }
+
+  set RECAPTCHA_ALLOWED_HOSTNAMES(value: string) {
+    this._RECAPTCHA_ALLOWED_HOSTNAMES = value;
+  }
+
   @Type(() => Number)
   @IsInt()
   @Min(1)
@@ -52,14 +57,8 @@ export class EnvironmentVariables {
   @IsNotEmpty()
   RECAPTCHA_SECRET_KEY!: string;
 
-  @Type(() => Number)
-  @IsNumber()
-  @Min(0)
-  @Max(1)
-  RECAPTCHA_MIN_SCORE: number = 0.5;
-
   @IsString()
   @IsNotEmpty()
   @Matches(/^\s*[^,\s]+(?:\s*,\s*[^,\s]+)*\s*$/)
-  RECAPTCHA_ALLOWED_HOSTNAMES!: string;
+  private _RECAPTCHA_ALLOWED_HOSTNAMES!: string;
 }

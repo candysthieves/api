@@ -11,7 +11,7 @@ export class PasswordRecoveryDto {
 
   @ApiProperty({
     description:
-      'reCAPTCHA v3 token created with the password_recovery action immediately before this request.',
+      'Response token returned after completing the reCAPTCHA v2 Checkbox challenge immediately before this request.',
   })
   @Trim()
   @IsNotEmpty()

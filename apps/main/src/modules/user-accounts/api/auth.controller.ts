@@ -44,6 +44,7 @@ import { ValidatePasswordRecoveryCodeCommand } from '../application/use-cases/au
 import { NewPasswordDto } from '../dto/new-password.dto.js';
 import { NewPasswordCommand } from '../application/use-cases/auth-use-cases/new-password.usecase.js';
 import { RecaptchaService } from '../../../core/services/recaptcha.service.js';
+import { apiErrorResponseSchema } from '../../../core/exceptions/api-error-response.swagger.js';
 
 @ApiTags('Authentication')
 @Controller('auth')
@@ -61,13 +62,7 @@ export class AuthController {
   @ApiBadRequestResponse({
     description:
       'Validation failed, passwords do not match, or the email or username is already registered.',
-    schema: {
-      example: {
-        message: 'User with this email is already registered',
-        error: 'Bad Request',
-        statusCode: 400,
-      },
-    },
+    schema: apiErrorResponseSchema,
   })
   async registration(@Body() registrationDto: RegistrationDto) {
     await this.commandBus.execute<RegistrationCommand, void>(
@@ -91,8 +86,14 @@ export class AuthController {
       },
     },
   })
-  @ApiBadRequestResponse({ description: 'Request validation failed.' })
-  @ApiUnauthorizedResponse({ description: 'Invalid email or password.' })
+  @ApiBadRequestResponse({
+    description: 'Request validation failed.',
+    schema: apiErrorResponseSchema,
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Invalid email or password.',
+    schema: apiErrorResponseSchema,
+  })
   async login(
     @Res({ passthrough: true }) res: Response,
     @Req() req: Request,
@@ -154,8 +155,12 @@ export class AuthController {
   @ApiOperation({ summary: 'Send a password recovery email' })
   @ApiBadRequestResponse({
     description: 'User with this email does not exist.',
+    schema: apiErrorResponseSchema,
   })
-  @ApiForbiddenResponse({ description: 'reCAPTCHA verification failed.' })
+  @ApiForbiddenResponse({
+    description: 'reCAPTCHA verification failed.',
+    schema: apiErrorResponseSchema,
+  })
   async passwordRecovery(@Body() dto: PasswordRecoveryDto): Promise<void> {
     await this.recaptchaService.verifyPasswordRecovery(dto.recaptchaToken);
     await this.commandBus.execute<PasswordRecoveryCommand, void>(
@@ -166,7 +171,10 @@ export class AuthController {
   @Get('password-recovery/validate')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Validate a password recovery code' })
-  @ApiBadRequestResponse({ description: 'Invalid or expired recovery code.' })
+  @ApiBadRequestResponse({
+    description: 'Invalid or expired recovery code.',
+    schema: apiErrorResponseSchema,
+  })
   async validatePasswordRecoveryCode(
     @Query() dto: ValidatePasswordRecoveryCodeDto,
   ): Promise<void> {
@@ -180,6 +188,7 @@ export class AuthController {
   @ApiOperation({ summary: 'Set a new password using a recovery code' })
   @ApiBadRequestResponse({
     description: 'Validation failed or recovery code is invalid.',
+    schema: apiErrorResponseSchema,
   })
   async newPassword(@Body() dto: NewPasswordDto): Promise<void> {
     await this.commandBus.execute<NewPasswordCommand, void>(

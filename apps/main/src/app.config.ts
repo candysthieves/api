@@ -15,7 +15,6 @@ export class AppConfig {
   readonly smtpUser: string;
   readonly smtpPassword: string;
   readonly recaptchaSecretKey: string;
-  readonly recaptchaMinScore: number;
   readonly recaptchaAllowedHostnames: ReadonlySet<string>;
 
   constructor(@Inject(ConfigService) configService: ConfigService) {
@@ -39,9 +38,6 @@ export class AppConfig {
     this.smtpPassword = configService.getOrThrow<string>('SMTP_PASSWORD');
     this.recaptchaSecretKey = configService.getOrThrow<string>(
       'RECAPTCHA_SECRET_KEY',
-    );
-    this.recaptchaMinScore = configService.getOrThrow<number>(
-      'RECAPTCHA_MIN_SCORE',
     );
     this.recaptchaAllowedHostnames = new Set(
       configService
