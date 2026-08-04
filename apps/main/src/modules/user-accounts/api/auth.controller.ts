@@ -42,6 +42,10 @@ import { ValidatePasswordRecoveryCodeDto } from '../dto/validate-password-recove
 import { ValidatePasswordRecoveryCodeCommand } from '../application/use-cases/auth-use-cases/validate-password-recovery-code.usecase.js';
 import { NewPasswordDto } from '../dto/new-password.dto.js';
 import { NewPasswordCommand } from '../application/use-cases/auth-use-cases/new-password.usecase.js';
+import { type RequestWithUser } from '../../../core/types/request-with-user.type.js';
+import { Profile } from 'passport-google-oauth20';
+import { OAuthLoginCommand } from '../application/use-cases/auth-use-cases/oauth-login.usecase.js';
+import { OAuthProfileDto } from '../dto/oauth-profile.dto.js';
 
 @ApiTags('Authentication')
 @Controller('auth')
@@ -192,5 +196,15 @@ export class AuthController {
     await this.commandBus.execute<LogoutCommand, void>(new LogoutCommand(user));
 
     this.cookieAdapter.clearRefreshCookie(res);
+  }
+
+  @Get('google')
+  googleLogin(): void {}
+
+  @Get('google/callback')
+  async googleCallback(@Req() req: RequestWithUser<OAuthProfileDto>) {
+    return this.commandBus.execute<OAuthLoginCommand, void>(
+      new OAuthLoginCommand(req.user),
+    );
   }
 }

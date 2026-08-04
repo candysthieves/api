@@ -1,11 +1,11 @@
 jest.mock(
-  '../../src/modules/user-accounts/repositories/sessionRepositories/sessions.repository.js',
+  '../../src/modules/user-accounts/repositories/session-repositories/sessions.repository.js',
   () => ({
     SessionsRepository: class SessionsRepository {},
   }),
 );
 
-import { SessionsRepository } from '../../src/modules/user-accounts/repositories/sessionRepositories/sessions.repository.js';
+import { SessionsRepository } from '../../src/modules/user-accounts/repositories/session-repositories/sessions.repository.js';
 import {
   DeleteOtherSessionsCommand,
   DeleteOtherSessionsUseCase,

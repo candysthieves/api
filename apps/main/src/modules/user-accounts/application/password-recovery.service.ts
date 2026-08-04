@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { UsersRepository } from '../repositories/userRepositories/users.repository.js';
+import { UsersRepository } from '../repositories/user-repositories/users.repository.js';
 import { UserEntity } from '../domain/entities/user.entity.js';
 import { DomainExceptions } from '../../../core/exceptions/domain-exceptions.js';
 

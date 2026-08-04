@@ -1,5 +1,5 @@
 import type { Session } from '../../../generated/prisma/client.js';
-import { SessionView } from '../api/view-types/sessions/sessionView.type.js';
+import { SessionView } from '../api/view-types/sessions/session-view.type.js';
 
 export const mapSessionToView = (session: Session): SessionView => ({
   ip: session.ip,

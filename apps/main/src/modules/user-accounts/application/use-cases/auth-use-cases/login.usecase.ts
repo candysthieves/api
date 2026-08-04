@@ -3,10 +3,10 @@ import { LoginDto } from '../../../dto/login.dto.js';
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { JwtAdapter } from '../../../../../core/adapters/jwt.adapter.js';
 import { HashAdapter } from '../../../../../core/adapters/hash.adapter.js';
-import { UsersRepository } from '../../../repositories/userRepositories/users.repository.js';
+import { UsersRepository } from '../../../repositories/user-repositories/users.repository.js';
 import { UserEntity } from '../../../domain/entities/user.entity.js';
 import { SessionEntity } from '../../../domain/entities/session.entity.js';
-import { SessionsRepository } from '../../../repositories/sessionRepositories/sessions.repository.js';
+import { SessionsRepository } from '../../../repositories/session-repositories/sessions.repository.js';
 import { AppConfig } from '../../../../../app.config.js';
 import { DomainExceptions } from '../../../../../core/exceptions/domain-exceptions.js';
 

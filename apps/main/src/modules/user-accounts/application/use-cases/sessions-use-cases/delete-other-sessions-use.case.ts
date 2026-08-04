@@ -1,5 +1,5 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { SessionsRepository } from '../../../repositories/sessionRepositories/sessions.repository.js';
+import { SessionsRepository } from '../../../repositories/session-repositories/sessions.repository.js';
 
 export class DeleteOtherSessionsCommand {
   constructor(

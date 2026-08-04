@@ -14,6 +14,8 @@ export class AppConfig {
   readonly passwordRecoveryExpiresIn: string;
   readonly smtpUser: string;
   readonly smtpPassword: string;
+  readonly googleClientId: string;
+  readonly googleClientSecret: string;
 
   constructor(@Inject(ConfigService) configService: ConfigService) {
     this.port = Number(configService.getOrThrow<string>('PORT'));
@@ -34,6 +36,10 @@ export class AppConfig {
     );
     this.smtpUser = configService.getOrThrow<string>('SMTP_USER');
     this.smtpPassword = configService.getOrThrow<string>('SMTP_PASSWORD');
+    this.googleClientId = configService.getOrThrow<string>('GOOGLE_CLIENT_ID');
+    this.googleClientSecret = configService.getOrThrow<string>(
+      'GOOGLE_CLIENT_SECRET',
+    );
   }
 
   get refreshTokenMaxAge(): number {
