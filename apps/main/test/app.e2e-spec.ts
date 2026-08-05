@@ -86,13 +86,15 @@ describe('AppController (e2e)', () => {
     });
   });
 
-  it('uses the unified format for an unknown route', async () => {
+  it('uses the standard Nest format for an unknown route', async () => {
     const response = await request(app.getHttpServer())
       .get('/api/unknown-route')
       .expect(404);
 
     expect(response.body).toEqual({
-      errorsMessages: [{ field: '', message: 'Cannot GET /api/unknown-route' }],
+      statusCode: 404,
+      message: 'Cannot GET /api/unknown-route',
+      error: 'Not Found',
     });
   });
 });
