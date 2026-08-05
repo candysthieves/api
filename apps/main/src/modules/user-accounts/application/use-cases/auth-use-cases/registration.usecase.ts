@@ -54,12 +54,12 @@ export class RegistrationUseCase implements ICommandHandler<RegistrationCommand>
 
     const confirmationExpiresAt = new Date(Date.now() + duration);
 
-    const newUser: UserEntity = UserEntity.create({
-      email: dto.email,
-      username: dto.username,
-      passwordHash: hash,
+    const newUser: UserEntity = UserEntity.create(
+      dto.email,
+      dto.username,
+      hash,
       confirmationExpiresAt,
-    });
+    );
 
     await this.usersRepository.create(newUser);
 

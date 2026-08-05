@@ -1,14 +1,11 @@
 import { AccessAndRefreshTokensType } from '../../../../../core/types/access-and-refresh-tokens.type.js';
 import { LoginDto } from '../../../dto/login.dto.js';
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { JwtAdapter } from '../../../../../core/adapters/jwt.adapter.js';
 import { HashAdapter } from '../../../../../core/adapters/hash.adapter.js';
 import { UsersRepository } from '../../../repositories/user-repositories/users.repository.js';
 import { UserEntity } from '../../../domain/entities/user.entity.js';
-import { SessionEntity } from '../../../domain/entities/session.entity.js';
-import { SessionsRepository } from '../../../repositories/session-repositories/sessions.repository.js';
-import { AppConfig } from '../../../../../app.config.js';
 import { DomainExceptions } from '../../../../../core/exceptions/domain-exceptions.js';
+import { AuthSessionService } from '../../auth-session.service.js';
 
 export class LoginCommand {
   constructor(
@@ -21,11 +18,9 @@ export class LoginCommand {
 @CommandHandler(LoginCommand)
 export class LoginUseCase implements ICommandHandler<LoginCommand> {
   constructor(
-    private readonly jwtAdapter: JwtAdapter,
     private readonly hashAdapter: HashAdapter,
+    private readonly authSessionService: AuthSessionService,
     private readonly usersRepository: UsersRepository,
-    private readonly sessionsRepository: SessionsRepository,
-    private readonly config: AppConfig,
   ) {}
   async execute({
     dto,
@@ -49,25 +44,10 @@ export class LoginUseCase implements ICommandHandler<LoginCommand> {
       DomainExceptions.unauthorized('credentials', 'Invalid email or password');
     }
 
-    const session = SessionEntity.create({
-      userId: user.id,
+    return this.authSessionService.createSessionAndTokens(
+      user.id,
       ip,
-      deviceName: userAgent,
-      lifetimeMs: this.config.refreshTokenMaxAge,
-    });
-    await this.sessionsRepository.save(session);
-
-    const accessToken: string = await this.jwtAdapter.createAccessToken(
-      user.id,
+      userAgent,
     );
-    const refreshToken: string = await this.jwtAdapter.createRefreshToken(
-      user.id,
-      session.id,
-    );
-
-    return {
-      accessToken,
-      refreshToken,
-    };
   }
 }

@@ -14,16 +14,16 @@ export class OAuthAccountEntity {
     this.props = props;
   }
 
-  static create(data: {
-    userId: string;
-    provider: OAuthProvider;
-    providerId: string;
-  }): OAuthAccountEntity {
+  static create(
+    userId: string,
+    provider: OAuthProvider,
+    providerId: string,
+  ): OAuthAccountEntity {
     return new OAuthAccountEntity({
       id: crypto.randomUUID(),
-      userId: data.userId,
-      provider: data.provider,
-      providerId: data.providerId,
+      userId: userId,
+      provider: provider,
+      providerId: providerId,
       createdAt: new Date(),
     });
   }

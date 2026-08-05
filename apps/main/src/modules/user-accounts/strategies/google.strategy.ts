@@ -8,7 +8,7 @@ import { OAuthProfileDto } from '../dto/oauth-profile.dto.js';
 export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
   constructor(private readonly config: AppConfig) {
     super({
-      callbackURL: '/auth/google/callback',
+      callbackURL: config.googleCallbackUrl,
       clientID: config.googleClientId,
       clientSecret: config.googleClientSecret,
       scope: ['email', 'profile'],

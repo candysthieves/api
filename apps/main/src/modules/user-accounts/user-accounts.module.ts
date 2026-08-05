@@ -26,6 +26,7 @@ import { PasswordRecoveryService } from './application/password-recovery.service
 import { OAuthLoginUseCase } from './application/use-cases/auth-use-cases/oauth-login.usecase.js';
 import { GoogleStrategy } from './strategies/google.strategy.js';
 import { OAuthRepository } from './repositories/oauth-repositories/oauth.repository.js';
+import { AuthSessionService } from './application/auth-session.service.js';
 
 const useCases = [
   RegistrationUseCase,
@@ -46,6 +47,7 @@ const repositories = [UsersRepository, SessionsRepository, OAuthRepository];
 const queryRepositories = [SessionsQueryRepository, UsersQueryRepository];
 const services = [
   PrismaService,
+  AuthSessionService,
   UsersService,
   AuthService,
   PasswordRecoveryService,

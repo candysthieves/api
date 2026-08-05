@@ -43,10 +43,9 @@ import { ValidatePasswordRecoveryCodeCommand } from '../application/use-cases/au
 import { NewPasswordDto } from '../dto/new-password.dto.js';
 import { NewPasswordCommand } from '../application/use-cases/auth-use-cases/new-password.usecase.js';
 import { type RequestWithUser } from '../../../core/types/request-with-user.type.js';
-import { Profile } from 'passport-google-oauth20';
 import { OAuthLoginCommand } from '../application/use-cases/auth-use-cases/oauth-login.usecase.js';
 import { OAuthProfileDto } from '../dto/oauth-profile.dto.js';
-import { GoogleStrategy } from '../strategies/google.strategy.js';
+import { GoogleAuthGuard } from '../guards/google-auth.guard.js';
 
 @ApiTags('Authentication')
 @Controller('auth')
@@ -200,14 +199,22 @@ export class AuthController {
   }
 
   @Get('google')
-  @UseGuards(GoogleStrategy)
+  @UseGuards(GoogleAuthGuard)
   googleLogin(): void {}
 
   @Get('google/callback')
-  @UseGuards(GoogleStrategy)
-  async googleCallback(@Req() req: RequestWithUser<OAuthProfileDto>) {
-    return this.commandBus.execute<OAuthLoginCommand, void>(
-      new OAuthLoginCommand(req.user),
+  @UseGuards(GoogleAuthGuard)
+  async googleCallback(
+    @Req() req: RequestWithUser<OAuthProfileDto>,
+  ): Promise<AccessTokenType> {
+    return this.commandBus.execute<OAuthLoginCommand, AccessTokenType>(
+      new OAuthLoginCommand(
+        req.user,
+        req.ip ?? '',
+        typeof req.headers['user-agent'] === 'string'
+          ? req.headers['user-agent']
+          : '',
+      ),
     );
   }
 }

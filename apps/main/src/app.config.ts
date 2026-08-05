@@ -5,6 +5,8 @@ import ms from 'ms';
 @Injectable()
 export class AppConfig {
   readonly port: number;
+  readonly appUrl: string;
+  readonly googleCallbackUrl: string;
   readonly databaseUrl: string;
   readonly accessSecret: string;
   readonly accessExpiresIn: string;
@@ -19,6 +21,8 @@ export class AppConfig {
 
   constructor(@Inject(ConfigService) configService: ConfigService) {
     this.port = Number(configService.getOrThrow<string>('PORT'));
+    this.appUrl = configService.getOrThrow<string>('APP_URL');
+    this.googleCallbackUrl = `${this.appUrl}/auth/google/callback`;
     this.databaseUrl = configService.getOrThrow<string>('DATABASE_URL');
     this.accessSecret = configService.getOrThrow<string>('JWT_SECRET_KEY');
     this.accessExpiresIn = configService.getOrThrow<string>('JWT_EXPIRES_IN');
