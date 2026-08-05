@@ -69,7 +69,6 @@ export class OAuthLoginUseCase implements ICommandHandler<OAuthLoginCommand> {
     if (!(await this.usersRepository.existByUsername(base))) {
       return base;
     }
-
     return `${base}_${Date.now()}`;
   }
 }
