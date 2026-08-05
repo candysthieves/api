@@ -8,4 +8,12 @@ export class PasswordRecoveryDto {
   @IsNotEmpty()
   @IsEmail()
   email: string;
+
+  @ApiProperty({
+    description:
+      'Response token returned after completing the reCAPTCHA v2 Checkbox challenge immediately before this request.',
+  })
+  @Trim()
+  @IsNotEmpty()
+  recaptchaToken: string;
 }

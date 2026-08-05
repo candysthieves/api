@@ -16,6 +16,8 @@ export class AppConfig {
   readonly passwordRecoveryExpiresIn: string;
   readonly smtpUser: string;
   readonly smtpPassword: string;
+  readonly recaptchaSecretKey: string;
+  readonly recaptchaAllowedHostnames: ReadonlySet<string>;
   readonly googleClientId: string;
   readonly googleClientSecret: string;
 
@@ -43,6 +45,16 @@ export class AppConfig {
     this.googleClientId = configService.getOrThrow<string>('GOOGLE_CLIENT_ID');
     this.googleClientSecret = configService.getOrThrow<string>(
       'GOOGLE_CLIENT_SECRET',
+    );
+    this.recaptchaSecretKey = configService.getOrThrow<string>(
+      'RECAPTCHA_SECRET_KEY',
+    );
+    this.recaptchaAllowedHostnames = new Set(
+      configService
+        .getOrThrow<string>('RECAPTCHA_ALLOWED_HOSTNAMES')
+        .split(',')
+        .map((hostname) => hostname.trim().toLowerCase())
+        .filter(Boolean),
     );
   }
 
