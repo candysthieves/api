@@ -8,22 +8,14 @@ import { Response } from 'express';
 import { DomainException } from './domain-exception.js';
 import { DomainExceptionCode } from './domain-exception-code.js';
 
-//TODO попросить Влада объяснить за exception errors
-
 @Catch(DomainException)
-export class DomainExceptionFilter implements ExceptionFilter {
+export class DomainExceptionFilter implements ExceptionFilter<DomainException> {
   catch(exception: DomainException, host: ArgumentsHost): void {
     const response: Response = host.switchToHttp().getResponse<Response>();
 
-    response.status(this.getDomainStatus(exception.code)).json({
-      errorsMessages: exception.errors,
-    });
-  }
-
-  private getDomainStatus(code: DomainExceptionCode): HttpStatus {
     let status: HttpStatus = HttpStatus.INTERNAL_SERVER_ERROR;
 
-    switch (code) {
+    switch (exception.code) {
       case DomainExceptionCode.BadRequest:
       case DomainExceptionCode.ValidationError:
       case DomainExceptionCode.EmailNotConfirmed:
@@ -46,6 +38,8 @@ export class DomainExceptionFilter implements ExceptionFilter {
         break;
     }
 
-    return status;
+    response.status(status).json({
+      errorsMessages: exception.errors,
+    });
   }
 }
