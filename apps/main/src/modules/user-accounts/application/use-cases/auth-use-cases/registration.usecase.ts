@@ -1,7 +1,7 @@
 import { RegistrationDto } from '../../../dto/registration.dto.js';
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { HashAdapter } from '../../../../../core/adapters/hash.adapter.js';
-import { UsersRepository } from '../../../repositories/userRepositories/users.repository.js';
+import { UsersRepository } from '../../../repositories/user-repositories/users.repository.js';
 import { UserEntity } from '../../../domain/entities/user.entity.js';
 import { AppConfig } from '../../../../../app.config.js';
 import ms from 'ms';
@@ -54,12 +54,12 @@ export class RegistrationUseCase implements ICommandHandler<RegistrationCommand>
 
     const confirmationExpiresAt = new Date(Date.now() + duration);
 
-    const newUser: UserEntity = UserEntity.create({
-      email: dto.email,
-      username: dto.username,
-      passwordHash: hash,
+    const newUser: UserEntity = UserEntity.create(
+      dto.email,
+      dto.username,
+      hash,
       confirmationExpiresAt,
-    });
+    );
 
     await this.usersRepository.create(newUser);
 

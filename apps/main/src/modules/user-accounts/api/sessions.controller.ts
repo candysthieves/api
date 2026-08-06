@@ -20,7 +20,7 @@ import {
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 import { FindAllSessionsQuery } from '../application/query-handler/sessions/find-sessions-query-handler.js';
-import { SessionView } from './view-types/sessions/sessionView.type.js';
+import { SessionView } from './view-types/sessions/session-view.type.js';
 import { DeleteOtherSessionsCommand } from '../application/use-cases/sessions-use-cases/delete-other-sessions-use.case.js';
 import { RefreshTokenGuard } from '../guards/refresh-token.guard.js';
 import { User } from '../decorators/user.decorator.js';

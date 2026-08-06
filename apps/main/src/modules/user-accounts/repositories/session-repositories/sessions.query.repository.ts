@@ -4,10 +4,13 @@ import type { Session } from '../../../../generated/prisma/client.js';
 
 @Injectable()
 export class SessionsQueryRepository {
-  constructor(private readonly prisma: PrismaService) {}
+  private readonly prismaSession: PrismaService['session'];
+  constructor(private readonly prisma: PrismaService) {
+    this.prismaSession = prisma.session;
+  }
 
   async findSessionsForUser(userId: string): Promise<Session[]> {
-    return this.prisma.session.findMany({
+    return this.prismaSession.findMany({
       where: { userId, deletedAt: null },
     });
   }

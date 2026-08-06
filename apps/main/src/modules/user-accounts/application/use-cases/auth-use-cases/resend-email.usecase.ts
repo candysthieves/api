@@ -1,5 +1,5 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { UsersRepository } from '../../../repositories/userRepositories/users.repository.js';
+import { UsersRepository } from '../../../repositories/user-repositories/users.repository.js';
 import ms from 'ms';
 import { AppConfig } from '../../../../../app.config.js';
 import { UserEntity } from '../../../domain/entities/user.entity.js';

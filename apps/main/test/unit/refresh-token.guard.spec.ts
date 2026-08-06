@@ -1,5 +1,5 @@
 jest.mock(
-  '../../src/modules/user-accounts/repositories/sessionRepositories/sessions.repository.js',
+  '../../src/modules/user-accounts/repositories/session-repositories/sessions.repository.js',
   () => ({
     SessionsRepository: class SessionsRepository {},
   }),
@@ -9,7 +9,7 @@ import { ExecutionContext, UnauthorizedException } from '@nestjs/common';
 import { JwtAdapter } from '../../src/core/adapters/jwt.adapter.js';
 import { RequestWithUser } from '../../src/core/types/request-with-user.type.js';
 import { SessionEntity } from '../../src/modules/user-accounts/domain/entities/session.entity.js';
-import { SessionsRepository } from '../../src/modules/user-accounts/repositories/sessionRepositories/sessions.repository.js';
+import { SessionsRepository } from '../../src/modules/user-accounts/repositories/session-repositories/sessions.repository.js';
 import { RefreshTokenGuard } from '../../src/modules/user-accounts/guards/refresh-token.guard.js';
 
 describe('RefreshTokenGuard', () => {

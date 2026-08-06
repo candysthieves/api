@@ -1,12 +1,15 @@
-jest.mock('../repositories/sessionRepositories/sessions.repository.js', () => ({
-  SessionsRepository: class SessionsRepository {},
-}));
+jest.mock(
+  '../repositories/session-repositories/sessions.repository.js',
+  () => ({
+    SessionsRepository: class SessionsRepository {},
+  }),
+);
 
 import { ExecutionContext, UnauthorizedException } from '@nestjs/common';
 import { JwtAdapter } from '../../../core/adapters/jwt.adapter.js';
 import { RequestWithUser } from '../../../core/types/request-with-user.type.js';
 import { SessionEntity } from '../domain/entities/session.entity.js';
-import { SessionsRepository } from '../repositories/sessionRepositories/sessions.repository.js';
+import { SessionsRepository } from '../repositories/session-repositories/sessions.repository.js';
 import { RefreshTokenGuard } from './refresh-token.guard.js';
 
 describe('RefreshTokenGuard', () => {
@@ -24,7 +27,9 @@ describe('RefreshTokenGuard', () => {
     const sessionsRepository = {
       findActiveById: jest.fn().mockResolvedValue({ userId: payload.userId }),
     } as unknown as SessionsRepository;
-    const request = { cookies: { refreshToken: 'valid-token' } } as Partial<RequestWithUser>;
+    const request = {
+      cookies: { refreshToken: 'valid-token' },
+    } as Partial<RequestWithUser>;
 
     await expect(
       new RefreshTokenGuard(jwtAdapter, sessionsRepository).canActivate(
@@ -57,7 +62,9 @@ describe('RefreshTokenGuard', () => {
     const sessionsRepository = {
       findActiveById: jest.fn().mockResolvedValue(session),
     } as unknown as SessionsRepository;
-    const request = { cookies: token ? { refreshToken: token } : {} } as Partial<RequestWithUser>;
+    const request = {
+      cookies: token ? { refreshToken: token } : {},
+    } as Partial<RequestWithUser>;
 
     await expect(
       new RefreshTokenGuard(jwtAdapter, sessionsRepository).canActivate(

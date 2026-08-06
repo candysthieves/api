@@ -7,10 +7,10 @@ import { UsersController } from './api/user.controller.js';
 import { AuthController } from './api/auth.controller.js';
 import { PrismaService } from '../../infrastructure/prisma/prisma.service.js';
 import { AuthService } from './application/auth.service.js';
-import { UsersRepository } from './repositories/userRepositories/users.repository.js';
-import { UsersQueryRepository } from './repositories/userRepositories/users.query.repository.js';
-import { SessionsRepository } from './repositories/sessionRepositories/sessions.repository.js';
-import { SessionsQueryRepository } from './repositories/sessionRepositories/sessions.queryRepository.js';
+import { UsersRepository } from './repositories/user-repositories/users.repository.js';
+import { UsersQueryRepository } from './repositories/user-repositories/users.query.repository.js';
+import { SessionsRepository } from './repositories/session-repositories/sessions.repository.js';
+import { SessionsQueryRepository } from './repositories/session-repositories/sessions.query.repository.js';
 import { SessionsController } from './api/sessions.controller.js';
 import { FindAllSessionsQueryHandler } from './application/query-handler/sessions/find-sessions-query-handler.js';
 import { LogoutUseCase } from './application/use-cases/auth-use-cases/logout.usecase.js';
@@ -23,6 +23,10 @@ import { PasswordRecoveryUseCase } from './application/use-cases/auth-use-cases/
 import { ValidatePasswordRecoveryCodeUseCase } from './application/use-cases/auth-use-cases/validate-password-recovery-code.usecase.js';
 import { NewPasswordUseCase } from './application/use-cases/auth-use-cases/new-password.usecase.js';
 import { PasswordRecoveryService } from './application/password-recovery.service.js';
+import { OAuthLoginUseCase } from './application/use-cases/auth-use-cases/oauth-login.usecase.js';
+import { GoogleStrategy } from './strategies/google.strategy.js';
+import { OAuthRepository } from './repositories/oauth-repositories/oauth.repository.js';
+import { AuthSessionService } from './application/auth-session.service.js';
 
 const useCases = [
   RegistrationUseCase,
@@ -36,17 +40,21 @@ const useCases = [
   PasswordRecoveryUseCase,
   ValidatePasswordRecoveryCodeUseCase,
   NewPasswordUseCase,
+  OAuthLoginUseCase,
 ];
 const queryHandlers = [FindAllSessionsQueryHandler];
-const repositories = [UsersRepository, SessionsRepository];
+const repositories = [UsersRepository, SessionsRepository, OAuthRepository];
 const queryRepositories = [SessionsQueryRepository, UsersQueryRepository];
 const services = [
   PrismaService,
+  AuthSessionService,
   UsersService,
   AuthService,
   PasswordRecoveryService,
 ];
 const controllers = [UsersController, AuthController, SessionsController];
+
+const strategies = [GoogleStrategy];
 
 @Module({
   imports: [CqrsModule],
@@ -57,6 +65,7 @@ const controllers = [UsersController, AuthController, SessionsController];
     ...repositories,
     ...queryRepositories,
     ...services,
+    ...strategies,
   ],
 })
 export class UserAccountsModule {}

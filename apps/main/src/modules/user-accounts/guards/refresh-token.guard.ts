@@ -2,7 +2,7 @@ import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
 import { JwtAdapter } from '../../../core/adapters/jwt.adapter.js';
 import { JwtRefreshPayload } from '../../../core/types/jwt-payload.type.js';
 import { RequestWithUser } from '../../../core/types/request-with-user.type.js';
-import { SessionsRepository } from '../repositories/sessionRepositories/sessions.repository.js';
+import { SessionsRepository } from '../repositories/session-repositories/sessions.repository.js';
 import { DomainExceptions } from '../../../core/exceptions/domain-exceptions.js';
 
 @Injectable()

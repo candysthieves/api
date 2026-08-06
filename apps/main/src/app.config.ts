@@ -5,6 +5,8 @@ import ms from 'ms';
 @Injectable()
 export class AppConfig {
   readonly port: number;
+  readonly appUrl: string;
+  readonly googleCallbackUrl: string;
   readonly databaseUrl: string;
   readonly accessSecret: string;
   readonly accessExpiresIn: string;
@@ -16,9 +18,13 @@ export class AppConfig {
   readonly smtpPassword: string;
   readonly recaptchaSecretKey: string;
   readonly recaptchaAllowedHostnames: ReadonlySet<string>;
+  readonly googleClientId: string;
+  readonly googleClientSecret: string;
 
   constructor(@Inject(ConfigService) configService: ConfigService) {
     this.port = Number(configService.getOrThrow<string>('PORT'));
+    this.appUrl = configService.getOrThrow<string>('APP_URL');
+    this.googleCallbackUrl = `${this.appUrl}/auth/google/callback`;
     this.databaseUrl = configService.getOrThrow<string>('DATABASE_URL');
     this.accessSecret = configService.getOrThrow<string>('JWT_SECRET_KEY');
     this.accessExpiresIn = configService.getOrThrow<string>('JWT_EXPIRES_IN');
@@ -36,6 +42,10 @@ export class AppConfig {
     );
     this.smtpUser = configService.getOrThrow<string>('SMTP_USER');
     this.smtpPassword = configService.getOrThrow<string>('SMTP_PASSWORD');
+    this.googleClientId = configService.getOrThrow<string>('GOOGLE_CLIENT_ID');
+    this.googleClientSecret = configService.getOrThrow<string>(
+      'GOOGLE_CLIENT_SECRET',
+    );
     this.recaptchaSecretKey = configService.getOrThrow<string>(
       'RECAPTCHA_SECRET_KEY',
     );

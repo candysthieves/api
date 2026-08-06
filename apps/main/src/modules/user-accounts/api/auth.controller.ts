@@ -43,6 +43,10 @@ import { ValidatePasswordRecoveryCodeDto } from '../dto/validate-password-recove
 import { ValidatePasswordRecoveryCodeCommand } from '../application/use-cases/auth-use-cases/validate-password-recovery-code.usecase.js';
 import { NewPasswordDto } from '../dto/new-password.dto.js';
 import { NewPasswordCommand } from '../application/use-cases/auth-use-cases/new-password.usecase.js';
+import { type RequestWithUser } from '../../../core/types/request-with-user.type.js';
+import { OAuthLoginCommand } from '../application/use-cases/auth-use-cases/oauth-login.usecase.js';
+import { OAuthProfileDto } from '../dto/oauth-profile.dto.js';
+import { GoogleAuthGuard } from '../guards/google-auth.guard.js';
 import { RecaptchaService } from '../../../core/services/recaptcha.service.js';
 import { apiErrorResponseSchema } from '../../../core/exceptions/api-error-response.swagger.js';
 
@@ -206,5 +210,25 @@ export class AuthController {
     await this.commandBus.execute<LogoutCommand, void>(new LogoutCommand(user));
 
     this.cookieAdapter.clearRefreshCookie(res);
+  }
+
+  @Get('google')
+  @UseGuards(GoogleAuthGuard)
+  googleLogin(): void {}
+
+  @Get('google/callback')
+  @UseGuards(GoogleAuthGuard)
+  async googleCallback(
+    @Req() req: RequestWithUser<OAuthProfileDto>,
+  ): Promise<AccessTokenType> {
+    return this.commandBus.execute<OAuthLoginCommand, AccessTokenType>(
+      new OAuthLoginCommand(
+        req.user,
+        req.ip ?? '',
+        typeof req.headers['user-agent'] === 'string'
+          ? req.headers['user-agent']
+          : '',
+      ),
+    );
   }
 }

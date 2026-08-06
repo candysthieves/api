@@ -5,14 +5,17 @@ import type { Session } from '../../../../generated/prisma/client.js';
 
 @Injectable()
 export class SessionsRepository {
-  constructor(private readonly prisma: PrismaService) {}
+  private readonly prismaSession: PrismaService['session'];
+  constructor(private readonly prisma: PrismaService) {
+    this.prismaSession = prisma.session;
+  }
 
-  async save(session: SessionEntity): Promise<void> {
-    await this.prisma.session.create({ data: session.toPersistence() });
+  async save(sessionEntity: SessionEntity): Promise<void> {
+    await this.prismaSession.create({ data: sessionEntity.toPersistence() });
   }
 
   async findActiveById(sessionId: string): Promise<SessionEntity | null> {
-    const session = await this.prisma.session.findFirst({
+    const session = await this.prismaSession.findFirst({
       where: {
         id: sessionId,
         expiresAt: { gt: new Date() },
@@ -24,7 +27,7 @@ export class SessionsRepository {
   }
 
   async deleteById(sessionId: string, userId: string): Promise<void> {
-    await this.prisma.session.update({
+    await this.prismaSession.update({
       where: { id: sessionId, userId, deletedAt: null },
       data: { deletedAt: new Date() },
     });
@@ -34,7 +37,7 @@ export class SessionsRepository {
     userId: string,
     currentSessionId: string,
   ): Promise<void> {
-    await this.prisma.session.updateMany({
+    await this.prismaSession.updateMany({
       where: {
         userId,
         id: { not: currentSessionId },
@@ -45,13 +48,13 @@ export class SessionsRepository {
   }
 
   async deleteAllActiveByUserId(userId: string): Promise<void> {
-    await this.prisma.session.updateMany({
+    await this.prismaSession.updateMany({
       where: { userId, deletedAt: null },
       data: { deletedAt: new Date() },
     });
   }
 
   async findById(id: string): Promise<Session | null> {
-    return this.prisma.session.findUnique({ where: { id } });
+    return this.prismaSession.findUnique({ where: { id } });
   }
 }

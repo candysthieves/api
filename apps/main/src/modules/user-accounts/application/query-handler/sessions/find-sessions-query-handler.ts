@@ -1,9 +1,9 @@
 import { IQueryHandler, QueryHandler } from '@nestjs/cqrs';
 import { Inject } from '@nestjs/common';
-import { SessionsQueryRepository } from '../../../repositories/sessionRepositories/sessions.queryRepository.js';
+import { SessionsQueryRepository } from '../../../repositories/session-repositories/sessions.query.repository.js';
 import type { Session } from '../../../../../generated/prisma/client.js';
 import { mapSessionsToView } from '../../../mappers/sessions.mapper.js';
-import { SessionView } from '../../../api/view-types/sessions/sessionView.type.js';
+import { SessionView } from '../../../api/view-types/sessions/session-view.type.js';
 
 export class FindAllSessionsQuery {
   constructor(public userId: string) {}

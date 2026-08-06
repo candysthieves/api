@@ -13,22 +13,23 @@ export class UserEntity {
     this.props = props;
   }
 
-  static create(data: {
-    email: string;
-    username: string;
-    passwordHash: string;
-    confirmationExpiresAt: Date;
-  }): UserEntity {
+  static create(
+    email: string,
+    username: string,
+    passwordHash: string,
+    confirmationExpiresAt: Date,
+    isEmailConfirmed: boolean = false,
+  ): UserEntity {
     return new UserEntity({
       id: crypto.randomUUID(),
-      email: data.email,
-      username: data.username,
-      password: data.passwordHash,
+      email: email,
+      username: username,
+      password: passwordHash,
       confirmationCode: crypto.randomUUID(),
-      confirmationExpiresAt: data.confirmationExpiresAt,
+      confirmationExpiresAt: confirmationExpiresAt,
       passwordRecoveryCode: null,
       passwordRecoveryExpiresAt: null,
-      isEmailConfirmed: false,
+      isEmailConfirmed: isEmailConfirmed,
       termsAcceptedAt: new Date(),
       createdAt: new Date(),
     });

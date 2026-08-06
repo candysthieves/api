@@ -3,7 +3,7 @@ import ms from 'ms';
 import { AppConfig } from '../../../../../app.config.js';
 import { EmailAdapter } from '../../../../../core/adapters/email/email.adapter.js';
 import { emailTemplates } from '../../../../../core/adapters/email/email.templates.js';
-import { UsersRepository } from '../../../repositories/userRepositories/users.repository.js';
+import { UsersRepository } from '../../../repositories/user-repositories/users.repository.js';
 import { DomainExceptions } from '../../../../../core/exceptions/domain-exceptions.js';
 
 export class PasswordRecoveryCommand {
