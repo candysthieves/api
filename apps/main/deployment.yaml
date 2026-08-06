@@ -75,3 +75,13 @@ spec:
                  secretKeyRef:
                    name: lumosapp-backend-main-production-config-secret
                    key: JWT_SECRET_KEY
+             - name: RECAPTCHA_SECRET_KEY
+               valueFrom:
+                 secretKeyRef:
+                   name: lumosapp-backend-main-production-config-secret
+                   key: RECAPTCHA_SECRET_KEY
+             - name: RECAPTCHA_ALLOWED_HOSTNAMES
+               valueFrom:
+                 secretKeyRef:
+                   name: lumosapp-backend-main-production-config-secret
+                   key: RECAPTCHA_ALLOWED_HOSTNAMES
