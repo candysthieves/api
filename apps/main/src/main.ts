@@ -37,7 +37,7 @@ async function bootstrap() {
     .addCookieAuth('refreshToken', { type: 'apiKey' }, 'refreshToken')
     .build();
   const document = SwaggerModule.createDocument(app, swaggerConfig);
-  SwaggerModule.setup('api/docs', app, document);
+  SwaggerModule.setup('api/v1/docs', app, document);
 
   await app.listen(appConfig.port);
   console.log('Server started on port: ' + appConfig.port);

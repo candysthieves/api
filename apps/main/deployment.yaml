@@ -70,18 +70,33 @@ spec:
                  secretKeyRef:
                    name: lumosapp-backend-main-production-config-secret
                    key: DATABASE_URL
-             - name: JWT_SECRET_KEY
+             - name: GOOGLE_CLIENT_ID
                valueFrom:
                  secretKeyRef:
                    name: lumosapp-backend-main-production-config-secret
-                   key: JWT_SECRET_KEY
+                   key: GOOGLE_CLIENT_ID
+             - name: GOOGLE_CLIENT_SECRET
+               valueFrom:
+                 secretKeyRef:
+                   name: lumosapp-backend-main-production-config-secret
+                   key: GOOGLE_CLIENT_SECRET
              - name: RECAPTCHA_SECRET_KEY
                valueFrom:
                  secretKeyRef:
                    name: lumosapp-backend-main-production-config-secret
                    key: RECAPTCHA_SECRET_KEY
+             - name: APP_URL
+               valueFrom:
+                 secretKeyRef:
+                   name: lumosapp-backend-main-production-config-secret
+                   key: APP_URL
              - name: RECAPTCHA_ALLOWED_HOSTNAMES
                valueFrom:
                  secretKeyRef:
                    name: lumosapp-backend-main-production-config-secret
                    key: RECAPTCHA_ALLOWED_HOSTNAMES
+             - name: JWT_SECRET_KEY
+               valueFrom:
+                 secretKeyRef:
+                   name: lumosapp-backend-main-production-config-secret
+                   key: JWT_SECRET_KEY
