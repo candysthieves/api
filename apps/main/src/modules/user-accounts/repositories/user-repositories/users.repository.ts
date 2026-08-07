@@ -25,24 +25,24 @@ export class UsersRepository {
     });
   }
 
-  async findByEmailOrUsername(
-    email: string,
-    username: string,
-  ): Promise<UserEntity | null> {
-    const raw = await this.prismaUser.findFirst({
-      where: {
-        OR: [{ email }, { username }],
-      },
-    });
+  // async findByEmailOrUsername(
+  //   email: string,
+  //   username: string,
+  // ): Promise<UserEntity | null> {
+  //   const raw = await this.prismaUser.findFirst({
+  //     where: {
+  //       OR: [{ email }, { username }],
+  //     },
+  //   });
+  //
+  //   if (!raw) {
+  //     return null;
+  //   }
+  //
+  //   return UserEntity.restore(raw);
+  // }
 
-    if (!raw) {
-      return null;
-    }
-
-    return UserEntity.restore(raw);
-  }
-
-  async existByUsername(username: string) {
+  async findByUsername(username: string) {
     const user = await this.prismaUser.findUnique({ where: { username } });
 
     return user ? UserEntity.restore(user) : null;
