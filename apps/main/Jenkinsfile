@@ -22,26 +22,29 @@ pipeline {
         }
         stage('Unit tests') {
             steps {
-                script {
-                    sh '''
-                       export NVM_DIR="$HOME/.nvm"
-                       [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
-                       nvm use --lts
-                       yarn install
-                       yarn test
-                    '''
+                dir(env.WORKSPACE) {
+                    script {
+                        sh '''
+                           export NVM_DIR="$HOME/.nvm"
+                           [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
+                           nvm use --lts
+                           corepack enable
+                           pnpm install --frozen-lockfile
+                        '''
+                    }
                 }
             }
         }
         stage('e2e tests') {
             steps {
-                script {
-                    sh '''
-                       export NVM_DIR="$HOME/.nvm"
-                       [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
-                       nvm use --lts
-                       yarn test:e2e
-                    '''
+                dir(env.WORKSPACE) {
+                    script {
+                        sh '''
+                           export NVM_DIR="$HOME/.nvm"
+                           [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
+                           nvm use --lts
+                           corepack enable'''
+                    }
                 }
             }
         }

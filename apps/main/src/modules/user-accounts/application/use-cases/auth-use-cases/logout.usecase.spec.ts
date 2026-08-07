@@ -24,7 +24,10 @@ describe('LogoutUseCase', () => {
       }),
     );
 
-    expect(sessionsRepository.deleteById).toHaveBeenCalledWith('session-1');
+    expect(sessionsRepository.deleteById).toHaveBeenCalledWith(
+      'session-1',
+      'user-1',
+    );
     expect(sessionsRepository.deleteById).toHaveBeenCalledTimes(1);
   });
 });
