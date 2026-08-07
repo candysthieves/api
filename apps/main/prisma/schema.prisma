@@ -24,7 +24,7 @@ model User {
   username String @unique
 
   isEmailConfirmed          Boolean   @default(false) @map("is_email_confirmed")
-  confirmationCode          String    @unique @map("confirmation_code")
+  confirmationCode          String?   @unique @map("confirmation_code")
   confirmationExpiresAt     DateTime  @map("confirmation_expires_at")
   passwordRecoveryCode      String?   @unique @map("password_recovery_code")
   passwordRecoveryExpiresAt DateTime? @map("password_recovery_expires_at")

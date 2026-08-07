@@ -62,7 +62,7 @@ export class RegistrationUseCase implements ICommandHandler<RegistrationCommand>
       await this.usersRepository.save(userByEmail);
 
       const emailTemplate = emailTemplates.registration(
-        userByEmail.confirmationCode,
+        userByEmail.confirmationCode!,
         this.config.clientUrl,
       );
 
@@ -83,7 +83,7 @@ export class RegistrationUseCase implements ICommandHandler<RegistrationCommand>
     await this.usersRepository.create(newUser);
 
     const emailTemplate = emailTemplates.registration(
-      newUser.confirmationCode,
+      newUser.confirmationCode!,
       this.config.clientUrl,
     );
 

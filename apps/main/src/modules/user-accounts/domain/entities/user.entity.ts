@@ -80,7 +80,7 @@ export class UserEntity {
     return this.props.username;
   }
 
-  get confirmationCode(): string {
+  get confirmationCode(): string | null {
     return this.props.confirmationCode;
   }
 
@@ -98,7 +98,7 @@ export class UserEntity {
     }
 
     this.props.isEmailConfirmed = true;
-    this.props.confirmationCode = '';
+    this.props.confirmationCode = null;
   }
 
   public resendEmail(confirmationExpiresAt: Date): void {
