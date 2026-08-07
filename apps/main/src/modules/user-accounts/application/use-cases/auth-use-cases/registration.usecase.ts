@@ -6,10 +6,7 @@ import { UserEntity } from '../../../domain/entities/user.entity.js';
 import { AppConfig } from '../../../../../app.config.js';
 import ms from 'ms';
 import { EmailAdapter } from '../../../../../core/adapters/email/email.adapter.js';
-import {
-  emailTemplates,
-  EmailTemplateType,
-} from '../../../../../core/adapters/email/email.templates.js';
+import { emailTemplates } from '../../../../../core/adapters/email/email.templates.js';
 import { DomainExceptions } from '../../../../../core/exceptions/domain-exceptions.js';
 
 export class RegistrationCommand {
@@ -32,29 +29,51 @@ export class RegistrationUseCase implements ICommandHandler<RegistrationCommand>
       DomainExceptions.badRequest('password', 'Passwords must match');
     }
 
-    const existUser: UserEntity | null =
-      await this.usersRepository.findByEmailOrUsername(dto.email, dto.username);
+    const userByEmail = await this.usersRepository.findByEmail(dto.email);
+    const userByUsername = await this.usersRepository.findByUsername(
+      dto.username,
+    );
 
-    if (existUser) {
-      if (existUser.username === dto.username) {
-        DomainExceptions.badRequest('username', 'Username already exists');
-      } else if (existUser.email === dto.email) {
-        DomainExceptions.badRequest(
-          'email',
-          'User with this email is already registered',
-        );
-      }
+    if (
+      userByUsername &&
+      (!userByEmail || userByUsername.id !== userByEmail.id)
+    ) {
+      DomainExceptions.badRequest('username', 'Username already exists');
     }
 
-    const hash: string = await this.hashAdapter.hashPassword(dto.password);
-
-    const duration: number = ms(
+    const duration = ms(
       this.config.emailConfirmationExpiresIn as ms.StringValue,
     );
 
     const confirmationExpiresAt = new Date(Date.now() + duration);
 
-    const newUser: UserEntity = UserEntity.create(
+    if (userByEmail) {
+      if (userByEmail.isEmailConfirmed) {
+        DomainExceptions.badRequest(
+          'email',
+          'User with this email is already registered',
+        );
+      }
+
+      const hash = await this.hashAdapter.hashPassword(dto.password);
+
+      userByEmail.update(dto.username, hash, confirmationExpiresAt);
+
+      await this.usersRepository.save(userByEmail);
+
+      const emailTemplate = emailTemplates.registration(
+        userByEmail.confirmationCode,
+        this.config.clientUrl,
+      );
+
+      await this.emailAdapter.sendEmail(userByEmail.email, emailTemplate);
+
+      return;
+    }
+
+    const hash = await this.hashAdapter.hashPassword(dto.password);
+
+    const newUser = UserEntity.create(
       dto.email,
       dto.username,
       hash,
@@ -63,7 +82,7 @@ export class RegistrationUseCase implements ICommandHandler<RegistrationCommand>
 
     await this.usersRepository.create(newUser);
 
-    const emailTemplate: EmailTemplateType = emailTemplates.registration(
+    const emailTemplate = emailTemplates.registration(
       newUser.confirmationCode,
       this.config.clientUrl,
     );
