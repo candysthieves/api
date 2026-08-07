@@ -36,7 +36,10 @@ export class PasswordRecoveryUseCase implements ICommandHandler<PasswordRecovery
 
     await this.emailAdapter.sendEmail(
       user.email,
-      emailTemplates.passwordRecovery(user.passwordRecoveryCode!),
+      emailTemplates.passwordRecovery(
+        user.passwordRecoveryCode!,
+        this.config.clientUrl,
+      ),
     );
   }
 }
