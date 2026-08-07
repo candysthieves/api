@@ -6,10 +6,7 @@ import { UserEntity } from '../../../domain/entities/user.entity.js';
 import { AppConfig } from '../../../../../app.config.js';
 import ms from 'ms';
 import { EmailAdapter } from '../../../../../core/adapters/email/email.adapter.js';
-import {
-  emailTemplates,
-  EmailTemplateType,
-} from '../../../../../core/adapters/email/email.templates.js';
+import { emailTemplates } from '../../../../../core/adapters/email/email.templates.js';
 import { DomainExceptions } from '../../../../../core/exceptions/domain-exceptions.js';
 
 export class RegistrationCommand {

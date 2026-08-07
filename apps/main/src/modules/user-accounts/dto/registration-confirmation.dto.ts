@@ -5,6 +5,6 @@ export class RegistrationConfirmationDto {
   @Trim()
   @IsNotEmpty()
   @IsString()
-  @IsUUID()
+  @IsUUID(undefined, { message: 'Code is expired' })
   code: string;
 }
