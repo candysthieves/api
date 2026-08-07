@@ -65,6 +65,7 @@ export class RegistrationUseCase implements ICommandHandler<RegistrationCommand>
 
     const emailTemplate: EmailTemplateType = emailTemplates.registration(
       newUser.confirmationCode,
+      this.config.clientUrl,
     );
 
     await this.emailAdapter.sendEmail(newUser.email, emailTemplate);

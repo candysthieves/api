@@ -20,6 +20,7 @@ export class AppConfig {
   readonly recaptchaAllowedHostnames: ReadonlySet<string>;
   readonly googleClientId: string;
   readonly googleClientSecret: string;
+  readonly clientUrl: string;
 
   constructor(@Inject(ConfigService) configService: ConfigService) {
     this.port = Number(configService.getOrThrow<string>('PORT'));
@@ -56,6 +57,7 @@ export class AppConfig {
         .map((hostname) => hostname.trim().toLowerCase())
         .filter(Boolean),
     );
+    this.clientUrl = configService.getOrThrow<string>('CLIENT_URL');
   }
 
   get refreshTokenMaxAge(): number {
