@@ -95,6 +95,11 @@ spec:
                  secretKeyRef:
                    name: lumosapp-backend-main-production-config-secret
                    key: RECAPTCHA_ALLOWED_HOSTNAMES
+             - name: CLIENT_URL
+               valueFrom:
+                 secretKeyRef:
+                   name: lumosapp-backend-main-production-config-secret
+                   key: CLIENT_URL
              - name: JWT_SECRET_KEY
                valueFrom:
                  secretKeyRef:
