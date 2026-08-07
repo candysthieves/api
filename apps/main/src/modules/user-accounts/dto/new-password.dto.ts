@@ -6,7 +6,7 @@ export class NewPasswordDto {
   @ApiProperty({ format: 'uuid' })
   @IsNotEmpty()
   @IsString()
-  @IsUUID(undefined, { message: 'Code is expired' })
+  @IsUUID(undefined, { message: 'Recovery code is expired' })
   recoveryCode: string;
 
   @ApiProperty({ minLength: 6, maxLength: 20, format: 'password' })
