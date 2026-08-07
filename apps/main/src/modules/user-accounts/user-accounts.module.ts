@@ -25,6 +25,7 @@ import { NewPasswordUseCase } from './application/use-cases/auth-use-cases/new-p
 import { PasswordRecoveryService } from './application/password-recovery.service.js';
 import { OAuthLoginUseCase } from './application/use-cases/auth-use-cases/oauth-login.usecase.js';
 import { GoogleStrategy } from './strategies/google.strategy.js';
+import { GithubStrategy } from './strategies/github.strategy.js';
 import { OAuthRepository } from './repositories/oauth-repositories/oauth.repository.js';
 import { AuthSessionService } from './application/auth-session.service.js';
 
@@ -54,7 +55,7 @@ const services = [
 ];
 const controllers = [UsersController, AuthController, SessionsController];
 
-const strategies = [GoogleStrategy];
+const strategies = [GoogleStrategy, GithubStrategy];
 
 @Module({
   imports: [CqrsModule],
