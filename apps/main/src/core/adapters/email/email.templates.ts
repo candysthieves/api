@@ -15,10 +15,9 @@ export const emailTemplates = {
             Complete registration
         </p>
         <p>
-          <b>LOCAL LINK</b>
           To finish registration please follow the link below:
           <a href="https://dev.lumosapp.net:3000/verify?code=${code}">
-            Complete registration
+            Complete registration[LOCAL LINK]
         </p>
       `,
     };
@@ -36,10 +35,9 @@ export const emailTemplates = {
           </a>
         </p>
         <p>
-          <b>LOCAL LINK</b>
           To finish password recovery please follow the link below:
           <a href="https://dev.lumosapp.net:3000/recoveryCode=${code}">
-            Recover password
+            Recover password[LOCAL LINK]
           </a>
         </p>
       `,
