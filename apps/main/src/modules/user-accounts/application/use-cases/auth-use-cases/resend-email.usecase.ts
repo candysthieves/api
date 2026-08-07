@@ -42,6 +42,7 @@ export class ResendEmailUseCase implements ICommandHandler<ResendEmailCommand> {
 
     const emailTemplate: EmailTemplateType = emailTemplates.registration(
       user.confirmationCode,
+      this.config.clientUrl,
     );
 
     await this.emailAdapter.sendEmail(user.email, emailTemplate);
