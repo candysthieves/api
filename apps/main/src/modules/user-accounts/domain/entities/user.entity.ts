@@ -35,6 +35,27 @@ export class UserEntity {
     });
   }
 
+  public update(
+    username: string,
+    passwordHash: string,
+    confirmationExpiresAt: Date,
+    isEmailConfirmed: boolean = false,
+  ): UserEntity {
+    return new UserEntity({
+      id: this.id,
+      email: this.email,
+      username: username,
+      password: passwordHash,
+      confirmationCode: crypto.randomUUID(),
+      confirmationExpiresAt: confirmationExpiresAt,
+      passwordRecoveryCode: null,
+      passwordRecoveryExpiresAt: null,
+      isEmailConfirmed: isEmailConfirmed,
+      termsAcceptedAt: new Date(),
+      createdAt: new Date(),
+    });
+  }
+
   static restore(prismaUser: PrismaUser): UserEntity {
     return new UserEntity(prismaUser);
   }

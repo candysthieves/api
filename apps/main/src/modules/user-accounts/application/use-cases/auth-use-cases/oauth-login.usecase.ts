@@ -66,7 +66,7 @@ export class OAuthLoginUseCase implements ICommandHandler<OAuthLoginCommand> {
   private async generateUniqueUsername(email: string): Promise<string> {
     const base: string = email.split('@')[0];
 
-    if (!(await this.usersRepository.existByUsername(base))) {
+    if (!(await this.usersRepository.findByUsername(base))) {
       return base;
     }
     return `${base}_${Date.now()}`;
