@@ -98,7 +98,7 @@ export class UserEntity {
     }
 
     this.props.isEmailConfirmed = true;
-    this.props.confirmationCode = null;
+    this.props.confirmationCode = '';
   }
 
   public resendEmail(confirmationExpiresAt: Date): void {
