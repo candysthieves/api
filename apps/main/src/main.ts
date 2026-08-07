@@ -13,7 +13,7 @@ async function bootstrap() {
   const appConfig = app.get<AppConfig>(AppConfig);
   app.use(cookieParser());
   app.useGlobalFilters(new DomainExceptionFilter());
-  app.setGlobalPrefix('api');
+  app.setGlobalPrefix('api/v1');
   app.useGlobalPipes(
     new ValidationPipe({
       transform: true,
@@ -37,7 +37,7 @@ async function bootstrap() {
     .addCookieAuth('refreshToken', { type: 'apiKey' }, 'refreshToken')
     .build();
   const document = SwaggerModule.createDocument(app, swaggerConfig);
-  SwaggerModule.setup('api/docs', app, document);
+  SwaggerModule.setup('api/v1/docs', app, document);
 
   await app.listen(appConfig.port);
   console.log('Server started on port: ' + appConfig.port);

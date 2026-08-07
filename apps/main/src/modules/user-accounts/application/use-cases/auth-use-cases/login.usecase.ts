@@ -34,7 +34,9 @@ export class LoginUseCase implements ICommandHandler<LoginCommand> {
     if (!user) {
       DomainExceptions.unauthorized('credentials', 'Invalid email or password');
     }
-
+    if (!user.isEmailConfirmed) {
+      DomainExceptions.unauthorized('email', 'Email is not confirmed');
+    }
     const isPasswordCorrect: boolean = await this.hashAdapter.compare(
       dto.password,
       user.password,
