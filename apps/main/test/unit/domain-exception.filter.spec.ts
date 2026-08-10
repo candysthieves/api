@@ -1,7 +1,10 @@
 import { ArgumentsHost } from '@nestjs/common';
 import { Response } from 'express';
 import { DomainException } from '../../src/core/exceptions/domain-exception.js';
-import { DomainExceptionCode } from '../../src/core/exceptions/domain-exception-code.js';
+import {
+  DomainExceptionCode,
+  ErrorStatus,
+} from '../../src/core/exceptions/domain-exception-code.js';
 import { DomainExceptionFilter } from '../../src/core/exceptions/domain-exception.filter.js';
 
 const createHost = (response: Pick<Response, 'status'>): ArgumentsHost =>
@@ -25,15 +28,18 @@ describe('DomainExceptionFilter', () => {
     [DomainExceptionCode.Forbidden, 403],
     [DomainExceptionCode.NotFound, 404],
   ])(
-    'preserves DomainException %i errors and status %i',
+    'returns the common error code for DomainException %i with status %i',
     (code, statusCode) => {
       const errors = [{ field: 'email', message: 'Invalid email' }];
       const { status, json } = catchException(
-        new DomainException(code, errors),
+        new DomainException(code, ErrorStatus.VALIDATION_ERROR, errors),
       );
 
       expect(status).toHaveBeenCalledWith(statusCode);
-      expect(json).toHaveBeenCalledWith({ errorsMessages: errors });
+      expect(json).toHaveBeenCalledWith({
+        code: ErrorStatus.VALIDATION_ERROR,
+        errorsMessages: errors,
+      });
     },
   );
 });

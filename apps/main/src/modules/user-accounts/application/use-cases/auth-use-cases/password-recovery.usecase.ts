@@ -5,6 +5,7 @@ import { EmailAdapter } from '../../../../../core/adapters/email/email.adapter.j
 import { emailTemplates } from '../../../../../core/adapters/email/email.templates.js';
 import { UsersRepository } from '../../../repositories/user-repositories/users.repository.js';
 import { DomainExceptions } from '../../../../../core/exceptions/domain-exceptions.js';
+import { ErrorStatus } from '../../../../../core/exceptions/domain-exception-code.js';
 
 export class PasswordRecoveryCommand {
   constructor(public readonly email: string) {}
@@ -23,6 +24,7 @@ export class PasswordRecoveryUseCase implements ICommandHandler<PasswordRecovery
 
     if (!user) {
       DomainExceptions.badRequest(
+        ErrorStatus.EMAIL_NOT_EXISTS,
         'email',
         "User with this email doesn't exist",
       );

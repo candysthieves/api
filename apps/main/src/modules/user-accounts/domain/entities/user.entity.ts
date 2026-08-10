@@ -1,6 +1,7 @@
 // import type { UserModel } from '../../../../generated/prisma/models/User.js';
 import type { User } from '../../../../generated/prisma/client.js';
 import { DomainExceptions } from '../../../../core/exceptions/domain-exceptions.js';
+import { ErrorStatus } from '../../../../core/exceptions/domain-exception-code.js';
 
 type PrismaUser = {
   [K in keyof User]: User[K];
@@ -90,11 +91,19 @@ export class UserEntity {
 
   public confirmEmail(): void {
     if (this.props.isEmailConfirmed) {
-      DomainExceptions.badRequest('email', 'Email already confirmed');
+      DomainExceptions.badRequest(
+        ErrorStatus.EMAIL_ALREADY_CONFIRMED,
+        'email',
+        'Email already confirmed',
+      );
     }
 
     if (this.props.confirmationExpiresAt < new Date()) {
-      DomainExceptions.badRequest('code', 'Confirmation code expired');
+      DomainExceptions.badRequest(
+        ErrorStatus.CONFIRMATION_CODE_EXPIRED,
+        'code',
+        'Confirmation code expired',
+      );
     }
 
     this.props.isEmailConfirmed = true;
@@ -102,7 +111,11 @@ export class UserEntity {
 
   public resendEmail(confirmationExpiresAt: Date): void {
     if (this.props.isEmailConfirmed) {
-      DomainExceptions.badRequest('email', 'Email already confirmed');
+      DomainExceptions.badRequest(
+        ErrorStatus.EMAIL_ALREADY_CONFIRMED,
+        'email',
+        'Email already confirmed',
+      );
     }
 
     this.props.confirmationCode = crypto.randomUUID();

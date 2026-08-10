@@ -8,6 +8,7 @@ import ms from 'ms';
 import { EmailAdapter } from '../../../../../core/adapters/email/email.adapter.js';
 import { emailTemplates } from '../../../../../core/adapters/email/email.templates.js';
 import { DomainExceptions } from '../../../../../core/exceptions/domain-exceptions.js';
+import { ErrorStatus } from '../../../../../core/exceptions/domain-exception-code.js';
 
 export class RegistrationCommand {
   constructor(public readonly dto: RegistrationDto) {}
@@ -26,7 +27,11 @@ export class RegistrationUseCase implements ICommandHandler<RegistrationCommand>
     const { dto } = command;
 
     if (dto.password !== dto.passwordConfirmation) {
-      DomainExceptions.badRequest('password', 'Passwords must match');
+      DomainExceptions.badRequest(
+        ErrorStatus.PASSWORDS_NOT_MATCH,
+        'passwordConfirmation',
+        'Passwords must match',
+      );
     }
 
     const userByEmail = await this.usersRepository.findByEmail(dto.email);
@@ -38,7 +43,11 @@ export class RegistrationUseCase implements ICommandHandler<RegistrationCommand>
       userByUsername &&
       (!userByEmail || userByUsername.id !== userByEmail.id)
     ) {
-      DomainExceptions.badRequest('username', 'Username already exists');
+      DomainExceptions.badRequest(
+        ErrorStatus.USERNAME_ALREADY_EXISTS,
+        'username',
+        'Username already exists',
+      );
     }
 
     const duration = ms(
@@ -50,6 +59,7 @@ export class RegistrationUseCase implements ICommandHandler<RegistrationCommand>
     if (userByEmail) {
       if (userByEmail.isEmailConfirmed) {
         DomainExceptions.badRequest(
+          ErrorStatus.EMAIL_ALREADY_EXISTS,
           'email',
           'User with this email is already registered',
         );

@@ -9,6 +9,7 @@ import {
 } from '../../../../../core/adapters/email/email.templates.js';
 import { EmailAdapter } from '../../../../../core/adapters/email/email.adapter.js';
 import { DomainExceptions } from '../../../../../core/exceptions/domain-exceptions.js';
+import { ErrorStatus } from '../../../../../core/exceptions/domain-exception-code.js';
 
 export class ResendEmailCommand {
   constructor(public email: string) {}
@@ -27,7 +28,11 @@ export class ResendEmailUseCase implements ICommandHandler<ResendEmailCommand> {
       await this.usersRepository.findByEmail(email);
 
     if (!user) {
-      DomainExceptions.badRequest('email', 'Incorrect email');
+      DomainExceptions.badRequest(
+        ErrorStatus.EMAIL_NOT_EXISTS,
+        'email',
+        'Incorrect email',
+      );
     }
 
     const duration: number = ms(

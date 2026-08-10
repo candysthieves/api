@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { AppConfig } from '../../app.config.js';
 import { DomainExceptions } from '../exceptions/domain-exceptions.js';
+import { ErrorStatus } from '../exceptions/domain-exception-code.js';
 
 interface RecaptchaVerificationResponse {
   // Google подтверждает успешность проверки токена.
@@ -37,9 +38,10 @@ export class RecaptchaService {
 
     // Google должен явно подтвердить, что токен действителен.
     if (!result.success) {
-      return DomainExceptions.forbidden(
-        '',
-        'Verification reCaptcha toke is broken',
+      return DomainExceptions.badRequest(
+        ErrorStatus.RECAPTCHA_INVALID,
+        'recaptchaToken',
+        'reCAPTCHA verification failed',
       );
     }
   }

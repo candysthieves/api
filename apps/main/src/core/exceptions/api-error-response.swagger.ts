@@ -1,7 +1,10 @@
+import { ErrorStatus } from './domain-exception-code.js';
+
 export const apiErrorResponseSchema = {
   type: 'object',
-  required: ['errorsMessages'],
+  required: ['code', 'errorsMessages'],
   properties: {
+    code: { type: 'number', example: ErrorStatus.REFRESH_TOKEN_EXPIRED },
     errorsMessages: {
       type: 'array',
       items: {
@@ -15,6 +18,12 @@ export const apiErrorResponseSchema = {
     },
   },
   example: {
-    errorsMessages: [{ field: 'email', message: 'Incorrect email' }],
+    code: ErrorStatus.REFRESH_TOKEN_EXPIRED,
+    errorsMessages: [
+      {
+        field: 'refreshToken',
+        message: 'Refresh token is expired.',
+      },
+    ],
   },
 };

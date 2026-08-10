@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../../infrastructure/prisma/prisma.service.js';
 import { UserEntity } from '../../domain/entities/user.entity.js';
 import { DomainExceptions } from '../../../../core/exceptions/domain-exceptions.js';
+import { ErrorStatus } from '../../../../core/exceptions/domain-exception-code.js';
 
 @Injectable()
 export class UsersRepository {
@@ -58,7 +59,11 @@ export class UsersRepository {
     const user = await this.prismaUser.findFirst({ where: { id } });
 
     if (!user) {
-      DomainExceptions.notFound('userId', 'User not found');
+      DomainExceptions.notFound(
+        ErrorStatus.USER_NOT_FOUND,
+        'userId',
+        'User not found',
+      );
     }
 
     return UserEntity.restore(user);

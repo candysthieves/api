@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { UsersRepository } from '../repositories/user-repositories/users.repository.js';
 import { UserEntity } from '../domain/entities/user.entity.js';
 import { DomainExceptions } from '../../../core/exceptions/domain-exceptions.js';
+import { ErrorStatus } from '../../../core/exceptions/domain-exception-code.js';
 
 @Injectable()
 export class PasswordRecoveryService {
@@ -11,8 +12,20 @@ export class PasswordRecoveryService {
     const user =
       await this.usersRepository.findByPasswordRecoveryCode(recoveryCode);
 
-    if (!user || !user.isPasswordRecoveryCodeValid(recoveryCode)) {
-      DomainExceptions.badRequest('code', 'Invalid or expired recovery code');
+    if (!user) {
+      DomainExceptions.badRequest(
+        ErrorStatus.RECOVERY_CODE_INVALID,
+        'recoveryCode',
+        'Invalid recovery code',
+      );
+    }
+
+    if (!user.isPasswordRecoveryCodeValid(recoveryCode)) {
+      DomainExceptions.badRequest(
+        ErrorStatus.RECOVERY_CODE_EXPIRED,
+        'recoveryCode',
+        'Recovery code has expired',
+      );
     }
 
     return user;
