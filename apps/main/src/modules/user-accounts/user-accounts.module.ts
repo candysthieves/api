@@ -27,6 +27,8 @@ import { OAuthLoginUseCase } from './application/use-cases/auth-use-cases/oauth-
 import { GoogleStrategy } from './strategies/google.strategy.js';
 import { OAuthRepository } from './repositories/oauth-repositories/oauth.repository.js';
 import { AuthSessionService } from './application/auth-session.service.js';
+import { GoogleOAuthLoginUseCase } from './application/use-cases/auth-use-cases/google-oauth-login.usecase.js';
+import { GithubOAuthLoginUseCase } from './application/use-cases/auth-use-cases/github-oauth-login.usecase.js';
 
 const useCases = [
   RegistrationUseCase,
@@ -40,6 +42,8 @@ const useCases = [
   PasswordRecoveryUseCase,
   ValidatePasswordRecoveryCodeUseCase,
   NewPasswordUseCase,
+  GoogleOAuthLoginUseCase,
+  GithubOAuthLoginUseCase,
   OAuthLoginUseCase,
 ];
 const queryHandlers = [FindAllSessionsQueryHandler];

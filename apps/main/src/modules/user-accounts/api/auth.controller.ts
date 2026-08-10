@@ -44,16 +44,18 @@ import { ValidatePasswordRecoveryCodeCommand } from '../application/use-cases/au
 import { NewPasswordDto } from '../dto/new-password.dto.js';
 import { NewPasswordCommand } from '../application/use-cases/auth-use-cases/new-password.usecase.js';
 import { type RequestWithUser } from '../../../core/types/request-with-user.type.js';
-import { OAuthLoginCommand } from '../application/use-cases/auth-use-cases/oauth-login.usecase.js';
 import { OAuthProfileDto } from '../dto/oauth-profile.dto.js';
 import { GoogleAuthGuard } from '../guards/google-auth.guard.js';
 import { RecaptchaService } from '../../../core/services/recaptcha.service.js';
 import { apiErrorResponseSchema } from '../../../core/exceptions/api-error-response.swagger.js';
+import { GoogleOAuthLoginCommand } from '../application/use-cases/auth-use-cases/google-oauth-login.usecase.js';
+import { AppConfig } from '../../../app.config.js';
 
 @ApiTags('Authentication')
 @Controller('auth')
 export class AuthController {
   constructor(
+    private readonly config: AppConfig,
     private readonly commandBus: CommandBus,
     private readonly cookieAdapter: CookieAdapter,
     private readonly recaptchaService: RecaptchaService,
@@ -219,16 +221,26 @@ export class AuthController {
   @Get('google/callback')
   @UseGuards(GoogleAuthGuard)
   async googleCallback(
+    @Res() res: Response,
     @Req() req: RequestWithUser<OAuthProfileDto>,
-  ): Promise<AccessTokenType> {
-    return this.commandBus.execute<OAuthLoginCommand, AccessTokenType>(
-      new OAuthLoginCommand(
+  ) {
+    const { accessToken, refreshToken } = await this.commandBus.execute<
+      GoogleOAuthLoginCommand,
+      AccessAndRefreshTokensType
+    >(
+      new GoogleOAuthLoginCommand(
         req.user,
         req.ip ?? '',
         typeof req.headers['user-agent'] === 'string'
           ? req.headers['user-agent']
           : '',
       ),
+    );
+
+    this.cookieAdapter.setRefreshCookie(res, refreshToken);
+
+    return res.redirect(
+      `${this.config.clientUrl}/oauth/success?accessToken=${accessToken}`,
     );
   }
 }

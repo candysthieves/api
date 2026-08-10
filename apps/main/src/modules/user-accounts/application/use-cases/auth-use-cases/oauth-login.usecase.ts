@@ -51,6 +51,7 @@ export class OAuthLoginUseCase implements ICommandHandler<OAuthLoginCommand> {
         user.id,
         profile.provider,
         profile.providerId,
+        user.email,
       );
 
       await this.oauthRepository.create(newOAuthAccount);
@@ -66,9 +67,14 @@ export class OAuthLoginUseCase implements ICommandHandler<OAuthLoginCommand> {
   private async generateUniqueUsername(email: string): Promise<string> {
     const base: string = email.split('@')[0];
 
-    if (!(await this.usersRepository.findByUsername(base))) {
-      return base;
+    let username: string = base;
+    let counter: number = 1;
+
+    while (await this.usersRepository.findByUsername(username)) {
+      username = `${base}${counter}`;
+      counter++;
     }
-    return `${base}_${Date.now()}`;
+
+    return username;
   }
 }

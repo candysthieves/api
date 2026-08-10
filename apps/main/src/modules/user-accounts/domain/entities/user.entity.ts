@@ -19,12 +19,16 @@ export class UserEntity {
     passwordHash: string,
     confirmationExpiresAt: Date,
     isEmailConfirmed: boolean = false,
+    firstName: string | null = null,
+    lastName: string | null = null,
   ): UserEntity {
     return new UserEntity({
       id: crypto.randomUUID(),
       email: email,
       username: username,
       password: passwordHash,
+      lastName: lastName,
+      firstName: firstName,
       confirmationCode: crypto.randomUUID(),
       confirmationExpiresAt: confirmationExpiresAt,
       passwordRecoveryCode: null,
@@ -40,12 +44,16 @@ export class UserEntity {
     passwordHash: string,
     confirmationExpiresAt: Date,
     isEmailConfirmed: boolean = false,
+    firstName: string | null = null,
+    lastName: string | null = null,
   ): UserEntity {
     return new UserEntity({
       id: this.id,
       email: this.email,
       username: username,
       password: passwordHash,
+      firstName: firstName,
+      lastName: lastName,
       confirmationCode: crypto.randomUUID(),
       confirmationExpiresAt: confirmationExpiresAt,
       passwordRecoveryCode: null,
