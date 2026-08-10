@@ -3,17 +3,19 @@ import { ApiProperty } from '@nestjs/swagger';
 import { Trim } from '../../../core/decorators/trim.decorator.js';
 
 export class PasswordRecoveryDto {
-  @ApiProperty({ example: 'john.doe@example.com', format: 'email' })
   @Trim()
   @IsNotEmpty()
   @IsEmail()
+  @ApiProperty({ example: 'john.doe@example.com', format: 'email' })
   email: string;
 
-  @ApiProperty({
-    description:
-      'Response token returned after completing the reCAPTCHA v2 Checkbox challenge immediately before this request.',
-  })
   @Trim()
   @IsNotEmpty()
+  @ApiProperty({
+    type: 'string',
+    description:
+      'One-time token returned after completing the reCAPTCHA v2 Checkbox challenge immediately before this request.',
+    example: 'recaptcha-token-placeholder',
+  })
   recaptchaToken: string;
 }

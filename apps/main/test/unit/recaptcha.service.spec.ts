@@ -52,7 +52,10 @@ import { validate } from 'class-validator';
 import { AppConfig } from '../../src/app.config.js';
 import { RecaptchaService } from '../../src/core/services/recaptcha.service.js';
 import { DomainException } from '../../src/core/exceptions/domain-exception.js';
-import { DomainExceptionCode } from '../../src/core/exceptions/domain-exception-code.js';
+import {
+  DomainExceptionCode,
+  ErrorStatus,
+} from '../../src/core/exceptions/domain-exception-code.js';
 import { AuthController } from '../../src/modules/user-accounts/api/auth.controller.js';
 import { PasswordRecoveryDto } from '../../src/modules/user-accounts/dto/password-recovery.dto.js';
 
@@ -142,9 +145,11 @@ describe('password recovery CAPTCHA gate', () => {
     const verifyPasswordRecovery = jest
       .fn()
       .mockRejectedValue(
-        new DomainException(DomainExceptionCode.Forbidden, [
-          { field: '', message: 'reCAPTCHA verification failed.' },
-        ]),
+        new DomainException(
+          DomainExceptionCode.Forbidden,
+          ErrorStatus.RECAPTCHA_INVALID,
+          [{ field: '', message: 'reCAPTCHA verification failed.' }],
+        ),
       );
     const recaptchaService = {
       verifyPasswordRecovery,

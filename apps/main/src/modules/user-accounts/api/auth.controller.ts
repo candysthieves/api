@@ -12,15 +12,7 @@ import {
 } from '@nestjs/common';
 import { type Request, type Response } from 'express';
 import { CommandBus } from '@nestjs/cqrs';
-import {
-  ApiBadRequestResponse,
-  ApiCreatedResponse,
-  ApiOkResponse,
-  ApiOperation,
-  ApiTags,
-  ApiUnauthorizedResponse,
-  ApiForbiddenResponse,
-} from '@nestjs/swagger';
+import { ApiTags } from '@nestjs/swagger';
 import { RegistrationCommand } from '../application/use-cases/auth-use-cases/registration.usecase.js';
 import { RegistrationDto } from '../dto/registration.dto.js';
 import { LoginDto } from '../dto/login.dto.js';
@@ -48,7 +40,18 @@ import { OAuthLoginCommand } from '../application/use-cases/auth-use-cases/oauth
 import { OAuthProfileDto } from '../dto/oauth-profile.dto.js';
 import { GoogleAuthGuard } from '../guards/google-auth.guard.js';
 import { RecaptchaService } from '../../../core/services/recaptcha.service.js';
-import { apiErrorResponseSchema } from '../../../core/exceptions/api-error-response.swagger.js';
+
+import { ApiRegistrationNewUser } from '../../../core/swagger/authDTO/regestration_swagger_flow.js';
+import { ApiLogin } from '../../../core/swagger/authDTO/login_swagger_flow.js';
+import { ApiRefreshToken } from '../../../core/swagger/authDTO/refresh_token_swagger_flow.js';
+import { ApiRegistrationConfirmation } from '../../../core/swagger/authDTO/confirm_registration_swagger.js';
+import { ApiResendConfirmationEmail } from '../../../core/swagger/authDTO/resend_confirmation_email_swagger.js';
+import { ApiPasswordRecovery } from '../../../core/swagger/authDTO/password_recovery_swagger.js';
+import { ApiRecoveryPasswordValidate } from '../../../core/swagger/authDTO/recovery_password_validate.js';
+import { ApiNewPassword } from '../../../core/swagger/authDTO/new_password_swagger.js';
+import { ApiLogout } from '../../../core/swagger/authDTO/logout_swagger.js';
+import { ApiGoogleCallback } from '../../../core/swagger/authDTO/google_oAuth_callback_swagger.js';
+import { ApiGoogleAuth } from '../../../core/swagger/authDTO/google_oAuth_swagger.js';
 
 @ApiTags('Authentication')
 @Controller('auth')
@@ -60,14 +63,8 @@ export class AuthController {
   ) {}
 
   @Post('registration')
+  @ApiRegistrationNewUser()
   @HttpCode(HttpStatus.CREATED)
-  @ApiOperation({ summary: 'Register a new user' })
-  @ApiCreatedResponse({ description: 'User registered successfully.' })
-  @ApiBadRequestResponse({
-    description:
-      'Validation failed, passwords do not match, or the email or username is already registered.',
-    schema: apiErrorResponseSchema,
-  })
   async registration(@Body() registrationDto: RegistrationDto) {
     await this.commandBus.execute<RegistrationCommand, void>(
       new RegistrationCommand(registrationDto),
@@ -75,29 +72,8 @@ export class AuthController {
   }
 
   @Post('login')
+  @ApiLogin()
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Log in and receive an access token' })
-  @ApiOkResponse({
-    description: 'Access token issued successfully.',
-    schema: {
-      type: 'object',
-      required: ['accessToken'],
-      properties: {
-        accessToken: {
-          type: 'string',
-          example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
-        },
-      },
-    },
-  })
-  @ApiBadRequestResponse({
-    description: 'Request validation failed.',
-    schema: apiErrorResponseSchema,
-  })
-  @ApiUnauthorizedResponse({
-    description: 'Invalid email or password.',
-    schema: apiErrorResponseSchema,
-  })
   async login(
     @Res({ passthrough: true }) res: Response,
     @Req() req: Request,
@@ -115,7 +91,6 @@ export class AuthController {
           : '',
       ),
     );
-
     this.cookieAdapter.setRefreshCookie(res, refreshToken);
 
     return { accessToken };
@@ -123,6 +98,7 @@ export class AuthController {
 
   @Post('refresh-token')
   @UseGuards(RefreshTokenGuard)
+  @ApiRefreshToken()
   @HttpCode(HttpStatus.OK)
   async refreshToken(
     @Res({ passthrough: true }) res: Response,
@@ -132,13 +108,12 @@ export class AuthController {
       RefreshTokenCommand,
       AccessAndRefreshTokensType
     >(new RefreshTokenCommand(user));
-
     this.cookieAdapter.setRefreshCookie(res, refreshToken);
-
     return { accessToken };
   }
 
   @Post('registration-confirmation')
+  @ApiRegistrationConfirmation()
   @HttpCode(HttpStatus.NO_CONTENT)
   async registrationConfirmation(@Body() dto: RegistrationConfirmationDto) {
     await this.commandBus.execute<ConfirmEmailCommand, void>(
@@ -147,6 +122,7 @@ export class AuthController {
   }
 
   @Post('resend-confirmation-email')
+  @ApiResendConfirmationEmail()
   @HttpCode(HttpStatus.NO_CONTENT)
   async resendConfirmationEmail(@Body() dto: ResendEmailDto) {
     return this.commandBus.execute<ResendEmailCommand, void>(
@@ -155,16 +131,8 @@ export class AuthController {
   }
 
   @Post('password-recovery')
+  @ApiPasswordRecovery()
   @HttpCode(HttpStatus.NO_CONTENT)
-  @ApiOperation({ summary: 'Send a password recovery email' })
-  @ApiBadRequestResponse({
-    description: 'User with this email does not exist.',
-    schema: apiErrorResponseSchema,
-  })
-  @ApiForbiddenResponse({
-    description: 'reCAPTCHA verification failed.',
-    schema: apiErrorResponseSchema,
-  })
   async passwordRecovery(@Body() dto: PasswordRecoveryDto): Promise<void> {
     await this.recaptchaService.verifyPasswordRecovery(dto.recaptchaToken);
     await this.commandBus.execute<PasswordRecoveryCommand, void>(
@@ -173,12 +141,8 @@ export class AuthController {
   }
 
   @Get('password-recovery/validate')
+  @ApiRecoveryPasswordValidate()
   @HttpCode(HttpStatus.NO_CONTENT)
-  @ApiOperation({ summary: 'Validate a password recovery code' })
-  @ApiBadRequestResponse({
-    description: 'Invalid or expired recovery code.',
-    schema: apiErrorResponseSchema,
-  })
   async validatePasswordRecoveryCode(
     @Query() dto: ValidatePasswordRecoveryCodeDto,
   ): Promise<void> {
@@ -188,12 +152,8 @@ export class AuthController {
   }
 
   @Post('new-password')
+  @ApiNewPassword()
   @HttpCode(HttpStatus.NO_CONTENT)
-  @ApiOperation({ summary: 'Set a new password using a recovery code' })
-  @ApiBadRequestResponse({
-    description: 'Validation failed or recovery code is invalid.',
-    schema: apiErrorResponseSchema,
-  })
   async newPassword(@Body() dto: NewPasswordDto): Promise<void> {
     await this.commandBus.execute<NewPasswordCommand, void>(
       new NewPasswordCommand(dto),
@@ -202,6 +162,7 @@ export class AuthController {
 
   @Post('logout')
   @UseGuards(RefreshTokenGuard)
+  @ApiLogout()
   @HttpCode(HttpStatus.NO_CONTENT)
   async logout(
     @Res({ passthrough: true }) res: Response,
@@ -214,10 +175,12 @@ export class AuthController {
 
   @Get('google')
   @UseGuards(GoogleAuthGuard)
+  @ApiGoogleAuth()
   googleLogin(): void {}
 
   @Get('google/callback')
   @UseGuards(GoogleAuthGuard)
+  @ApiGoogleCallback()
   async googleCallback(
     @Req() req: RequestWithUser<OAuthProfileDto>,
   ): Promise<AccessTokenType> {

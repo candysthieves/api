@@ -5,6 +5,6 @@ export class ValidatePasswordRecoveryCodeDto {
   @ApiProperty({ format: 'uuid' })
   @IsNotEmpty()
   @IsString()
-  @IsUUID(undefined, { message: 'Recovery code is expired' })
+  @IsUUID(undefined, { message: 'Recovery code must be a UUID' })
   recoveryCode: string;
 }
