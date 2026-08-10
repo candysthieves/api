@@ -39,6 +39,7 @@ export class DomainExceptionFilter implements ExceptionFilter<DomainException> {
     }
 
     response.status(status).json({
+      code: exception.errorCode,
       errorsMessages: exception.errors,
     });
   }

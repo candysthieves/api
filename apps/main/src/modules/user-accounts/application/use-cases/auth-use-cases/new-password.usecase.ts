@@ -5,6 +5,7 @@ import { SessionsRepository } from '../../../repositories/session-repositories/s
 import { UsersRepository } from '../../../repositories/user-repositories/users.repository.js';
 import { PasswordRecoveryService } from '../../password-recovery.service.js';
 import { DomainExceptions } from '../../../../../core/exceptions/domain-exceptions.js';
+import { ErrorStatus } from '../../../../../core/exceptions/domain-exception-code.js';
 
 export class NewPasswordCommand {
   constructor(public readonly dto: NewPasswordDto) {}
@@ -21,7 +22,11 @@ export class NewPasswordUseCase implements ICommandHandler<NewPasswordCommand> {
 
   async execute({ dto }: NewPasswordCommand): Promise<void> {
     if (dto.newPassword !== dto.newPasswordConfirmation) {
-      DomainExceptions.badRequest('password', 'Passwords must match');
+      DomainExceptions.badRequest(
+        ErrorStatus.PASSWORDS_NOT_MATCH,
+        'newPasswordConfirmation',
+        'Passwords must match',
+      );
     }
 
     const user = await this.passwordRecoveryService.getUserByValidCode(

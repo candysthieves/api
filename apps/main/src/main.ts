@@ -34,7 +34,16 @@ async function bootstrap() {
     .setTitle('Lumosapp API')
     .setDescription('Documentation for the Lumosapp API.')
     .setVersion('1.0')
-    .addCookieAuth('refreshToken', { type: 'apiKey' }, 'refreshToken')
+    .addCookieAuth(
+      'refreshToken',
+      {
+        type: 'apiKey',
+        in: 'cookie',
+        description:
+          'JWT refreshToken inside cookie. Must be correct and not expired.',
+      },
+      'refreshToken',
+    )
     .build();
   const document = SwaggerModule.createDocument(app, swaggerConfig);
   SwaggerModule.setup('api/v1/docs', app, document);

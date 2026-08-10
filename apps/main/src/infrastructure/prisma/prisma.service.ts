@@ -22,6 +22,7 @@ export class PrismaService extends PrismaClient {
 
   async onModuleInit(): Promise<void> {
     try {
+      await this.$queryRaw`SELECT 1`;
       await this.$connect();
       console.log('✅ Database connected');
     } catch (error) {
