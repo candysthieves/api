@@ -39,10 +39,9 @@ import { type RequestWithUser } from '../../../core/types/request-with-user.type
 import { OAuthProfileDto } from '../dto/oauth-profile.dto.js';
 import { GoogleAuthGuard } from '../guards/google-auth.guard.js';
 import { RecaptchaService } from '../../../core/services/recaptcha.service.js';
-import { apiErrorResponseSchema } from '../../../core/exceptions/api-error-response.swagger.js';
 import { GoogleOAuthLoginCommand } from '../application/use-cases/auth-use-cases/google-oauth-login.usecase.js';
 import { AppConfig } from '../../../app.config.js';
-
+//swagger import
 import { ApiRegistrationNewUser } from '../../../core/swagger/authDTO/regestration_swagger_flow.js';
 import { ApiLogin } from '../../../core/swagger/authDTO/login_swagger_flow.js';
 import { ApiRefreshToken } from '../../../core/swagger/authDTO/refresh_token_swagger_flow.js';
