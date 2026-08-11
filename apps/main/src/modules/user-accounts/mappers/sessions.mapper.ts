@@ -1,12 +1,17 @@
 import type { Session } from '../../../generated/prisma/client.js';
 import { SessionView } from '../api/view-types/sessions/session-view.type.js';
 
-export const mapSessionToView = (session: Session): SessionView => ({
-  ip: session.ip,
-  title: session.deviceName,
-  lastActiveDate: session.issuedAt.toISOString(),
-  deviceId: session.id,
-});
+export class SessionMapper {
+  static toSession(session: Session): SessionView {
+    return {
+      ip: session.ip,
+      title: session.deviceName,
+      lastActiveDate: session.issuedAt.toISOString(),
+      deviceId: session.id,
+    };
+  }
 
-export const mapSessionsToView = (sessions: Session[]): SessionView[] =>
-  sessions.map(mapSessionToView);
+  static toSessions(sessions: Session[]): SessionView[] {
+    return sessions.map((session) => this.toSession(session));
+  }
+}

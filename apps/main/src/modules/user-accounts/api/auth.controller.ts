@@ -53,6 +53,8 @@ import { ApiNewPassword } from '../../../core/swagger/authDTO/new_password_swagg
 import { ApiLogout } from '../../../core/swagger/authDTO/logout_swagger.js';
 import { ApiGoogleCallback } from '../../../core/swagger/authDTO/google_oAuth_callback_swagger.js';
 import { ApiGoogleAuth } from '../../../core/swagger/authDTO/google_oAuth_swagger.js';
+import { ProfileCommand } from '../application/use-cases/auth-use-cases/profile.usecase.js';
+import { ProfileViewType } from './view-types/auth/profile-view.type.js';
 
 @ApiTags('Authentication')
 @Controller('auth')
@@ -203,5 +205,13 @@ export class AuthController {
     this.cookieAdapter.setRefreshCookie(res, refreshToken);
 
     return res.redirect(`${this.config.clientUrl}/oauth/success`);
+  }
+
+  @Get('@me')
+  async profile(): Promise<ProfileViewType> {
+    const userId = '123';
+    return this.commandBus.execute<ProfileCommand, ProfileViewType>(
+      new ProfileCommand(userId),
+    );
   }
 }
