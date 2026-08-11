@@ -1,15 +1,16 @@
 import { Controller, Get } from '@nestjs/common';
-import { ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiExcludeController } from '@nestjs/swagger';
 
-@ApiTags('Main')
+// @ApiTags('Main')
+@ApiExcludeController()
 @Controller()
 export class AppController {
   @Get()
-  @ApiOperation({ summary: 'Get the API welcome message' })
-  @ApiOkResponse({
-    description: 'Welcome message returned successfully.',
-    schema: { type: 'string', example: 'Main!' },
-  })
+  // @ApiOperation({ summary: 'Get the API welcome message' })
+  // @ApiOkResponse({
+  //   description: 'Welcome message returned successfully.',
+  //   schema: { type: 'string', example: 'Main!' },
+  // })
   getHello(): string {
     return 'Main!';
   }

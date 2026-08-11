@@ -17,10 +17,10 @@ describe('SessionsRepository', () => {
   beforeEach(() => jest.clearAllMocks());
 
   it('soft-deletes a session by setting deletedAt', async () => {
-    await repository.deleteById('session-1');
+    await repository.deleteById('session-1', 'user-1');
 
     expect(prisma.session.update).toHaveBeenCalledWith({
-      where: { id: 'session-1' },
+      where: { id: 'session-1', userId: 'user-1', deletedAt: null },
       data: { deletedAt: expect.any(Date) },
     });
   });

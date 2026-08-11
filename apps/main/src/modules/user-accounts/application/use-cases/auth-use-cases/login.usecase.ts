@@ -6,6 +6,7 @@ import { UsersRepository } from '../../../repositories/user-repositories/users.r
 import { UserEntity } from '../../../domain/entities/user.entity.js';
 import { DomainExceptions } from '../../../../../core/exceptions/domain-exceptions.js';
 import { AuthSessionService } from '../../auth-session.service.js';
+import { ErrorStatus } from '../../../../../core/exceptions/domain-exception-code.js';
 
 export class LoginCommand {
   constructor(
@@ -32,10 +33,18 @@ export class LoginUseCase implements ICommandHandler<LoginCommand> {
     );
 
     if (!user) {
-      DomainExceptions.unauthorized('credentials', 'Invalid email or password');
+      DomainExceptions.unauthorized(
+        ErrorStatus.INVALID_CREDENTIALS,
+        'credentials',
+        'Invalid email or password',
+      );
     }
     if (!user.isEmailConfirmed) {
-      DomainExceptions.unauthorized('email', 'Email is not confirmed');
+      DomainExceptions.unauthorized(
+        ErrorStatus.EMAIL_NOT_CONFIRMED,
+        'email',
+        'Email is not confirmed',
+      );
     }
     const isPasswordCorrect: boolean = await this.hashAdapter.compare(
       dto.password,
@@ -43,7 +52,11 @@ export class LoginUseCase implements ICommandHandler<LoginCommand> {
     );
 
     if (!isPasswordCorrect) {
-      DomainExceptions.unauthorized('credentials', 'Invalid email or password');
+      DomainExceptions.unauthorized(
+        ErrorStatus.INVALID_CREDENTIALS,
+        'credentials',
+        'Invalid email or password',
+      );
     }
 
     return this.authSessionService.createSessionAndTokens(

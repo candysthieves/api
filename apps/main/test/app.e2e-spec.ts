@@ -1,3 +1,4 @@
+
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import request from 'supertest';
@@ -7,6 +8,8 @@ import cookieParser from 'cookie-parser';
 import { DomainExceptionFilter } from '../src/core/exceptions/domain-exception.filter.js';
 import { DomainExceptions } from '../src/core/exceptions/domain-exceptions.js';
 import { DomainError } from '../src/core/exceptions/domain-error.js';
+import { ErrorStatus } from '../src/core/exceptions/domain-exception-code.js';
+import { PasswordRecoveryService } from '../src/modules/user-accounts/application/password-recovery.service.js';
 
 describe('AppController (e2e)', () => {
   let app: INestApplication<App>;
@@ -51,6 +54,7 @@ describe('AppController (e2e)', () => {
       .expect(400);
 
     expect(response.body).toEqual({
+      code: ErrorStatus.VALIDATION_ERROR,
       errorsMessages: [
         expect.objectContaining({
           field: 'username',
@@ -82,6 +86,7 @@ describe('AppController (e2e)', () => {
       .expect(401);
 
     expect(response.body).toEqual({
+      code: ErrorStatus.REFRESH_TOKEN_MISSING,
       errorsMessages: [{ field: '', message: 'Unauthorized' }],
     });
   });
@@ -95,6 +100,81 @@ describe('AppController (e2e)', () => {
       statusCode: 404,
       message: 'Cannot GET /api/unknown-route',
       error: 'Not Found',
+    });
+  });
+
+  describe('GET /api/auth/password-recovery/validate', () => {
+    const validRecoveryCode = 'f47ac10b-58cc-4372-a567-0e02b2c3d479';
+    let passwordRecoveryService: PasswordRecoveryService;
+
+    beforeEach(() => {
+      passwordRecoveryService = app.get(PasswordRecoveryService);
+    });
+
+    it('validates a recovery code from the query string', async () => {
+      const getUserByValidCode = jest
+        .spyOn(passwordRecoveryService, 'getUserByValidCode')
+        .mockResolvedValue({} as never);
+
+      await request(app.getHttpServer())
+        .get('/api/auth/password-recovery/validate')
+        .query({ recoveryCode: validRecoveryCode })
+        .expect(204);
+
+      expect(getUserByValidCode).toHaveBeenCalledWith(validRecoveryCode);
+    });
+
+    it('rejects a non-UUID recovery code before invoking the use case', async () => {
+      const getUserByValidCode = jest.spyOn(
+        passwordRecoveryService,
+        'getUserByValidCode',
+      );
+
+      const response = await request(app.getHttpServer())
+        .get('/api/auth/password-recovery/validate')
+        .query({ recoveryCode: 'not-a-uuid' })
+        .expect(400);
+
+      expect(response.body.code).toBe(ErrorStatus.VALIDATION_ERROR);
+      expect(getUserByValidCode).not.toHaveBeenCalled();
+    });
+
+    it('reports an unknown recovery code', async () => {
+      jest
+        .spyOn(passwordRecoveryService, 'getUserByValidCode')
+        .mockImplementation(async () =>
+          DomainExceptions.badRequest(
+            ErrorStatus.RECOVERY_CODE_INVALID,
+            'recoveryCode',
+            'Invalid recovery code',
+          ),
+        );
+
+      const response = await request(app.getHttpServer())
+        .get('/api/auth/password-recovery/validate')
+        .query({ recoveryCode: validRecoveryCode })
+        .expect(400);
+
+      expect(response.body.code).toBe(ErrorStatus.RECOVERY_CODE_INVALID);
+    });
+
+    it('reports an expired recovery code', async () => {
+      jest
+        .spyOn(passwordRecoveryService, 'getUserByValidCode')
+        .mockImplementation(async () =>
+          DomainExceptions.badRequest(
+            ErrorStatus.RECOVERY_CODE_EXPIRED,
+            'recoveryCode',
+            'Recovery code has expired',
+          ),
+        );
+
+      const response = await request(app.getHttpServer())
+        .get('/api/auth/password-recovery/validate')
+        .query({ recoveryCode: validRecoveryCode })
+        .expect(400);
+
+      expect(response.body.code).toBe(ErrorStatus.RECOVERY_CODE_EXPIRED);
     });
   });
 });
