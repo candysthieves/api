@@ -18,11 +18,13 @@ export class OAuthAccountEntity {
     userId: string,
     provider: OAuthProvider,
     providerId: string,
+    email: string,
   ): OAuthAccountEntity {
     return new OAuthAccountEntity({
       id: crypto.randomUUID(),
       userId: userId,
       provider: provider,
+      email: email,
       providerId: providerId,
       createdAt: new Date(),
     });

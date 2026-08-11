@@ -36,11 +36,12 @@ import { ValidatePasswordRecoveryCodeCommand } from '../application/use-cases/au
 import { NewPasswordDto } from '../dto/new-password.dto.js';
 import { NewPasswordCommand } from '../application/use-cases/auth-use-cases/new-password.usecase.js';
 import { type RequestWithUser } from '../../../core/types/request-with-user.type.js';
-import { OAuthLoginCommand } from '../application/use-cases/auth-use-cases/oauth-login.usecase.js';
 import { OAuthProfileDto } from '../dto/oauth-profile.dto.js';
 import { GoogleAuthGuard } from '../guards/google-auth.guard.js';
 import { RecaptchaService } from '../../../core/services/recaptcha.service.js';
-
+import { GoogleOAuthLoginCommand } from '../application/use-cases/auth-use-cases/google-oauth-login.usecase.js';
+import { AppConfig } from '../../../app.config.js';
+//swagger import
 import { ApiRegistrationNewUser } from '../../../core/swagger/authDTO/regestration_swagger_flow.js';
 import { ApiLogin } from '../../../core/swagger/authDTO/login_swagger_flow.js';
 import { ApiRefreshToken } from '../../../core/swagger/authDTO/refresh_token_swagger_flow.js';
@@ -57,6 +58,7 @@ import { ApiGoogleAuth } from '../../../core/swagger/authDTO/google_oAuth_swagge
 @Controller('auth')
 export class AuthController {
   constructor(
+    private readonly config: AppConfig,
     private readonly commandBus: CommandBus,
     private readonly cookieAdapter: CookieAdapter,
     private readonly recaptchaService: RecaptchaService,
@@ -182,10 +184,14 @@ export class AuthController {
   @UseGuards(GoogleAuthGuard)
   @ApiGoogleCallback()
   async googleCallback(
+    @Res() res: Response,
     @Req() req: RequestWithUser<OAuthProfileDto>,
-  ): Promise<AccessTokenType> {
-    return this.commandBus.execute<OAuthLoginCommand, AccessTokenType>(
-      new OAuthLoginCommand(
+  ) {
+    const { refreshToken } = await this.commandBus.execute<
+      GoogleOAuthLoginCommand,
+      AccessAndRefreshTokensType
+    >(
+      new GoogleOAuthLoginCommand(
         req.user,
         req.ip ?? '',
         typeof req.headers['user-agent'] === 'string'
@@ -193,5 +199,9 @@ export class AuthController {
           : '',
       ),
     );
+
+    this.cookieAdapter.setRefreshCookie(res, refreshToken);
+
+    return res.redirect(`${this.config.clientUrl}/oauth/success`);
   }
 }
