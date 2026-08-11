@@ -224,7 +224,7 @@ export class AuthController {
     @Res() res: Response,
     @Req() req: RequestWithUser<OAuthProfileDto>,
   ) {
-    const { accessToken, refreshToken } = await this.commandBus.execute<
+    const { refreshToken } = await this.commandBus.execute<
       GoogleOAuthLoginCommand,
       AccessAndRefreshTokensType
     >(
@@ -239,8 +239,6 @@ export class AuthController {
 
     this.cookieAdapter.setRefreshCookie(res, refreshToken);
 
-    return res.redirect(
-      `${this.config.clientUrl}/oauth/success?accessToken=${accessToken}`,
-    );
+    return res.redirect(`${this.config.clientUrl}/oauth/success`);
   }
 }
