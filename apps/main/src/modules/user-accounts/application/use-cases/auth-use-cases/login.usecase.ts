@@ -7,6 +7,7 @@ import { UserEntity } from '../../../domain/entities/user.entity.js';
 import { DomainExceptions } from '../../../../../core/exceptions/domain-exceptions.js';
 import { AuthSessionService } from '../../auth-session.service.js';
 import { ErrorStatus } from '../../../../../core/exceptions/domain-exception-code.js';
+import { OAuthRepository } from '../../../repositories/oauth-repositories/oauth.repository.js';
 
 export class LoginCommand {
   constructor(
@@ -22,6 +23,7 @@ export class LoginUseCase implements ICommandHandler<LoginCommand> {
     private readonly hashAdapter: HashAdapter,
     private readonly authSessionService: AuthSessionService,
     private readonly usersRepository: UsersRepository,
+    private readonly oAuthRepository: OAuthRepository,
   ) {}
   async execute({
     dto,
@@ -31,6 +33,18 @@ export class LoginUseCase implements ICommandHandler<LoginCommand> {
     const user: UserEntity | null = await this.usersRepository.findByEmail(
       dto.email,
     );
+
+    if (user) {
+      const oAuthAccount = await this.oAuthRepository.findByUserId(user.id);
+
+      if (oAuthAccount) {
+        DomainExceptions.badRequest(
+          ErrorStatus.INVALID_CREDENTIALS,
+          'password',
+          `Не удалось выполнить вход. Проверьте email и пароль или воспользуйтесь восстановлением пароля.`,
+        );
+      }
+    }
 
     if (!user) {
       DomainExceptions.unauthorized(

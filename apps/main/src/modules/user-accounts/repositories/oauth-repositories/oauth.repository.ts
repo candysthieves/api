@@ -36,4 +36,12 @@ export class OAuthRepository {
 
     return existProvider ? OAuthAccountEntity.restore(existProvider) : null;
   }
+
+  async findByUserId(userId: string): Promise<OAuthAccountEntity | null> {
+    const existProvider = await this.oauthAccountPrisma.findFirst({
+      where: { userId: userId },
+    });
+
+    return existProvider ? OAuthAccountEntity.restore(existProvider) : null;
+  }
 }
