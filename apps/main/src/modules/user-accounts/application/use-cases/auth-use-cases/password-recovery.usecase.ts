@@ -38,10 +38,11 @@ export class PasswordRecoveryUseCase implements ICommandHandler<PasswordRecovery
 
     const passwordRecoveryCode = crypto.randomUUID();
 
-    const userData: UserUpdateInput = UserDataFactory.passwordRecoveryCodeData(
-      passwordRecoveryCode,
-      new Date(Date.now() + duration),
-    );
+    const userData: UserUpdateInput =
+      UserDataFactory.preparePasswordRecoveryCodeData(
+        passwordRecoveryCode,
+        new Date(Date.now() + duration),
+      );
 
     await this.usersRepository.update(user.id, userData);
 

@@ -1,13 +1,13 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { OAuthProfileDto } from '../../../api/dto/oauth-profile.dto.js';
 import { OAuthRepository } from '../../../infrastructure/repositories/oauth-repositories/oauth.repository.js';
-import { OAuthAccountEntity } from '../../../domain/entities/oauth-account.entity.js';
 import { UsersRepository } from '../../../infrastructure/repositories/user-repositories/users.repository.js';
 import { AccessAndRefreshTokensType } from '../../../../../core/types/access-and-refresh-tokens.type.js';
 import { AuthSessionService } from '../../auth-session.service.js';
-import { User } from '../../../../../generated/prisma/client.js';
+import { OAuthAccount, User } from '../../../../../generated/prisma/client.js';
 import { UserCreateInput } from '../../../../../generated/prisma/models/User.js';
 import { UserDataFactory } from '../../factories/user-data.factory.js';
+import { OAuthAccountDataFactory } from '../../factories/oauth-account-data.factory.js';
 
 export class OAuthLoginCommand {
   constructor(
@@ -28,7 +28,7 @@ export class OAuthLoginUseCase implements ICommandHandler<OAuthLoginCommand> {
   async execute(dto: OAuthLoginCommand): Promise<AccessAndRefreshTokensType> {
     const { profile, ip, userAgent } = dto;
 
-    const oauthAccount: OAuthAccountEntity | null =
+    const oauthAccount: OAuthAccount | null =
       await this.oauthRepository.findByProvider(
         profile.provider,
         profile.providerId,
@@ -44,7 +44,7 @@ export class OAuthLoginUseCase implements ICommandHandler<OAuthLoginCommand> {
       const username: string = await this.generateUniqueUsername(profile.email);
 
       if (!user) {
-        const userData: UserCreateInput = UserDataFactory.registrationData(
+        const userData: UserCreateInput = UserDataFactory.prepareCreateData(
           profile.email,
           username,
           '',
@@ -59,14 +59,14 @@ export class OAuthLoginUseCase implements ICommandHandler<OAuthLoginCommand> {
         await this.usersRepository.create(user);
       }
 
-      const newOAuthAccount: OAuthAccountEntity = OAuthAccountEntity.create(
+      const oAuthAccountData = OAuthAccountDataFactory.prepareCreateData(
         user.id,
         profile.provider,
         profile.providerId,
         user.email,
       );
 
-      await this.oauthRepository.create(newOAuthAccount);
+      await this.oauthRepository.create(oAuthAccountData);
     }
 
     return this.authSessionService.createSessionAndTokens(

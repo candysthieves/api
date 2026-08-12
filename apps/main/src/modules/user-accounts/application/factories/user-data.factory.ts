@@ -1,7 +1,7 @@
 import { Prisma } from '../../../../generated/prisma/client.js';
 
 export class UserDataFactory {
-  static registrationData(
+  static prepareCreateData(
     email: string,
     username: string,
     password: string,
@@ -22,14 +22,16 @@ export class UserDataFactory {
     };
   }
 
-  static confirmEmailData(): Prisma.UserUpdateInput {
+  static prepareConfirmEmailData(): Prisma.UserUpdateInput {
     return {
       isEmailConfirmed: true,
       confirmationCode: null,
     };
   }
 
-  static changePasswordData(passwordHash: string): Prisma.UserUpdateInput {
+  static prepareChangePasswordData(
+    passwordHash: string,
+  ): Prisma.UserUpdateInput {
     return {
       password: passwordHash,
       passwordRecoveryCode: null,
@@ -37,7 +39,7 @@ export class UserDataFactory {
     };
   }
 
-  static passwordRecoveryCodeData(
+  static preparePasswordRecoveryCodeData(
     passwordRecoveryCode: string,
     expiresAt: Date,
   ): Prisma.UserUpdateInput {
@@ -47,7 +49,7 @@ export class UserDataFactory {
     };
   }
 
-  static resendEmailData(
+  static prepareResendEmailData(
     confirmationCode: string,
     confirmationExpiresAt: Date,
   ): Prisma.UserUpdateInput {

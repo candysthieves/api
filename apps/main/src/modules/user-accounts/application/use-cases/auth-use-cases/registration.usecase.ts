@@ -67,7 +67,7 @@ export class RegistrationUseCase implements ICommandHandler<RegistrationCommand>
 
     const hash: string = await this.hashAdapter.hashPassword(dto.password);
 
-    const userData: UserCreateInput = UserDataFactory.registrationData(
+    const userData: UserCreateInput = UserDataFactory.prepareCreateData(
       dto.email,
       dto.username,
       hash,

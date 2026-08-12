@@ -35,9 +35,10 @@ export class NewPasswordUseCase implements ICommandHandler<NewPasswordCommand> {
       dto.recoveryCode,
     );
 
-    const updateData: UserUpdateInput = UserDataFactory.changePasswordData(
-      await this.hashAdapter.hashPassword(dto.newPassword),
-    );
+    const updateData: UserUpdateInput =
+      UserDataFactory.prepareChangePasswordData(
+        await this.hashAdapter.hashPassword(dto.newPassword),
+      );
 
     await this.usersRepository.update(user.id, updateData);
     await this.sessionsRepository.deleteAllActiveByUserId(user.id);

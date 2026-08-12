@@ -1,7 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../../../infrastructure/prisma/prisma.service.js';
-import { OAuthAccountEntity } from '../../../domain/entities/oauth-account.entity.js';
-import { OAuthProvider } from '../../../../../generated/prisma/client.js';
+import {
+  OAuthAccount,
+  OAuthProvider,
+} from '../../../../../generated/prisma/client.js';
+import {
+  OAuthAccountCreateInput,
+  OAuthAccountUpdateInput,
+} from '../../../../../generated/prisma/models/OAuthAccount.js';
 
 @Injectable()
 export class OAuthRepository {
@@ -11,37 +17,31 @@ export class OAuthRepository {
     this.oauthAccountPrisma = prisma.oAuthAccount;
   }
 
-  async create(oAuthAccountEntity: OAuthAccountEntity) {
-    const data = oAuthAccountEntity.toPersistence();
-
+  async create(data: OAuthAccountCreateInput): Promise<OAuthAccount> {
     return this.oauthAccountPrisma.create({ data });
   }
 
-  async save(oAuthAccountEntity: OAuthAccountEntity): Promise<void> {
+  async update(id: string, data: OAuthAccountUpdateInput): Promise<void> {
     await this.oauthAccountPrisma.update({
       where: {
-        id: oAuthAccountEntity.id,
+        id: id,
       },
-      data: oAuthAccountEntity.toPersistence(),
+      data: data,
     });
   }
 
   async findByProvider(
     provider: OAuthProvider,
     providerId: string,
-  ): Promise<OAuthAccountEntity | null> {
-    const existProvider = await this.oauthAccountPrisma.findUnique({
+  ): Promise<OAuthAccount | null> {
+    return this.oauthAccountPrisma.findUnique({
       where: { providerId_provider: { providerId, provider } },
     });
-
-    return existProvider ? OAuthAccountEntity.restore(existProvider) : null;
   }
 
-  async findByUserId(userId: string): Promise<OAuthAccountEntity | null> {
-    const existProvider = await this.oauthAccountPrisma.findFirst({
+  async findByUserId(userId: string): Promise<OAuthAccount | null> {
+    return this.oauthAccountPrisma.findFirst({
       where: { userId: userId },
     });
-
-    return existProvider ? OAuthAccountEntity.restore(existProvider) : null;
   }
 }

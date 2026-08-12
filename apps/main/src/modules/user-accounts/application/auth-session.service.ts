@@ -1,9 +1,11 @@
 import { Injectable } from '@nestjs/common';
-import { SessionEntity } from '../domain/entities/session.entity.js';
 import { JwtAdapter } from '../../../core/adapters/jwt.adapter.js';
 import { AppConfig } from '../../../app.config.js';
 import { SessionsRepository } from '../infrastructure/repositories/session-repositories/sessions.repository.js';
 import { AccessAndRefreshTokensType } from '../../../core/types/access-and-refresh-tokens.type.js';
+import { SessionDataFactory } from './factories/session-data.factory.js';
+import { Session } from '../../../generated/prisma/client.js';
+import { SessionCreateInput } from '../../../generated/prisma/models/Session.js';
 
 @Injectable()
 export class AuthSessionService {
@@ -18,13 +20,15 @@ export class AuthSessionService {
     ip: string,
     userAgent: string,
   ): Promise<AccessAndRefreshTokensType> {
-    const session = SessionEntity.create({
-      userId: userId,
-      ip,
-      deviceName: userAgent,
-      lifetimeMs: this.config.refreshTokenMaxAge,
-    });
-    await this.sessionsRepository.save(session);
+    const sessionData: SessionCreateInput =
+      SessionDataFactory.prepareCreateData(
+        userId,
+        ip,
+        userAgent,
+        this.config.refreshTokenMaxAge,
+      );
+
+    const session: Session = await this.sessionsRepository.create(sessionData);
 
     const accessToken: string = await this.jwtAdapter.createAccessToken(userId);
     const refreshToken: string = await this.jwtAdapter.createRefreshToken(

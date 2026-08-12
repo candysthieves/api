@@ -31,11 +31,13 @@ model User {
   passwordRecoveryCode      String?   @unique @map("password_recovery_code")
   passwordRecoveryExpiresAt DateTime? @map("password_recovery_expires_at")
 
-  termsAcceptedAt DateTime       @default(now()) @map("terms_accepted_at")
-  createdAt       DateTime       @default(now()) @map("created_at")
-  oauthAccounts   OAuthAccount[]
-  posts           Post[]
-  sessions        Session[]
+  termsAcceptedAt DateTime @default(now()) @map("terms_accepted_at")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  oauthAccounts OAuthAccount[]
+  posts         Post[]
+  sessions      Session[]
 }
 
 model OAuthAccount {
@@ -46,6 +48,7 @@ model OAuthAccount {
   userId     String        @map("user_id")
   user       User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt  DateTime      @default(now()) @map("created_at")
+  updatedAt  DateTime      @updatedAt @map("updated_at")
 
   @@unique([providerId, provider])
   @@index([userId])

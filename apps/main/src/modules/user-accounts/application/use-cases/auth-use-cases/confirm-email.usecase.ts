@@ -42,7 +42,7 @@ export class ConfirmEmailUseCase implements ICommandHandler<ConfirmEmailCommand>
       );
     }
 
-    const data: UserUpdateInput = UserDataFactory.confirmEmailData();
+    const data: UserUpdateInput = UserDataFactory.prepareConfirmEmailData();
 
     await this.usersRepository.update(user.id, data);
   }

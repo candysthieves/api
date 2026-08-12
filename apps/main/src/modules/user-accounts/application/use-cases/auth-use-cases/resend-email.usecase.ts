@@ -51,7 +51,7 @@ export class ResendEmailUseCase implements ICommandHandler<ResendEmailCommand> {
 
     const passwordRecoveryCode = crypto.randomUUID();
 
-    const userData = UserDataFactory.resendEmailData(
+    const userData = UserDataFactory.prepareResendEmailData(
       passwordRecoveryCode,
       newConfirmationExpiresAt,
     );
