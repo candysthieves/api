@@ -29,6 +29,7 @@ import { OAuthRepository } from './repositories/oauth-repositories/oauth.reposit
 import { AuthSessionService } from './application/auth-session.service.js';
 import { GoogleOAuthLoginUseCase } from './application/use-cases/auth-use-cases/google-oauth-login.usecase.js';
 import { GithubOAuthLoginUseCase } from './application/use-cases/auth-use-cases/github-oauth-login.usecase.js';
+import { ProfileQueryHandler } from './application/query-handler/auth/profile.usecase.js';
 
 const useCases = [
   RegistrationUseCase,
@@ -42,11 +43,11 @@ const useCases = [
   PasswordRecoveryUseCase,
   ValidatePasswordRecoveryCodeUseCase,
   NewPasswordUseCase,
+  OAuthLoginUseCase,
   GoogleOAuthLoginUseCase,
   GithubOAuthLoginUseCase,
-  OAuthLoginUseCase,
 ];
-const queryHandlers = [FindAllSessionsQueryHandler];
+const queryHandlers = [FindAllSessionsQueryHandler, ProfileQueryHandler];
 const repositories = [UsersRepository, SessionsRepository, OAuthRepository];
 const queryRepositories = [SessionsQueryRepository, UsersQueryRepository];
 const services = [

@@ -2,7 +2,7 @@ import { IQueryHandler, QueryHandler } from '@nestjs/cqrs';
 import { Inject } from '@nestjs/common';
 import { SessionsQueryRepository } from '../../../repositories/session-repositories/sessions.query.repository.js';
 import type { Session } from '../../../../../generated/prisma/client.js';
-import { mapSessionsToView } from '../../../mappers/sessions.mapper.js';
+import { SessionMapper } from '../../../mappers/sessions.mapper.js';
 import { SessionView } from '../../../api/view-types/sessions/session-view.type.js';
 
 export class FindAllSessionsQuery {
@@ -23,6 +23,6 @@ export class FindAllSessionsQueryHandler implements IQueryHandler<
     const sessions: Session[] =
       await this.sessionsQueryRepository.findSessionsForUser(query.userId);
 
-    return mapSessionsToView(sessions);
+    return SessionMapper.toSessions(sessions);
   }
 }

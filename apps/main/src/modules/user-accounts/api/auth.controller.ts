@@ -11,7 +11,7 @@ import {
   Query,
 } from '@nestjs/common';
 import { type Request, type Response } from 'express';
-import { CommandBus } from '@nestjs/cqrs';
+import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { ApiTags } from '@nestjs/swagger';
 import { RegistrationCommand } from '../application/use-cases/auth-use-cases/registration.usecase.js';
 import { RegistrationDto } from '../dto/registration.dto.js';
@@ -23,7 +23,10 @@ import { CookieAdapter } from '../../../core/adapters/cookie.adapter.js';
 import { RefreshTokenGuard } from '../guards/refresh-token.guard.js';
 import { LogoutCommand } from '../application/use-cases/auth-use-cases/logout.usecase.js';
 import { User } from '../decorators/user.decorator.js';
-import type { JwtRefreshPayload } from '../../../core/types/jwt-payload.type.js';
+import {
+  type JwtAccessPayload,
+  type JwtRefreshPayload,
+} from '../../../core/types/jwt-payload.type.js';
 import { RefreshTokenCommand } from '../application/use-cases/auth-use-cases/refresh-token,usecase.js';
 import { RegistrationConfirmationDto } from '../dto/registration-confirmation.dto.js';
 import { ConfirmEmailCommand } from '../application/use-cases/auth-use-cases/confirm-email.usecase.js';
@@ -41,7 +44,6 @@ import { GoogleAuthGuard } from '../guards/google-auth.guard.js';
 import { RecaptchaService } from '../../../core/services/recaptcha.service.js';
 import { GoogleOAuthLoginCommand } from '../application/use-cases/auth-use-cases/google-oauth-login.usecase.js';
 import { AppConfig } from '../../../app.config.js';
-//swagger import
 import { ApiRegistrationNewUser } from '../../../core/swagger/authDTO/regestration_swagger_flow.js';
 import { ApiLogin } from '../../../core/swagger/authDTO/login_swagger_flow.js';
 import { ApiRefreshToken } from '../../../core/swagger/authDTO/refresh_token_swagger_flow.js';
@@ -53,6 +55,9 @@ import { ApiNewPassword } from '../../../core/swagger/authDTO/new_password_swagg
 import { ApiLogout } from '../../../core/swagger/authDTO/logout_swagger.js';
 import { ApiGoogleCallback } from '../../../core/swagger/authDTO/google_oAuth_callback_swagger.js';
 import { ApiGoogleAuth } from '../../../core/swagger/authDTO/google_oAuth_swagger.js';
+import { ProfileViewType } from './view-types/auth/profile-view.type.js';
+import { ProfileQuery } from '../application/query-handler/auth/profile.usecase.js';
+import { AccessTokenGuard } from '../guards/access-token.guard.js';
 
 @ApiTags('Authentication')
 @Controller('auth')
@@ -60,6 +65,7 @@ export class AuthController {
   constructor(
     private readonly config: AppConfig,
     private readonly commandBus: CommandBus,
+    private readonly queryBus: QueryBus,
     private readonly cookieAdapter: CookieAdapter,
     private readonly recaptchaService: RecaptchaService,
   ) {}
@@ -203,5 +209,14 @@ export class AuthController {
     this.cookieAdapter.setRefreshCookie(res, refreshToken);
 
     return res.redirect(`${this.config.clientUrl}/oauth/success`);
+  }
+
+  @Get('@me')
+  @UseGuards(AccessTokenGuard)
+  async profile(@User() user: JwtAccessPayload): Promise<ProfileViewType> {
+    const { userId } = user;
+    return this.queryBus.execute<ProfileQuery, ProfileViewType>(
+      new ProfileQuery(userId),
+    );
   }
 }

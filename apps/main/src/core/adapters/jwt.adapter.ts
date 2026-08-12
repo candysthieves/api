@@ -1,7 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { JwtService, JwtSignOptions } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
-import { JwtRefreshPayload } from '../types/jwt-payload.type.js';
+import {
+  JwtAccessPayload,
+  JwtRefreshPayload,
+} from '../types/jwt-payload.type.js';
 import { DomainExceptions } from '../exceptions/domain-exceptions.js';
 import { ErrorStatus } from '../exceptions/domain-exception-code.js';
 
@@ -44,6 +47,20 @@ export class JwtAdapter {
       secret: this.jwt_secret_refresh_key,
       expiresIn: this.jwt_refresh_expires_in,
     });
+  }
+
+  async verifyAccessToken(accessToken: string): Promise<JwtAccessPayload> {
+    try {
+      return this.jwtService.verifyAsync(accessToken, {
+        secret: this.jwt_secret_key,
+      });
+    } catch {
+      DomainExceptions.unauthorized(
+        ErrorStatus.REFRESH_TOKEN_INVALID,
+        'token',
+        'Invalid or expired refresh token',
+      );
+    }
   }
 
   async verifyRefreshToken(refreshToken: string): Promise<JwtRefreshPayload> {
