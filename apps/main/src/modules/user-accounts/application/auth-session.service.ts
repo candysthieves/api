@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { SessionEntity } from '../domain/entities/session.entity.js';
 import { JwtAdapter } from '../../../core/adapters/jwt.adapter.js';
 import { AppConfig } from '../../../app.config.js';
-import { SessionsRepository } from '../repositories/session-repositories/sessions.repository.js';
+import { SessionsRepository } from '../infrastructure/repositories/session-repositories/sessions.repository.js';
 import { AccessAndRefreshTokensType } from '../../../core/types/access-and-refresh-tokens.type.js';
 
 @Injectable()

@@ -1,4 +1,4 @@
-import type { OAuthProvider } from '../../../generated/prisma/client.js';
+import type { OAuthProvider } from '../../../../generated/prisma/client.js';
 
 export class OAuthProfileDto {
   provider: OAuthProvider;

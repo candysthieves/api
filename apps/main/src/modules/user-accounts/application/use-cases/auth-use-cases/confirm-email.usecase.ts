@@ -1,8 +1,10 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { UsersRepository } from '../../../repositories/user-repositories/users.repository.js';
-import { UserEntity } from '../../../domain/entities/user.entity.js';
+import { UsersRepository } from '../../../infrastructure/repositories/user-repositories/users.repository.js';
 import { DomainExceptions } from '../../../../../core/exceptions/domain-exceptions.js';
 import { ErrorStatus } from '../../../../../core/exceptions/domain-exception-code.js';
+import { User } from '../../../../../generated/prisma/client.js';
+import { UserDataFactory } from '../../factories/user-data.factory.js';
+import { UserUpdateInput } from '../../../../../generated/prisma/models/User.js';
 
 export class ConfirmEmailCommand {
   constructor(public readonly code: string) {}
@@ -12,9 +14,11 @@ export class ConfirmEmailCommand {
 export class ConfirmEmailUseCase implements ICommandHandler<ConfirmEmailCommand> {
   constructor(private readonly usersRepository: UsersRepository) {}
 
-  async execute({ code }: ConfirmEmailCommand) {
-    const prismaUser = await this.usersRepository.findByConfirmationCode(code);
-    if (!prismaUser) {
+  async execute({ code }: ConfirmEmailCommand): Promise<void> {
+    const user: User | null =
+      await this.usersRepository.findByConfirmationCode(code);
+
+    if (!user) {
       DomainExceptions.badRequest(
         ErrorStatus.CONFIRMATION_CODE_INVALID,
         'code',
@@ -22,10 +26,24 @@ export class ConfirmEmailUseCase implements ICommandHandler<ConfirmEmailCommand>
       );
     }
 
-    const user = UserEntity.restore(prismaUser);
+    if (user.isEmailConfirmed) {
+      DomainExceptions.badRequest(
+        ErrorStatus.EMAIL_ALREADY_CONFIRMED,
+        'email',
+        'Email already confirmed',
+      );
+    }
 
-    user.confirmEmail();
+    if (user.confirmationExpiresAt < new Date()) {
+      DomainExceptions.badRequest(
+        ErrorStatus.CONFIRMATION_CODE_EXPIRED,
+        'code',
+        'Confirmation code expired',
+      );
+    }
 
-    await this.usersRepository.save(user);
+    const data: UserUpdateInput = UserDataFactory.confirmEmailData();
+
+    await this.usersRepository.update(user.id, data);
   }
 }

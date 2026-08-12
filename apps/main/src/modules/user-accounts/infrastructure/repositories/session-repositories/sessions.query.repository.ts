@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '../../../../infrastructure/prisma/prisma.service.js';
-import type { Session } from '../../../../generated/prisma/client.js';
+import { PrismaService } from '../../../../../infrastructure/prisma/prisma.service.js';
+import type { Session } from '../../../../../generated/prisma/client.js';
 
 @Injectable()
 export class SessionsQueryRepository {

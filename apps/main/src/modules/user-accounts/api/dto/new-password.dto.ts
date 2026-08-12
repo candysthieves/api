@@ -1,6 +1,6 @@
 import { IsNotEmpty, IsString, IsUUID, Length, Matches } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
-import { Trim } from '../../../core/decorators/trim.decorator.js';
+import { Trim } from '../../../../core/decorators/trim.decorator.js';
 
 export class NewPasswordDto {
   @IsNotEmpty()

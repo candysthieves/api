@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '../../../../infrastructure/prisma/prisma.service.js';
-import { OAuthAccountEntity } from '../../domain/entities/oauth-account.entity.js';
-import { OAuthProvider } from '../../../../generated/prisma/client.js';
+import { PrismaService } from '../../../../../infrastructure/prisma/prisma.service.js';
+import { OAuthAccountEntity } from '../../../domain/entities/oauth-account.entity.js';
+import { OAuthProvider } from '../../../../../generated/prisma/client.js';
 
 @Injectable()
 export class OAuthRepository {

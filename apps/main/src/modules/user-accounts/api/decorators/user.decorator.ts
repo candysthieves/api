@@ -13,7 +13,7 @@
 
 // Написал новую логику, старую закомментил на всякий случай. таким образом мы сможем избавиться от неявного типа AuthUser, без нарушения логики и не сломать типы
 import { createParamDecorator, ExecutionContext } from '@nestjs/common';
-import { RequestWithUser } from '../../../core/types/request-with-user.type.js';
+import { RequestWithUser } from '../../../../core/types/request-with-user.type.js';
 
 export const User = createParamDecorator(
   (_data: unknown, ctx: ExecutionContext) => {

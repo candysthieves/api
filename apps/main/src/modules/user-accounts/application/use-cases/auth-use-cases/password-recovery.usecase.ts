@@ -3,9 +3,11 @@ import ms from 'ms';
 import { AppConfig } from '../../../../../app.config.js';
 import { EmailAdapter } from '../../../../../core/adapters/email/email.adapter.js';
 import { emailTemplates } from '../../../../../core/adapters/email/email.templates.js';
-import { UsersRepository } from '../../../repositories/user-repositories/users.repository.js';
+import { UsersRepository } from '../../../infrastructure/repositories/user-repositories/users.repository.js';
 import { DomainExceptions } from '../../../../../core/exceptions/domain-exceptions.js';
 import { ErrorStatus } from '../../../../../core/exceptions/domain-exception-code.js';
+import { UserDataFactory } from '../../factories/user-data.factory.js';
+import { UserUpdateInput } from '../../../../../generated/prisma/models/User.js';
 
 export class PasswordRecoveryCommand {
   constructor(public readonly email: string) {}
@@ -33,13 +35,20 @@ export class PasswordRecoveryUseCase implements ICommandHandler<PasswordRecovery
     const duration = ms(
       this.config.passwordRecoveryExpiresIn as ms.StringValue,
     );
-    user.createPasswordRecoveryCode(new Date(Date.now() + duration));
-    await this.usersRepository.save(user);
+
+    const passwordRecoveryCode = crypto.randomUUID();
+
+    const userData: UserUpdateInput = UserDataFactory.passwordRecoveryCodeData(
+      passwordRecoveryCode,
+      new Date(Date.now() + duration),
+    );
+
+    await this.usersRepository.update(user.id, userData);
 
     await this.emailAdapter.sendEmail(
       user.email,
       emailTemplates.passwordRecovery(
-        user.passwordRecoveryCode!,
+        passwordRecoveryCode,
         this.config.clientUrl,
       ),
     );

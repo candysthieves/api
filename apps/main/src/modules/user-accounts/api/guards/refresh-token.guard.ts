@@ -1,10 +1,10 @@
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
-import { JwtAdapter } from '../../../core/adapters/jwt.adapter.js';
-import { JwtRefreshPayload } from '../../../core/types/jwt-payload.type.js';
-import { RequestWithUser } from '../../../core/types/request-with-user.type.js';
-import { SessionsRepository } from '../repositories/session-repositories/sessions.repository.js';
-import { DomainExceptions } from '../../../core/exceptions/domain-exceptions.js';
-import { ErrorStatus } from '../../../core/exceptions/domain-exception-code.js';
+import { JwtAdapter } from '../../../../core/adapters/jwt.adapter.js';
+import { JwtRefreshPayload } from '../../../../core/types/jwt-payload.type.js';
+import { RequestWithUser } from '../../../../core/types/request-with-user.type.js';
+import { SessionsRepository } from '../../infrastructure/repositories/session-repositories/sessions.repository.js';
+import { DomainExceptions } from '../../../../core/exceptions/domain-exceptions.js';
+import { ErrorStatus } from '../../../../core/exceptions/domain-exception-code.js';
 
 @Injectable()
 export class RefreshTokenGuard implements CanActivate {

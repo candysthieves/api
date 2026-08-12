@@ -1,5 +1,5 @@
-import type { Session } from '../../../generated/prisma/client.js';
-import { SessionView } from '../api/view-types/sessions/session-view.type.js';
+import type { Session } from '../../../../generated/prisma/client.js';
+import { SessionView } from '../view-types/sessions/session-view.type.js';
 
 export class SessionMapper {
   static toSession(session: Session): SessionView {

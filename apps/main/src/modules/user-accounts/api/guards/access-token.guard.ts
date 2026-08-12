@@ -1,9 +1,9 @@
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
-import { JwtAdapter } from '../../../core/adapters/jwt.adapter.js';
-import { DomainExceptions } from '../../../core/exceptions/domain-exceptions.js';
-import { ErrorStatus } from '../../../core/exceptions/domain-exception-code.js';
+import { JwtAdapter } from '../../../../core/adapters/jwt.adapter.js';
+import { DomainExceptions } from '../../../../core/exceptions/domain-exceptions.js';
+import { ErrorStatus } from '../../../../core/exceptions/domain-exception-code.js';
 import { Request } from 'express';
-import { JwtAccessPayload } from '../../../core/types/jwt-payload.type.js';
+import { JwtAccessPayload } from '../../../../core/types/jwt-payload.type.js';
 
 @Injectable()
 export class AccessTokenGuard implements CanActivate {

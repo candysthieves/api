@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsEmail, IsNotEmpty } from 'class-validator';
-import { Trim } from '../../../core/decorators/trim.decorator.js';
+import { Trim } from '../../../../core/decorators/trim.decorator.js';
 
 export class ResendEmailDto {
   @IsNotEmpty()

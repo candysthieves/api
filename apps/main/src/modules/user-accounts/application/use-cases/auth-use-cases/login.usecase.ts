@@ -1,13 +1,13 @@
 import { AccessAndRefreshTokensType } from '../../../../../core/types/access-and-refresh-tokens.type.js';
-import { LoginDto } from '../../../dto/login.dto.js';
+import { LoginDto } from '../../../api/dto/login.dto.js';
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { HashAdapter } from '../../../../../core/adapters/hash.adapter.js';
-import { UsersRepository } from '../../../repositories/user-repositories/users.repository.js';
-import { UserEntity } from '../../../domain/entities/user.entity.js';
+import { UsersRepository } from '../../../infrastructure/repositories/user-repositories/users.repository.js';
 import { DomainExceptions } from '../../../../../core/exceptions/domain-exceptions.js';
 import { AuthSessionService } from '../../auth-session.service.js';
 import { ErrorStatus } from '../../../../../core/exceptions/domain-exception-code.js';
-import { OAuthRepository } from '../../../repositories/oauth-repositories/oauth.repository.js';
+import { OAuthRepository } from '../../../infrastructure/repositories/oauth-repositories/oauth.repository.js';
+import { User } from '../../../../../generated/prisma/client.js';
 
 export class LoginCommand {
   constructor(
@@ -30,9 +30,7 @@ export class LoginUseCase implements ICommandHandler<LoginCommand> {
     ip,
     userAgent,
   }: LoginCommand): Promise<AccessAndRefreshTokensType> {
-    const user: UserEntity | null = await this.usersRepository.findByEmail(
-      dto.email,
-    );
+    const user: User | null = await this.usersRepository.findByEmail(dto.email);
 
     if (user) {
       const oAuthAccount = await this.oAuthRepository.findByUserId(user.id);

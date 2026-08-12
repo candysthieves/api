@@ -1,11 +1,13 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { OAuthProfileDto } from '../../../dto/oauth-profile.dto.js';
-import { OAuthRepository } from '../../../repositories/oauth-repositories/oauth.repository.js';
+import { OAuthProfileDto } from '../../../api/dto/oauth-profile.dto.js';
+import { OAuthRepository } from '../../../infrastructure/repositories/oauth-repositories/oauth.repository.js';
 import { OAuthAccountEntity } from '../../../domain/entities/oauth-account.entity.js';
-import { UserEntity } from '../../../domain/entities/user.entity.js';
-import { UsersRepository } from '../../../repositories/user-repositories/users.repository.js';
+import { UsersRepository } from '../../../infrastructure/repositories/user-repositories/users.repository.js';
 import { AccessAndRefreshTokensType } from '../../../../../core/types/access-and-refresh-tokens.type.js';
 import { AuthSessionService } from '../../auth-session.service.js';
+import { User } from '../../../../../generated/prisma/client.js';
+import { UserCreateInput } from '../../../../../generated/prisma/models/User.js';
+import { UserDataFactory } from '../../factories/user-data.factory.js';
 
 export class OAuthLoginCommand {
   constructor(
@@ -32,7 +34,7 @@ export class OAuthLoginUseCase implements ICommandHandler<OAuthLoginCommand> {
         profile.providerId,
       );
 
-    let user: UserEntity | null;
+    let user: User | null;
 
     if (oauthAccount) {
       user = await this.usersRepository.findByIdOrNotFound(oauthAccount.userId);
@@ -42,7 +44,17 @@ export class OAuthLoginUseCase implements ICommandHandler<OAuthLoginCommand> {
       const username: string = await this.generateUniqueUsername(profile.email);
 
       if (!user) {
-        user = UserEntity.create(profile.email, username, '', new Date(), true);
+        const userData: UserCreateInput = UserDataFactory.registrationData(
+          profile.email,
+          username,
+          '',
+          new Date(),
+          true,
+          profile.firstName,
+          profile.lastName,
+        );
+
+        user = await this.usersRepository.create(userData);
 
         await this.usersRepository.create(user);
       }

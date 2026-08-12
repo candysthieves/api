@@ -1,8 +1,8 @@
-jest.mock('../../../../infrastructure/prisma/prisma.service.js', () => ({
+jest.mock('../../../../../infrastructure/prisma/prisma.service.js', () => ({
   PrismaService: class PrismaService {},
 }));
 
-import type { PrismaService } from '../../../../infrastructure/prisma/prisma.service.js';
+import type { PrismaService } from '../../../../../infrastructure/prisma/prisma.service.js';
 import { SessionsRepository } from './sessions.repository.js';
 
 describe('SessionsRepository', () => {

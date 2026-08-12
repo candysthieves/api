@@ -1,5 +1,5 @@
-import { User } from '../../../generated/prisma/client.js';
-import { ProfileViewType } from '../api/view-types/auth/profile-view.type.js';
+import { User } from '../../../../generated/prisma/client.js';
+import { ProfileViewType } from '../view-types/auth/profile-view.type.js';
 
 export class UserMapper {
   static toProfileView(user: User): ProfileViewType {
