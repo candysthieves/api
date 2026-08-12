@@ -25,7 +25,7 @@ export class UserDataFactory {
   static prepareConfirmEmailData(): Prisma.UserUpdateInput {
     return {
       isEmailConfirmed: true,
-      confirmationCode: null,
+      // confirmationCode: null,
     };
   }
 
