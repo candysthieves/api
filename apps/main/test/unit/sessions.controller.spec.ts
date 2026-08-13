@@ -1,5 +1,5 @@
 jest.mock(
-  '../../src/modules/user-accounts/guards/refresh-token.guard.js',
+  '../../src/modules/user-accounts/api/guards/refresh-token.guard.js',
   () => ({
     RefreshTokenGuard: class RefreshTokenGuard {},
   }),
@@ -45,7 +45,11 @@ describe('SessionsController', () => {
     const cookieAdapter = {
       clearRefreshCookie: jest.fn(),
     } as unknown as CookieAdapter;
-    const controller = new SessionsController(queryBus, commandBus, cookieAdapter);
+    const controller = new SessionsController(
+      queryBus,
+      commandBus,
+      cookieAdapter,
+    );
     const user: JwtRefreshPayload = {
       userId: 'user-1',
       sessionId: 'session-1',

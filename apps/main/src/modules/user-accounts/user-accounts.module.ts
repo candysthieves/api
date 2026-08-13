@@ -1,16 +1,14 @@
 import { CqrsModule } from '@nestjs/cqrs';
-import { UsersService } from './application/users.service.js';
 import { RegistrationUseCase } from './application/use-cases/auth-use-cases/registration.usecase.js';
 import { LoginUseCase } from './application/use-cases/auth-use-cases/login.usecase.js';
 import { Module } from '@nestjs/common';
 import { UsersController } from './api/user.controller.js';
 import { AuthController } from './api/auth.controller.js';
 import { PrismaService } from '../../infrastructure/prisma/prisma.service.js';
-import { AuthService } from './application/auth.service.js';
-import { UsersRepository } from './repositories/user-repositories/users.repository.js';
-import { UsersQueryRepository } from './repositories/user-repositories/users.query.repository.js';
-import { SessionsRepository } from './repositories/session-repositories/sessions.repository.js';
-import { SessionsQueryRepository } from './repositories/session-repositories/sessions.query.repository.js';
+import { UsersRepository } from './infrastructure/repositories/user-repositories/users.repository.js';
+import { UsersQueryRepository } from './infrastructure/repositories/user-repositories/users.query.repository.js';
+import { SessionsRepository } from './infrastructure/repositories/session-repositories/sessions.repository.js';
+import { SessionsQueryRepository } from './infrastructure/repositories/session-repositories/sessions.query.repository.js';
 import { SessionsController } from './api/sessions.controller.js';
 import { FindAllSessionsQueryHandler } from './application/query-handler/sessions/find-sessions-query-handler.js';
 import { LogoutUseCase } from './application/use-cases/auth-use-cases/logout.usecase.js';
@@ -24,8 +22,8 @@ import { ValidatePasswordRecoveryCodeUseCase } from './application/use-cases/aut
 import { NewPasswordUseCase } from './application/use-cases/auth-use-cases/new-password.usecase.js';
 import { PasswordRecoveryService } from './application/password-recovery.service.js';
 import { OAuthLoginUseCase } from './application/use-cases/auth-use-cases/oauth-login.usecase.js';
-import { GoogleStrategy } from './strategies/google.strategy.js';
-import { OAuthRepository } from './repositories/oauth-repositories/oauth.repository.js';
+import { GoogleStrategy } from './infrastructure/strategies/google.strategy.js';
+import { OAuthRepository } from './infrastructure/repositories/oauth-repositories/oauth.repository.js';
 import { AuthSessionService } from './application/auth-session.service.js';
 import { GoogleOAuthLoginUseCase } from './application/use-cases/auth-use-cases/google-oauth-login.usecase.js';
 import { GithubOAuthLoginUseCase } from './application/use-cases/auth-use-cases/github-oauth-login.usecase.js';
@@ -50,13 +48,7 @@ const useCases = [
 const queryHandlers = [FindAllSessionsQueryHandler, ProfileQueryHandler];
 const repositories = [UsersRepository, SessionsRepository, OAuthRepository];
 const queryRepositories = [SessionsQueryRepository, UsersQueryRepository];
-const services = [
-  PrismaService,
-  AuthSessionService,
-  UsersService,
-  AuthService,
-  PasswordRecoveryService,
-];
+const services = [PrismaService, AuthSessionService, PasswordRecoveryService];
 const controllers = [UsersController, AuthController, SessionsController];
 
 const strategies = [GoogleStrategy];

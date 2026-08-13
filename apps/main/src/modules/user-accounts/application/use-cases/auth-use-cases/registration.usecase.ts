@@ -1,14 +1,16 @@
-import { RegistrationDto } from '../../../dto/registration.dto.js';
+import { RegistrationDto } from '../../../api/dto/registration.dto.js';
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { HashAdapter } from '../../../../../core/adapters/hash.adapter.js';
-import { UsersRepository } from '../../../repositories/user-repositories/users.repository.js';
-import { UserEntity } from '../../../domain/entities/user.entity.js';
+import { UsersRepository } from '../../../infrastructure/repositories/user-repositories/users.repository.js';
 import { AppConfig } from '../../../../../app.config.js';
 import ms from 'ms';
 import { EmailAdapter } from '../../../../../core/adapters/email/email.adapter.js';
 import { emailTemplates } from '../../../../../core/adapters/email/email.templates.js';
 import { DomainExceptions } from '../../../../../core/exceptions/domain-exceptions.js';
 import { ErrorStatus } from '../../../../../core/exceptions/domain-exception-code.js';
+import { UserDataFactory } from '../../factories/user-data.factory.js';
+import { User } from '../../../../../generated/prisma/client.js';
+import { UserCreateInput } from '../../../../../generated/prisma/models/User.js';
 
 export class RegistrationCommand {
   constructor(public readonly dto: RegistrationDto) {}
@@ -34,15 +36,22 @@ export class RegistrationUseCase implements ICommandHandler<RegistrationCommand>
       );
     }
 
-    const userByEmail = await this.usersRepository.findByEmail(dto.email);
-    const userByUsername = await this.usersRepository.findByUsername(
-      dto.username,
+    const userByEmail: User | null = await this.usersRepository.findByEmail(
+      dto.email,
     );
 
-    if (
-      userByUsername &&
-      (!userByEmail || userByUsername.id !== userByEmail.id)
-    ) {
+    if (userByEmail) {
+      DomainExceptions.badRequest(
+        ErrorStatus.EMAIL_ALREADY_EXISTS,
+        'email',
+        'User with this email is already registered',
+      );
+    }
+
+    const userByUsername: User | null =
+      await this.usersRepository.findByUsername(dto.username);
+
+    if (userByUsername) {
       DomainExceptions.badRequest(
         ErrorStatus.USERNAME_ALREADY_EXISTS,
         'username',
@@ -50,53 +59,30 @@ export class RegistrationUseCase implements ICommandHandler<RegistrationCommand>
       );
     }
 
-    const duration = ms(
+    const duration: number = ms(
       this.config.emailConfirmationExpiresIn as ms.StringValue,
     );
 
     const confirmationExpiresAt = new Date(Date.now() + duration);
 
-    if (userByEmail) {
-      if (userByEmail.isEmailConfirmed) {
-        DomainExceptions.badRequest(
-          ErrorStatus.EMAIL_ALREADY_EXISTS,
-          'email',
-          'User with this email is already registered',
-        );
-      }
+    const hash: string = await this.hashAdapter.hashPassword(dto.password);
 
-      const hash = await this.hashAdapter.hashPassword(dto.password);
-
-      userByEmail.update(dto.username, hash, confirmationExpiresAt);
-
-      await this.usersRepository.save(userByEmail);
-
-      const emailTemplate = emailTemplates.registration(
-        userByEmail.confirmationCode!,
-        this.config.clientUrl,
-      );
-
-      await this.emailAdapter.sendEmail(userByEmail.email, emailTemplate);
-
-      return;
-    }
-
-    const hash = await this.hashAdapter.hashPassword(dto.password);
-
-    const newUser = UserEntity.create(
+    const userData: UserCreateInput = UserDataFactory.prepareCreateData(
       dto.email,
       dto.username,
       hash,
       confirmationExpiresAt,
     );
 
-    await this.usersRepository.create(newUser);
+    const user: User = await this.usersRepository.create(userData);
 
-    const emailTemplate = emailTemplates.registration(
-      newUser.confirmationCode!,
-      this.config.clientUrl,
-    );
+    if (user.confirmationCode) {
+      const emailTemplate = emailTemplates.registration(
+        user.confirmationCode,
+        this.config.clientUrl,
+      );
 
-    await this.emailAdapter.sendEmail(newUser.email, emailTemplate);
+      await this.emailAdapter.sendEmail(user.email, emailTemplate);
+    }
   }
 }

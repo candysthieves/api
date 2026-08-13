@@ -1,12 +1,12 @@
 jest.mock(
-  '../../../repositories/session-repositories/sessions.repository.js',
+  '../../../infrastructure/repositories/session-repositories/sessions.repository.js',
   () => ({
     SessionsRepository: class SessionsRepository {},
   }),
 );
 
 import { LogoutCommand, LogoutUseCase } from './logout.usecase.js';
-import { SessionsRepository } from '../../../repositories/session-repositories/sessions.repository.js';
+import { SessionsRepository } from '../../../infrastructure/repositories/session-repositories/sessions.repository.js';
 
 describe('LogoutUseCase', () => {
   it('deletes only the session from the refresh-token payload', async () => {

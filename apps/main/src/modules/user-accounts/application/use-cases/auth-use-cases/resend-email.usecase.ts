@@ -1,8 +1,7 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { UsersRepository } from '../../../repositories/user-repositories/users.repository.js';
+import { UsersRepository } from '../../../infrastructure/repositories/user-repositories/users.repository.js';
 import ms from 'ms';
 import { AppConfig } from '../../../../../app.config.js';
-import { UserEntity } from '../../../domain/entities/user.entity.js';
 import {
   emailTemplates,
   EmailTemplateType,
@@ -10,6 +9,8 @@ import {
 import { EmailAdapter } from '../../../../../core/adapters/email/email.adapter.js';
 import { DomainExceptions } from '../../../../../core/exceptions/domain-exceptions.js';
 import { ErrorStatus } from '../../../../../core/exceptions/domain-exception-code.js';
+import { User } from '../../../../../generated/prisma/client.js';
+import { UserDataFactory } from '../../factories/user-data.factory.js';
 
 export class ResendEmailCommand {
   constructor(public email: string) {}
@@ -24,8 +25,7 @@ export class ResendEmailUseCase implements ICommandHandler<ResendEmailCommand> {
   ) {}
 
   async execute({ email }: ResendEmailCommand) {
-    const user: UserEntity | null =
-      await this.usersRepository.findByEmail(email);
+    const user: User | null = await this.usersRepository.findByEmail(email);
 
     if (!user) {
       DomainExceptions.badRequest(
@@ -35,18 +35,31 @@ export class ResendEmailUseCase implements ICommandHandler<ResendEmailCommand> {
       );
     }
 
+    if (user.isEmailConfirmed) {
+      DomainExceptions.badRequest(
+        ErrorStatus.EMAIL_ALREADY_CONFIRMED,
+        'email',
+        'Email already confirmed',
+      );
+    }
+
     const duration: number = ms(
       this.config.emailConfirmationExpiresIn as ms.StringValue,
     );
 
     const newConfirmationExpiresAt = new Date(Date.now() + duration);
 
-    user.resendEmail(newConfirmationExpiresAt);
+    const passwordRecoveryCode = crypto.randomUUID();
 
-    await this.usersRepository.save(user);
+    const userData = UserDataFactory.prepareResendEmailData(
+      passwordRecoveryCode,
+      newConfirmationExpiresAt,
+    );
+
+    await this.usersRepository.update(user.id, userData);
 
     const emailTemplate: EmailTemplateType = emailTemplates.registration(
-      user.confirmationCode!,
+      passwordRecoveryCode,
       this.config.clientUrl,
     );
 

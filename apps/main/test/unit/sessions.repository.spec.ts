@@ -3,7 +3,7 @@ jest.mock('../../src/infrastructure/prisma/prisma.service.js', () => ({
 }));
 
 import type { PrismaService } from '../../src/infrastructure/prisma/prisma.service.js';
-import { SessionsRepository } from '../../src/modules/user-accounts/repositories/session-repositories/sessions.repository.js';
+import { SessionsRepository } from '../../src/modules/user-accounts/infrastructure/repositories/session-repositories/sessions.repository.js';
 
 describe('SessionsRepository', () => {
   const findFirst = jest.fn();

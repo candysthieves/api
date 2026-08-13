@@ -14,33 +14,33 @@ import { type Request, type Response } from 'express';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { ApiTags } from '@nestjs/swagger';
 import { RegistrationCommand } from '../application/use-cases/auth-use-cases/registration.usecase.js';
-import { RegistrationDto } from '../dto/registration.dto.js';
-import { LoginDto } from '../dto/login.dto.js';
+import { RegistrationDto } from './dto/registration.dto.js';
+import { LoginDto } from './dto/login.dto.js';
 import { AccessTokenType } from '../../../core/types/access-token.type.js';
 import { LoginCommand } from '../application/use-cases/auth-use-cases/login.usecase.js';
 import { AccessAndRefreshTokensType } from '../../../core/types/access-and-refresh-tokens.type.js';
 import { CookieAdapter } from '../../../core/adapters/cookie.adapter.js';
-import { RefreshTokenGuard } from '../guards/refresh-token.guard.js';
+import { RefreshTokenGuard } from './guards/refresh-token.guard.js';
 import { LogoutCommand } from '../application/use-cases/auth-use-cases/logout.usecase.js';
-import { User } from '../decorators/user.decorator.js';
+import { User } from './decorators/user.decorator.js';
 import {
   type JwtAccessPayload,
   type JwtRefreshPayload,
 } from '../../../core/types/jwt-payload.type.js';
 import { RefreshTokenCommand } from '../application/use-cases/auth-use-cases/refresh-token,usecase.js';
-import { RegistrationConfirmationDto } from '../dto/registration-confirmation.dto.js';
+import { RegistrationConfirmationDto } from './dto/registration-confirmation.dto.js';
 import { ConfirmEmailCommand } from '../application/use-cases/auth-use-cases/confirm-email.usecase.js';
-import { ResendEmailDto } from '../dto/resend-email.dto.js';
+import { ResendEmailDto } from './dto/resend-email.dto.js';
 import { ResendEmailCommand } from '../application/use-cases/auth-use-cases/resend-email.usecase.js';
-import { PasswordRecoveryDto } from '../dto/password-recovery.dto.js';
+import { PasswordRecoveryDto } from './dto/password-recovery.dto.js';
 import { PasswordRecoveryCommand } from '../application/use-cases/auth-use-cases/password-recovery.usecase.js';
-import { ValidatePasswordRecoveryCodeDto } from '../dto/validate-password-recovery-code.dto.js';
+import { ValidatePasswordRecoveryCodeDto } from './dto/validate-password-recovery-code.dto.js';
 import { ValidatePasswordRecoveryCodeCommand } from '../application/use-cases/auth-use-cases/validate-password-recovery-code.usecase.js';
-import { NewPasswordDto } from '../dto/new-password.dto.js';
+import { NewPasswordDto } from './dto/new-password.dto.js';
 import { NewPasswordCommand } from '../application/use-cases/auth-use-cases/new-password.usecase.js';
 import { type RequestWithUser } from '../../../core/types/request-with-user.type.js';
-import { OAuthProfileDto } from '../dto/oauth-profile.dto.js';
-import { GoogleAuthGuard } from '../guards/google-auth.guard.js';
+import { OAuthProfileDto } from './dto/oauth-profile.dto.js';
+import { GoogleAuthGuard } from './guards/google-auth.guard.js';
 import { RecaptchaService } from '../../../core/services/recaptcha.service.js';
 import { GoogleOAuthLoginCommand } from '../application/use-cases/auth-use-cases/google-oauth-login.usecase.js';
 import { AppConfig } from '../../../app.config.js';
@@ -57,7 +57,8 @@ import { ApiGoogleCallback } from '../../../core/swagger/authDTO/google_oAuth_ca
 import { ApiGoogleAuth } from '../../../core/swagger/authDTO/google_oAuth_swagger.js';
 import { ProfileViewType } from './view-types/auth/profile-view.type.js';
 import { ProfileQuery } from '../application/query-handler/auth/profile.usecase.js';
-import { AccessTokenGuard } from '../guards/access-token.guard.js';
+import { AccessTokenGuard } from './guards/access-token.guard.js';
+import { ApiGetProfile } from '../../../core/swagger/authDTO/get-profile_swagger.js';
 
 @ApiTags('Authentication')
 @Controller('auth')
@@ -212,6 +213,7 @@ export class AuthController {
   }
 
   @Get('@me')
+  @ApiGetProfile()
   @UseGuards(AccessTokenGuard)
   async profile(@User() user: JwtAccessPayload): Promise<ProfileViewType> {
     const { userId } = user;

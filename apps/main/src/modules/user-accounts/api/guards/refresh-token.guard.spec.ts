@@ -1,16 +1,16 @@
 jest.mock(
-  '../../src/modules/user-accounts/infrastructure/repositories/session-repositories/sessions.repository.js',
+  '../../infrastructure/repositories/session-repositories/sessions.repository.js',
   () => ({
     SessionsRepository: class SessionsRepository {},
   }),
 );
 
 import { ExecutionContext, UnauthorizedException } from '@nestjs/common';
-import { JwtAdapter } from '../../src/core/adapters/jwt.adapter.js';
-import { RequestWithUser } from '../../src/core/types/request-with-user.type.js';
-import { SessionEntity } from '../../src/modules/user-accounts/domain/entities/session.entity.js';
-import { SessionsRepository } from '../../src/modules/user-accounts/infrastructure/repositories/session-repositories/sessions.repository.js';
-import { RefreshTokenGuard } from '../../src/modules/user-accounts/api/guards/refresh-token.guard.js';
+import { JwtAdapter } from '../../../../core/adapters/jwt.adapter.js';
+import { RequestWithUser } from '../../../../core/types/request-with-user.type.js';
+import { SessionEntity } from '../../domain/entities/session.entity.js';
+import { SessionsRepository } from '../../infrastructure/repositories/session-repositories/sessions.repository.js';
+import { RefreshTokenGuard } from './refresh-token.guard.js';
 
 describe('RefreshTokenGuard', () => {
   const payload = { userId: 'user-1', sessionId: 'session-1', iat: 1, exp: 2 };

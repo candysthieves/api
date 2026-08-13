@@ -41,7 +41,7 @@ jest.mock(
   () => ({ NewPasswordCommand: class NewPasswordCommand {} }),
 );
 jest.mock(
-  '../../src/modules/user-accounts/guards/refresh-token.guard.js',
+  '../../src/modules/user-accounts/api/guards/refresh-token.guard.js',
   () => ({ RefreshTokenGuard: class RefreshTokenGuard {} }),
 );
 
@@ -57,7 +57,7 @@ import {
   ErrorStatus,
 } from '../../src/core/exceptions/domain-exception-code.js';
 import { AuthController } from '../../src/modules/user-accounts/api/auth.controller.js';
-import { PasswordRecoveryDto } from '../../src/modules/user-accounts/dto/password-recovery.dto.js';
+import { PasswordRecoveryDto } from '../../src/modules/user-accounts/api/dto/password-recovery.dto.js';
 
 const validGoogleResponse = {
   success: true,

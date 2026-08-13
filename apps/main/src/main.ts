@@ -44,6 +44,16 @@ async function bootstrap() {
     .setTitle('Lumosapp API')
     .setDescription('Documentation for the Lumosapp API.')
     .setVersion('1.0')
+    .addBearerAuth(
+      {
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'JWT',
+        description:
+          'JWT accessToken in Authorization Bearer header. Must be valid and not expired.',
+      },
+      'accessToken',
+    )
     .addCookieAuth(
       'refreshToken',
       {
