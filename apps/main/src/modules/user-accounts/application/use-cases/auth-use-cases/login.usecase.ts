@@ -39,7 +39,7 @@ export class LoginUseCase implements ICommandHandler<LoginCommand> {
         DomainExceptions.badRequest(
           ErrorStatus.INVALID_CREDENTIALS,
           'credentials',
-          `Не удалось выполнить вход. Проверьте email и пароль или воспользуйтесь восстановлением пароля.`,
+          `Could not log in. Please check your email and password or use password recovery.`,
         );
       }
     }
