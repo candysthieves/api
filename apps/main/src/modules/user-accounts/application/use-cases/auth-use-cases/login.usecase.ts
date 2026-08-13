@@ -38,7 +38,7 @@ export class LoginUseCase implements ICommandHandler<LoginCommand> {
       if (oAuthAccount) {
         DomainExceptions.badRequest(
           ErrorStatus.INVALID_CREDENTIALS,
-          'password',
+          'credentials',
           `Не удалось выполнить вход. Проверьте email и пароль или воспользуйтесь восстановлением пароля.`,
         );
       }

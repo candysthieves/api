@@ -58,6 +58,7 @@ import { ApiGoogleAuth } from '../../../core/swagger/authDTO/google_oAuth_swagge
 import { ProfileViewType } from './view-types/auth/profile-view.type.js';
 import { ProfileQuery } from '../application/query-handler/auth/profile.usecase.js';
 import { AccessTokenGuard } from './guards/access-token.guard.js';
+import { ApiGetProfile } from '../../../core/swagger/authDTO/get-profile_swagger.js';
 
 @ApiTags('Authentication')
 @Controller('auth')
@@ -212,6 +213,7 @@ export class AuthController {
   }
 
   @Get('@me')
+  @ApiGetProfile()
   @UseGuards(AccessTokenGuard)
   async profile(@User() user: JwtAccessPayload): Promise<ProfileViewType> {
     const { userId } = user;
