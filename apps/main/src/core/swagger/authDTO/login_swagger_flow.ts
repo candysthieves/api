@@ -38,7 +38,7 @@ export function ApiLogin() {
                 message: {
                   type: 'string',
                   example:
-                    'password must be shorter than or equal to 20 characters ',
+                    'password must be shorter than or equal to 20 characters',
                 },
               },
             },

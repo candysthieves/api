@@ -48,6 +48,14 @@ export class RefreshTokenGuard implements CanActivate {
       );
     }
 
+    if (session.expiresAt.getTime() !== payload.exp * 1000) {
+      DomainExceptions.unauthorized(
+        ErrorStatus.REFRESH_TOKEN_INVALID,
+        'token',
+        'Invalid or expired refresh token',
+      );
+    }
+
     req.user = {
       userId: payload.userId,
       sessionId: payload.sessionId,

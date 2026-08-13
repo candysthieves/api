@@ -38,6 +38,12 @@ export class SessionEntity {
     return { ...this.props };
   }
 
+  updateTokenDates(issuedAt: Date, expiresAt: Date): void {
+    this.props.issuedAt = issuedAt;
+    this.props.expiresAt = expiresAt;
+    this.props.updatedAt = new Date();
+  }
+
   get id(): string {
     return this.props.id;
   }

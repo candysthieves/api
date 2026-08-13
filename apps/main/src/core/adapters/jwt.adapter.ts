@@ -46,6 +46,10 @@ export class JwtAdapter {
     });
   }
 
+  decodeRefreshToken(refreshToken: string): JwtRefreshPayload {
+    return this.jwtService.decode(refreshToken);
+  }
+
   async verifyRefreshToken(refreshToken: string): Promise<JwtRefreshPayload> {
     try {
       return await this.jwtService.verifyAsync(refreshToken, {

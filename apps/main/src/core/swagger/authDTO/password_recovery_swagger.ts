@@ -4,6 +4,7 @@ import {
   ApiNoContentResponse,
   ApiOperation,
 } from '@nestjs/swagger';
+import { ErrorStatus } from '../../exceptions/domain-exception-code.js';
 
 export function ApiPasswordRecovery() {
   return applyDecorators(
@@ -13,15 +14,18 @@ export function ApiPasswordRecovery() {
     }),
     ApiNoContentResponse({
       description:
-        "Even if current email is not registered (for prevent user's email detection)",
+        'Password recovery code was generated and sent to the registered email.',
     }),
     ApiBadRequestResponse({
-      description: 'If the inputModel has incorrect values',
+      description: 'If input data is invalid or the email is not registered.',
       schema: {
         type: 'object',
         required: ['code', 'errorsMessages'],
         properties: {
-          code: { type: 'number', example: 50 },
+          code: {
+            type: 'number',
+            enum: [ErrorStatus.VALIDATION_ERROR, ErrorStatus.EMAIL_NOT_EXISTS],
+          },
           errorsMessages: {
             type: 'array',
             items: {
@@ -29,7 +33,10 @@ export function ApiPasswordRecovery() {
               required: ['field', 'message'],
               properties: {
                 field: { type: 'string', example: 'email' },
-                message: { type: 'string', example: 'email must be an email' },
+                message: {
+                  type: 'string',
+                  example: "User with this email doesn't exist",
+                },
               },
             },
           },

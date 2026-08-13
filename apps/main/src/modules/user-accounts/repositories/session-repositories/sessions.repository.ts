@@ -14,6 +14,11 @@ export class SessionsRepository {
     await this.prismaSession.create({ data: sessionEntity.toPersistence() });
   }
 
+  async update(sessionEntity: SessionEntity): Promise<void> {
+    const { id, ...data } = sessionEntity.toPersistence();
+    await this.prismaSession.update({ where: { id }, data });
+  }
+
   async findActiveById(sessionId: string): Promise<SessionEntity | null> {
     const session = await this.prismaSession.findFirst({
       where: {

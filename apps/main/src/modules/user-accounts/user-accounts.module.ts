@@ -67,5 +67,6 @@ const strategies = [GoogleStrategy];
     ...services,
     ...strategies,
   ],
+  exports: [PrismaService],
 })
 export class UserAccountsModule {}
