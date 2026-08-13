@@ -11,6 +11,16 @@ import { DomainError } from './core/exceptions/domain-error.js';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const appConfig = app.get<AppConfig>(AppConfig);
+
+  app.enableCors({
+    origin: [
+      'https://lumosapp.net',
+      'https://dev.lumosapp.net:3000',
+      'http://localhost:3000',
+    ],
+    credentials: true,
+  });
+
   app.use(cookieParser());
   app.useGlobalFilters(new DomainExceptionFilter());
   app.setGlobalPrefix('api/v1');
