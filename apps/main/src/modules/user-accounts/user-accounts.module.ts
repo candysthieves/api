@@ -23,6 +23,7 @@ import { NewPasswordUseCase } from './application/use-cases/auth-use-cases/new-p
 import { PasswordRecoveryService } from './application/password-recovery.service.js';
 import { OAuthLoginUseCase } from './application/use-cases/auth-use-cases/oauth-login.usecase.js';
 import { GoogleStrategy } from './infrastructure/strategies/google.strategy.js';
+import { GithubStrategy } from './infrastructure/strategies/github.strategy.js';
 import { OAuthRepository } from './infrastructure/repositories/oauth-repositories/oauth.repository.js';
 import { AuthSessionService } from './application/auth-session.service.js';
 import { GoogleOAuthLoginUseCase } from './application/use-cases/auth-use-cases/google-oauth-login.usecase.js';
@@ -51,7 +52,7 @@ const queryRepositories = [SessionsQueryRepository, UsersQueryRepository];
 const services = [PrismaService, AuthSessionService, PasswordRecoveryService];
 const controllers = [UsersController, AuthController, SessionsController];
 
-const strategies = [GoogleStrategy];
+const strategies = [GoogleStrategy, GithubStrategy];
 
 @Module({
   imports: [CqrsModule],

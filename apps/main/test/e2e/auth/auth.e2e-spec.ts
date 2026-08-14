@@ -1,4 +1,4 @@
-import { INestApplication } from '@nestjs/common';
+import { type ExecutionContext, INestApplication } from '@nestjs/common';
 import { Server } from 'node:http';
 import { PrismaService } from '../../../src/infrastructure/prisma/prisma.service.js';
 import { Test, TestingModule } from '@nestjs/testing';
@@ -7,8 +7,38 @@ import { setupApp } from '../../../src/setup/app-setup.js';
 import { expect, jest } from '@jest/globals';
 import { EmailAdapter } from '../../../src/core/adapters/email/email.adapter.js';
 import request from 'supertest';
-import { RegistrationDto } from '../../../src/modules/user-accounts/dto/registration.dto.js';
+import { RegistrationDto } from '../../../src/modules/user-accounts/api/dto/registration.dto.js';
 import { RecaptchaService } from '../../../src/core/services/recaptcha.service.js';
+import { GoogleAuthGuard } from '../../../src/modules/user-accounts/api/guards/google-auth.guard.js';
+import { GithubAuthGuard } from '../../../src/modules/user-accounts/api/guards/github-auth.guard.js';
+import { OAuthProfileDto } from '../../../src/modules/user-accounts/api/dto/oauth-profile.dto.js';
+
+const googleProfile: OAuthProfileDto = {
+  provider: 'google',
+  providerId: 'google-user-1',
+  email: 'google.user@example.com',
+  firstName: 'Google User',
+};
+
+const githubProfile: OAuthProfileDto = {
+  provider: 'github',
+  providerId: 'github-user-1',
+  email: 'github.user@example.com',
+  firstName: 'GitHub User',
+};
+
+function createOAuthGuard(profile: OAuthProfileDto) {
+  return {
+    canActivate(context: ExecutionContext): boolean {
+      const request = context
+        .switchToHttp()
+        .getRequest<{ user: OAuthProfileDto }>();
+      request.user = profile;
+
+      return true;
+    },
+  };
+}
 
 describe('Auth e2e tests', () => {
   let app: INestApplication;
@@ -18,7 +48,12 @@ describe('Auth e2e tests', () => {
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
-    }).compile();
+    })
+      .overrideGuard(GoogleAuthGuard)
+      .useValue(createOAuthGuard(googleProfile))
+      .overrideGuard(GithubAuthGuard)
+      .useValue(createOAuthGuard(githubProfile))
+      .compile();
 
     app = moduleFixture.createNestApplication();
     setupApp(app);
@@ -574,5 +609,56 @@ describe('Auth e2e tests', () => {
       .post('/api/v1/auth/refresh-token')
       .set('Cookie', secondLogin.headers['set-cookie'])
       .expect(401);
+  });
+
+  async function expectOAuthCallback(
+    callbackPath: string,
+    profile: OAuthProfileDto,
+  ): Promise<void> {
+    const response = await request(httpServer).get(callbackPath).expect(302);
+
+    expect(response.headers.location).toBe(
+      'http://localhost:3000/oauth/success',
+    );
+    expect(response.headers['set-cookie']).toEqual(
+      expect.arrayContaining([expect.stringMatching(/^refreshToken=/)]),
+    );
+
+    const user = await prisma.user.findUnique({
+      where: { email: profile.email },
+    });
+    expect(user).not.toBeNull();
+    expect(user?.isEmailConfirmed).toBe(true);
+
+    const oauthAccount = await prisma.oAuthAccount.findFirst({
+      where: {
+        provider: profile.provider,
+        providerId: profile.providerId,
+        userId: user?.id,
+      },
+    });
+    expect(oauthAccount).not.toBeNull();
+
+    await request(httpServer).get(callbackPath).expect(302);
+
+    expect(await prisma.user.count({ where: { email: profile.email } })).toBe(
+      1,
+    );
+    expect(
+      await prisma.oAuthAccount.count({
+        where: {
+          provider: profile.provider,
+          providerId: profile.providerId,
+        },
+      }),
+    ).toBe(1);
+  }
+
+  it('Sign in a new and existing user with Google OAuth', async () => {
+    await expectOAuthCallback('/api/v1/auth/google/callback', googleProfile);
+  });
+
+  it('Sign in a new and existing user with GitHub OAuth', async () => {
+    await expectOAuthCallback('/api/v1/auth/github/callback', githubProfile);
   });
 });
