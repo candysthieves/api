@@ -21,9 +21,8 @@ export class PasswordRecoveryService {
     }
 
     if (
-      user.passwordRecoveryCode === recoveryCode &&
-      user.passwordRecoveryExpiresAt !== null &&
-      user.passwordRecoveryExpiresAt > new Date()
+      user.passwordRecoveryExpiresAt === null ||
+      user.passwordRecoveryExpiresAt <= new Date()
     ) {
       DomainExceptions.badRequest(
         ErrorStatus.RECOVERY_CODE_EXPIRED,
