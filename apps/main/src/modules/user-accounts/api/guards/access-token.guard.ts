@@ -21,15 +21,17 @@ export class AccessTokenGuard implements CanActivate {
       );
     }
 
-    const [type, accessToken] = authHeader.split(' ');
+    const match = authHeader.match(/^Bearer\s+(\S+)$/i);
 
-    if (type !== 'Bearer' && !accessToken) {
+    if (!match) {
       DomainExceptions.unauthorized(
         ErrorStatus.SESSION_NOT_FOUND,
         'session',
         'Session not found',
       );
     }
+
+    const [, accessToken] = match;
 
     try {
       const payload: JwtAccessPayload =

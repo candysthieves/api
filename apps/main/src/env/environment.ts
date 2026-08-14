@@ -2,6 +2,7 @@ import {
   IsInt,
   IsNotEmpty,
   IsString,
+  IsUrl,
   Max,
   Matches,
   Min,
@@ -35,6 +36,11 @@ export class EnvironmentVariables {
 
   @IsString()
   @IsNotEmpty()
+  @IsUrl({ require_tld: false })
+  APP_URL!: string;
+
+  @IsString()
+  @IsNotEmpty()
   JWT_SECRET_KEY!: string;
 
   @IsString()
@@ -55,7 +61,32 @@ export class EnvironmentVariables {
 
   @IsString()
   @IsNotEmpty()
+  EMAIL_CONFIRMATION_EXPIRES_IN!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  SMTP_USER!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  SMTP_PASSWORD!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  GOOGLE_CLIENT_ID!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  GOOGLE_CLIENT_SECRET!: string;
+
+  @IsString()
+  @IsNotEmpty()
   RECAPTCHA_SECRET_KEY!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @IsUrl({ require_tld: false })
+  CLIENT_URL!: string;
 
   @IsString()
   @IsNotEmpty()

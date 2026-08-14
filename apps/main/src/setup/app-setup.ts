@@ -6,6 +6,14 @@ import { DomainError } from '../core/exceptions/domain-error.js';
 import { DomainExceptions } from '../core/exceptions/domain-exceptions.js';
 
 export function setupApp(app: INestApplication): void {
+  app.enableCors({
+    origin: [
+      'https://lumosapp.net',
+      'https://dev.lumosapp.net:3000',
+      'http://localhost:3000',
+    ],
+    credentials: true,
+  });
   app.use(cookieParser());
   app.useGlobalFilters(new DomainExceptionFilter());
   app.setGlobalPrefix('api/v1');
@@ -29,6 +37,16 @@ export function setupApp(app: INestApplication): void {
     .setTitle('Lumosapp API')
     .setDescription('Documentation for the Lumosapp API.')
     .setVersion('1.0')
+    .addBearerAuth(
+      {
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'JWT',
+        description:
+          'JWT accessToken in Authorization Bearer header. Must be valid and not expired.',
+      },
+      'accessToken',
+    )
     .addCookieAuth(
       'refreshToken',
       {

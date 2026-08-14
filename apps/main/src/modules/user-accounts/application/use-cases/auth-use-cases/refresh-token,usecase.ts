@@ -2,7 +2,9 @@ import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { JwtRefreshPayload } from '../../../../../core/types/jwt-payload.type.js';
 import { JwtAdapter } from '../../../../../core/adapters/jwt.adapter.js';
 import { AccessAndRefreshTokensType } from '../../../../../core/types/access-and-refresh-tokens.type.js';
-import { SessionsRepository } from '../../../repositories/session-repositories/sessions.repository.js';
+import { SessionsRepository } from '../../../infrastructure/repositories/session-repositories/sessions.repository.js';
+import { DomainExceptions } from '../../../../../core/exceptions/domain-exceptions.js';
+import { ErrorStatus } from '../../../../../core/exceptions/domain-exception-code.js';
 
 export class RefreshTokenCommand {
   constructor(public readonly payload: JwtRefreshPayload) {}
@@ -26,19 +28,19 @@ export class RefreshTokenUseCase implements ICommandHandler<RefreshTokenCommand>
       payload.sessionId,
     );
     const refreshPayload = this.jwtAdapter.decodeRefreshToken(refreshToken);
-    const session = await this.sessionsRepository.findActiveById(
+    const wasUpdated = await this.sessionsRepository.updateTokenDates(
       payload.sessionId,
-    );
-
-    if (!session) {
-      throw new Error('Active session must exist after refresh token guard');
-    }
-
-    session.updateTokenDates(
       new Date(refreshPayload.iat * 1000),
       new Date(refreshPayload.exp * 1000),
     );
-    await this.sessionsRepository.update(session);
+
+    if (!wasUpdated) {
+      DomainExceptions.unauthorized(
+        ErrorStatus.SESSION_NOT_FOUND,
+        'session',
+        'Session not found',
+      );
+    }
 
     return { accessToken, refreshToken };
   }

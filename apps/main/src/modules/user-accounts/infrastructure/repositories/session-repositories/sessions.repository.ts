@@ -55,4 +55,21 @@ export class SessionsRepository {
   async findById(id: string): Promise<Session | null> {
     return this.prismaSession.findUnique({ where: { id } });
   }
+
+  async updateTokenDates(
+    sessionId: string,
+    issuedAt: Date,
+    expiresAt: Date,
+  ): Promise<boolean> {
+    const { count } = await this.prismaSession.updateMany({
+      where: {
+        id: sessionId,
+        deletedAt: null,
+        expiresAt: { gt: new Date() },
+      },
+      data: { issuedAt, expiresAt },
+    });
+
+    return count === 1;
+  }
 }
