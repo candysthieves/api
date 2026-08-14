@@ -35,6 +35,12 @@ export class AuthSessionService {
       userId,
       session.id,
     );
+    const refreshPayload = this.jwtAdapter.decodeRefreshToken(refreshToken);
+    session.updateTokenDates(
+      new Date(refreshPayload.iat * 1000),
+      new Date(refreshPayload.exp * 1000),
+    );
+    await this.sessionsRepository.update(session);
 
     return {
       accessToken,

@@ -1,21 +1,11 @@
-import { NestFactory } from '@nestjs/core';
-import { AppModule } from './app.module.js';
-import { AppConfig } from './app.config.js';
-import { setupApp } from './setup/app-setup.js';
-//TODO разобраться
-async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
-  const appConfig = app.get<AppConfig>(AppConfig);
+import { INestApplication, ValidationPipe } from '@nestjs/common';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import cookieParser from 'cookie-parser';
+import { DomainExceptionFilter } from '../core/exceptions/domain-exception.filter.js';
+import { DomainError } from '../core/exceptions/domain-error.js';
+import { DomainExceptions } from '../core/exceptions/domain-exceptions.js';
 
-  app.enableCors({
-    origin: [
-      'https://lumosapp.net',
-      'https://dev.lumosapp.net:3000',
-      'http://localhost:3000',
-    ],
-    credentials: true,
-  });
-
+export function setupApp(app: INestApplication): void {
   app.use(cookieParser());
   app.useGlobalFilters(new DomainExceptionFilter());
   app.setGlobalPrefix('api/v1');
@@ -39,16 +29,6 @@ async function bootstrap() {
     .setTitle('Lumosapp API')
     .setDescription('Documentation for the Lumosapp API.')
     .setVersion('1.0')
-    .addBearerAuth(
-      {
-        type: 'http',
-        scheme: 'bearer',
-        bearerFormat: 'JWT',
-        description:
-          'JWT accessToken in Authorization Bearer header. Must be valid and not expired.',
-      },
-      'accessToken',
-    )
     .addCookieAuth(
       'refreshToken',
       {
@@ -62,9 +42,4 @@ async function bootstrap() {
     .build();
   const document = SwaggerModule.createDocument(app, swaggerConfig);
   SwaggerModule.setup('api/v1/docs', app, document);
-  setupApp(app);
-
-  await app.listen(appConfig.port);
-  console.log('Server started on port: ' + appConfig.port);
 }
-bootstrap();
