@@ -23,8 +23,8 @@ export class AuthSessionService {
     const sessionData: SessionCreateInput =
       SessionDataFactory.prepareCreateData(
         userId,
-        ip,
         userAgent,
+        ip,
         this.config.refreshTokenMaxAge,
       );
 
@@ -34,6 +34,12 @@ export class AuthSessionService {
     const refreshToken: string = await this.jwtAdapter.createRefreshToken(
       userId,
       session.id,
+    );
+    const refreshPayload = this.jwtAdapter.decodeRefreshToken(refreshToken);
+    await this.sessionsRepository.updateTokenDates(
+      session.id,
+      new Date(refreshPayload.iat * 1000),
+      new Date(refreshPayload.exp * 1000),
     );
 
     return {

@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { AppConfig } from '../../app.config.js';
 import { DomainExceptions } from '../exceptions/domain-exceptions.js';
 import { ErrorStatus } from '../exceptions/domain-exception-code.js';
@@ -15,8 +15,6 @@ export class RecaptchaService {
   // Официальный серверный endpoint Google для проверки reCAPTCHA-токена.
   private static readonly verificationUrl =
     'https://www.google.com/recaptcha/api/siteverify';
-  // Логируем техническую категорию отказа, не раскрывая её клиенту.
-  private readonly logger = new Logger(RecaptchaService.name);
 
   constructor(private readonly config: AppConfig) {}
 
@@ -35,9 +33,14 @@ export class RecaptchaService {
     // Читаем JSON-ответ Google; повреждённый ответ также считается отказом.
     // TODO когда будет готов фронт, указать явный тип ( не присваивать, а указать)
     const result = (await response.json()) as RecaptchaVerificationResponse;
+    const hostname = result.hostname?.trim().toLowerCase();
 
     // Google должен явно подтвердить, что токен действителен.
-    if (!result.success) {
+    if (
+      !result.success ||
+      !hostname ||
+      !this.config.recaptchaAllowedHostnames.has(hostname)
+    ) {
       return DomainExceptions.badRequest(
         ErrorStatus.RECAPTCHA_INVALID,
         'recaptchaToken',

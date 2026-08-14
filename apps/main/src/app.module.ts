@@ -5,9 +5,13 @@ import { Module } from '@nestjs/common';
 import { UserAccountsModule } from './modules/user-accounts/user-accounts.module.js';
 import { AppController } from './app.controller.js';
 import { CoreModule } from './core/core.module.js';
+import { TestController } from './test.controller.js';
 
 @Module({
   imports: [configModule, CoreModule, CqrsModule.forRoot(), UserAccountsModule],
-  controllers: [AppController],
+  controllers:
+    process.env.NODE_ENV === 'testing'
+      ? [AppController, TestController]
+      : [AppController],
 })
 export class AppModule {}

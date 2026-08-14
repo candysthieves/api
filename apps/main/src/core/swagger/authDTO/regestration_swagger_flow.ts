@@ -26,8 +26,8 @@ export function ApiRegistrationNewUser() {
               type: 'object',
               required: ['field', 'message'],
               properties: {
-                field: { type: 'string', example: 'password' },
-                message: { type: 'string', example: 'password do not match' },
+                field: { type: 'string', example: 'passwordConfirmation' },
+                message: { type: 'string', example: 'Passwords must match' },
               },
             },
           },
