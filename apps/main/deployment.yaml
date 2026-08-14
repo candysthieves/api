@@ -100,6 +100,16 @@ spec:
                  secretKeyRef:
                    name: lumosapp-backend-main-production-config-secret
                    key: CLIENT_URL
+             - name: GITHUB_CLIENT_ID
+               valueFrom:
+                 secretKeyRef:
+                   name: lumosapp-backend-main-production-config-secret
+                   key: GITHUB_CLIENT_ID
+             - name: GITHUB_CLIENT_SECRET
+               valueFrom:
+                 secretKeyRef:
+                   name: lumosapp-backend-main-production-config-secret
+                   key: GITHUB_CLIENT_SECRET
              - name: JWT_SECRET_KEY
                valueFrom:
                  secretKeyRef:

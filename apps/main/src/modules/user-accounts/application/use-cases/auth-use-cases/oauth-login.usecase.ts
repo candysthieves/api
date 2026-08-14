@@ -55,8 +55,6 @@ export class OAuthLoginUseCase implements ICommandHandler<OAuthLoginCommand> {
         );
 
         user = await this.usersRepository.create(userData);
-
-        await this.usersRepository.create(user);
       }
 
       const oAuthAccountData = OAuthAccountDataFactory.prepareCreateData(

@@ -13,5 +13,7 @@ process.env.SMTP_USER ??= 'test@example.com';
 process.env.SMTP_PASSWORD ??= 'test-password';
 process.env.GOOGLE_CLIENT_ID ??= 'test-google-client-id';
 process.env.GOOGLE_CLIENT_SECRET ??= 'test-google-client-secret';
+process.env.GITHUB_CLIENT_ID ??= 'test-github-client-id';
+process.env.GITHUB_CLIENT_SECRET ??= 'test-github-client-secret';
 process.env.RECAPTCHA_SECRET_KEY ??= 'test-secret';
 process.env.RECAPTCHA_ALLOWED_HOSTNAMES ??= 'example.com';

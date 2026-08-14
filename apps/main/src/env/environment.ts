@@ -81,6 +81,14 @@ export class EnvironmentVariables {
 
   @IsString()
   @IsNotEmpty()
+  GITHUB_CLIENT_ID!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  GITHUB_CLIENT_SECRET!: string;
+
+  @IsString()
+  @IsNotEmpty()
   RECAPTCHA_SECRET_KEY!: string;
 
   @IsString()

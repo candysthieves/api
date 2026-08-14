@@ -41,8 +41,10 @@ import { NewPasswordCommand } from '../application/use-cases/auth-use-cases/new-
 import { type RequestWithUser } from '../../../core/types/request-with-user.type.js';
 import { OAuthProfileDto } from './dto/oauth-profile.dto.js';
 import { GoogleAuthGuard } from './guards/google-auth.guard.js';
+import { GithubAuthGuard } from './guards/github-auth.guard.js';
 import { RecaptchaService } from '../../../core/services/recaptcha.service.js';
 import { GoogleOAuthLoginCommand } from '../application/use-cases/auth-use-cases/google-oauth-login.usecase.js';
+import { GithubOAuthLoginCommand } from '../application/use-cases/auth-use-cases/github-oauth-login.usecase.js';
 import { AppConfig } from '../../../app.config.js';
 import { ApiRegistrationNewUser } from '../../../core/swagger/authDTO/regestration_swagger_flow.js';
 import { ApiLogin } from '../../../core/swagger/authDTO/login_swagger_flow.js';
@@ -55,6 +57,8 @@ import { ApiNewPassword } from '../../../core/swagger/authDTO/new_password_swagg
 import { ApiLogout } from '../../../core/swagger/authDTO/logout_swagger.js';
 import { ApiGoogleCallback } from '../../../core/swagger/authDTO/google_oAuth_callback_swagger.js';
 import { ApiGoogleAuth } from '../../../core/swagger/authDTO/google_oAuth_swagger.js';
+import { ApiGithubAuth } from '../../../core/swagger/authDTO/github_oAuth_swagger.js';
+import { ApiGithubCallback } from '../../../core/swagger/authDTO/github_oAuth_callback_swagger.js';
 import { ProfileViewType } from './view-types/auth/profile-view.type.js';
 import { ProfileQuery } from '../application/query-handler/auth/profile.usecase.js';
 import { AccessTokenGuard } from './guards/access-token.guard.js';
@@ -185,6 +189,7 @@ export class AuthController {
   @Get('google')
   @UseGuards(GoogleAuthGuard)
   @ApiGoogleAuth()
+  // TODO: добавить и проверять OAuth state для защиты callback от CSRF.
   googleLogin(): void {}
 
   @Get('google/callback')
@@ -199,6 +204,37 @@ export class AuthController {
       AccessAndRefreshTokensType
     >(
       new GoogleOAuthLoginCommand(
+        req.user,
+        req.ip ?? '',
+        typeof req.headers['user-agent'] === 'string'
+          ? req.headers['user-agent']
+          : '',
+      ),
+    );
+
+    this.cookieAdapter.setRefreshCookie(res, refreshToken);
+
+    return res.redirect(`${this.config.clientUrl}/oauth/success`);
+  }
+
+  @Get('github')
+  @UseGuards(GithubAuthGuard)
+  @ApiGithubAuth()
+  // TODO: добавить и проверять OAuth state для защиты callback от CSRF.
+  githubLogin(): void {}
+
+  @Get('github/callback')
+  @UseGuards(GithubAuthGuard)
+  @ApiGithubCallback()
+  async githubCallback(
+    @Res() res: Response,
+    @Req() req: RequestWithUser<OAuthProfileDto>,
+  ) {
+    const { refreshToken } = await this.commandBus.execute<
+      GithubOAuthLoginCommand,
+      AccessAndRefreshTokensType
+    >(
+      new GithubOAuthLoginCommand(
         req.user,
         req.ip ?? '',
         typeof req.headers['user-agent'] === 'string'

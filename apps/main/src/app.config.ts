@@ -7,6 +7,7 @@ export class AppConfig {
   readonly port: number;
   readonly appUrl: string;
   readonly googleCallbackUrl: string;
+  readonly githubCallbackUrl: string;
   readonly databaseUrl: string;
   readonly accessSecret: string;
   readonly accessExpiresIn: string;
@@ -20,12 +21,15 @@ export class AppConfig {
   readonly recaptchaAllowedHostnames: ReadonlySet<string>;
   readonly googleClientId: string;
   readonly googleClientSecret: string;
+  readonly githubClientId: string;
+  readonly githubClientSecret: string;
   readonly clientUrl: string;
 
   constructor(@Inject(ConfigService) configService: ConfigService) {
     this.port = Number(configService.getOrThrow<string>('PORT'));
     this.appUrl = configService.getOrThrow<string>('APP_URL');
     this.googleCallbackUrl = `${this.appUrl}/auth/google/callback`;
+    this.githubCallbackUrl = `${this.appUrl}/auth/github/callback`;
     this.databaseUrl = configService.getOrThrow<string>('DATABASE_URL');
     this.accessSecret = configService.getOrThrow<string>('JWT_SECRET_KEY');
     this.accessExpiresIn = configService.getOrThrow<string>('JWT_EXPIRES_IN');
@@ -46,6 +50,10 @@ export class AppConfig {
     this.googleClientId = configService.getOrThrow<string>('GOOGLE_CLIENT_ID');
     this.googleClientSecret = configService.getOrThrow<string>(
       'GOOGLE_CLIENT_SECRET',
+    );
+    this.githubClientId = configService.getOrThrow<string>('GITHUB_CLIENT_ID');
+    this.githubClientSecret = configService.getOrThrow<string>(
+      'GITHUB_CLIENT_SECRET',
     );
     this.recaptchaSecretKey = configService.getOrThrow<string>(
       'RECAPTCHA_SECRET_KEY',
