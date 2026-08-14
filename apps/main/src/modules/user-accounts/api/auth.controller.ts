@@ -248,7 +248,7 @@ export class AuthController {
     return res.redirect(`${this.config.clientUrl}/oauth/success`);
   }
 
-  @Get('@me')
+  @Get('me')
   @ApiGetProfile()
   @UseGuards(AccessTokenGuard)
   async profile(@User() user: JwtAccessPayload): Promise<ProfileViewType> {
