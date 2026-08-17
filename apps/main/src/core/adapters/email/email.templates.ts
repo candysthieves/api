@@ -30,13 +30,13 @@ export const emailTemplates = {
         <h1>Password recovery</h1>
         <p>
           To finish password recovery please follow the link below:
-          <a href="${clientUrl}?recoveryCode=${code}">
+          <a href="${clientUrl}/create-new-password?recoveryCode=${code}">
             Recover password
           </a>
         </p>
         <p>
           To finish password recovery please follow the link below:
-          <a href="https://dev.lumosapp.net:3000/recoveryCode=${code}">
+          <a href="https://dev.lumosapp.net:3000/create-new-password?recoveryCode=${code}">
             Recover password[LOCAL LINK]
           </a>
         </p>
