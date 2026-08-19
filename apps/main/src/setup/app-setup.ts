@@ -124,7 +124,8 @@ export function setupApp(app: NestExpressApplication): void {
 
         video = document.createElement('video');
         video.id = 'swagger-background-video';
-        video.src = '/api/v1/swagger-assets/swagger-background.mp4';
+        video.src =
+          'https://storage.yandexcloud.net/lumus-media/lumos-media.mp4';
         video.preload = 'auto';
         video.loop = true;
         video.muted = true;
