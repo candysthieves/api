@@ -115,16 +115,47 @@ export function setupApp(app: NestExpressApplication): void {
       }
     `,
     customJsStr: `
-      const video = document.createElement('video');
-      video.id = 'swagger-background-video';
-      video.src = '/api/v1/swagger-assets/swagger-background.mp4';
-      video.preload = 'auto';
-      video.loop = true;
-      video.muted = true;
-      video.volume = 0.05;
-      video.playsInline = true;
-      document.body.append(video);
-      video.load();
+      let video;
+
+      const preloadVideo = () => {
+        if (video) {
+          return video;
+        }
+
+        video = document.createElement('video');
+        video.id = 'swagger-background-video';
+        video.src = '/api/v1/swagger-assets/swagger-background.mp4';
+        video.preload = 'auto';
+        video.loop = true;
+        video.muted = true;
+        video.volume = 0.05;
+        video.playsInline = true;
+        document.body.append(video);
+        video.load();
+
+        return video;
+      };
+
+      const preloadAfterSwaggerIsReady = () => {
+        if (document.querySelector('.opblock-summary')) {
+          preloadVideo();
+          return;
+        }
+
+        const observer = new MutationObserver(() => {
+          if (document.querySelector('.opblock-summary')) {
+            preloadVideo();
+            observer.disconnect();
+          }
+        });
+        observer.observe(document.body, { childList: true, subtree: true });
+      };
+
+      if (document.readyState === 'complete') {
+        preloadAfterSwaggerIsReady();
+      } else {
+        window.addEventListener('load', preloadAfterSwaggerIsReady, { once: true });
+      }
 
       document.addEventListener('click', (event) => {
         const target = event.target;
@@ -133,12 +164,14 @@ export function setupApp(app: NestExpressApplication): void {
           return;
         }
 
-        if (video.dataset.started === 'true') {
+        const currentVideo = preloadVideo();
+
+        if (currentVideo.dataset.started === 'true') {
           return;
         }
 
-        video.dataset.started = 'true';
-        video.muted = false;
+        currentVideo.dataset.started = 'true';
+        currentVideo.muted = false;
         document.body.classList.add('swagger-video-active');
 
         const soundToggle = document.createElement('button');
@@ -146,14 +179,14 @@ export function setupApp(app: NestExpressApplication): void {
         soundToggle.type = 'button';
         soundToggle.textContent = 'Минус Вайб';
         soundToggle.addEventListener('click', () => {
-          video.muted = !video.muted;
-          soundToggle.textContent = video.muted ? 'Плюс Вайб' : 'Минус Вайб';
+          currentVideo.muted = !currentVideo.muted;
+          soundToggle.textContent = currentVideo.muted ? 'Плюс Вайб' : 'Минус Вайб';
         });
         document.body.append(soundToggle);
 
-        video.play().catch(() => {
-          delete video.dataset.started;
-          video.muted = true;
+        currentVideo.play().catch(() => {
+          delete currentVideo.dataset.started;
+          currentVideo.muted = true;
           document.body.classList.remove('swagger-video-active');
           soundToggle.remove();
         });
