@@ -12,7 +12,7 @@ const currentDirectory = dirname(fileURLToPath(import.meta.url));
 
 export function setupApp(app: NestExpressApplication): void {
   app.useStaticAssets(join(currentDirectory, '..', 'assets'), {
-    prefix: '/swagger-assets',
+    prefix: '/api/v1/swagger-assets',
   });
 
   app.enableCors({
@@ -80,7 +80,7 @@ export function setupApp(app: NestExpressApplication): void {
         z-index: 1;
         background:
           linear-gradient(rgba(17, 24, 39, 0.72), rgba(17, 24, 39, 0.72)),
-          url('/swagger-assets/swagger-background.png') center / cover fixed !important;
+          url('/api/v1/swagger-assets/swagger-background.png') center / cover fixed !important;
       }
 
       #swagger-background-video {
@@ -128,7 +128,7 @@ export function setupApp(app: NestExpressApplication): void {
 
         const video = document.createElement('video');
         video.id = 'swagger-background-video';
-        video.src = '/swagger-assets/swagger-background.mp4';
+        video.src = '/api/v1/swagger-assets/swagger-background.mp4';
         video.autoplay = true;
         video.loop = true;
         video.muted = false;
