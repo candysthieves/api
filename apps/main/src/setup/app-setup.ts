@@ -115,6 +115,17 @@ export function setupApp(app: NestExpressApplication): void {
       }
     `,
     customJsStr: `
+      const video = document.createElement('video');
+      video.id = 'swagger-background-video';
+      video.src = '/api/v1/swagger-assets/swagger-background.mp4';
+      video.preload = 'auto';
+      video.loop = true;
+      video.muted = true;
+      video.volume = 0.05;
+      video.playsInline = true;
+      document.body.append(video);
+      video.load();
+
       document.addEventListener('click', (event) => {
         const target = event.target;
 
@@ -122,20 +133,12 @@ export function setupApp(app: NestExpressApplication): void {
           return;
         }
 
-        if (document.getElementById('swagger-background-video')) {
+        if (video.dataset.started === 'true') {
           return;
         }
 
-        const video = document.createElement('video');
-        video.id = 'swagger-background-video';
-        video.src = '/api/v1/swagger-assets/swagger-background.mp4';
-        video.autoplay = true;
-        video.loop = true;
+        video.dataset.started = 'true';
         video.muted = false;
-        video.volume = 0.05;
-        video.playsInline = true;
-
-        document.body.append(video);
         document.body.classList.add('swagger-video-active');
 
         const soundToggle = document.createElement('button');
@@ -149,9 +152,10 @@ export function setupApp(app: NestExpressApplication): void {
         document.body.append(soundToggle);
 
         video.play().catch(() => {
+          delete video.dataset.started;
+          video.muted = true;
           document.body.classList.remove('swagger-video-active');
           soundToggle.remove();
-          video.remove();
         });
       });
     `,
