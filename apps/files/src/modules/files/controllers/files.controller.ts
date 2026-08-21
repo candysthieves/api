@@ -6,7 +6,7 @@ export class FilesController {
   constructor(private readonly filesService: FilesService) {}
 
   @Get()
-  getHello(): string {
+  getMessage(): string {
     return 'Files';
   }
 }
