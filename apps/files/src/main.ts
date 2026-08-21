@@ -1,8 +1,12 @@
 import { NestFactory } from '@nestjs/core';
+import { FilesConfig } from './files.config.js';
 import { FilesModule } from './files.module.js';
 
 async function bootstrap() {
   const app = await NestFactory.create(FilesModule);
-  await app.listen(process.env.port ?? 3000);
+  const config = app.get(FilesConfig);
+
+  await app.listen(config.port);
+  console.log('Files service started on port: ' + config.port);
 }
 bootstrap();
