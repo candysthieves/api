@@ -1,21 +1,23 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 
 @Schema({
-  collection: 'files',
+  collection: 'previews',
   timestamps: true,
 })
-export class File {
+export class Preview {
+  @Prop({
+    required: true,
+    unique: true,
+    index: true,
+  })
+  previewId: string;
+
   @Prop({
     required: true,
     unique: true,
     index: true,
   })
   fileId: string;
-
-  @Prop({
-    required: true,
-  })
-  originalName: string;
 
   @Prop({
     required: true,
@@ -33,4 +35,4 @@ export class File {
   mimeType: string;
 }
 
-export const FileSchema = SchemaFactory.createForClass(File);
+export const PreviewSchema = SchemaFactory.createForClass(Preview);
