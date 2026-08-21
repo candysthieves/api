@@ -38,6 +38,7 @@ kekw
 # dotenv environment variable files
 .env.production
 .env.*.local
+/apps/files/src/env/.env.development.local
 
 # temp directory
 .temp

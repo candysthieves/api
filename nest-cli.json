@@ -27,7 +27,14 @@
       "entryFile": "main",
       "sourceRoot": "apps/files/src",
       "compilerOptions": {
-        "tsConfigPath": "apps/files/tsconfig.app.json"
+        "tsConfigPath": "apps/files/tsconfig.app.json",
+        "assets": [
+          {
+            "include": "env/.env.*",
+            "outDir": "dist/apps/files"
+          }
+        ],
+        "watchAssets": true
       }
     },
     "main": {
