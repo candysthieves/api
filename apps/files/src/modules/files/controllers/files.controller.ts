@@ -1,11 +1,11 @@
 import { Controller, Get } from '@nestjs/common';
-import { FilesService } from './files.service.js';
+import { FilesService } from '../services/files.service.js';
 
 @Controller()
 export class FilesController {
   constructor(private readonly filesService: FilesService) {}
 
-  @Get(':id')
+  @Get()
   getHello(): string {
     return 'Files';
   }
