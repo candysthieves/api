@@ -13,7 +13,7 @@ export class DomainExceptionFilter implements ExceptionFilter<DomainException> {
   catch(exception: DomainException, host: ArgumentsHost): void {
     const response: Response = host.switchToHttp().getResponse<Response>();
 
-    let status: HttpStatus = HttpStatus.INTERNAL_SERVER_ERROR;
+    let status: number = HttpStatus.INTERNAL_SERVER_ERROR;
 
     switch (exception.code) {
       case DomainExceptionCode.BadRequest:
@@ -35,6 +35,10 @@ export class DomainExceptionFilter implements ExceptionFilter<DomainException> {
 
       case DomainExceptionCode.Unauthorized:
         status = HttpStatus.UNAUTHORIZED;
+        break;
+
+      case DomainExceptionCode.InvalidToken:
+        status = 498;
         break;
     }
 

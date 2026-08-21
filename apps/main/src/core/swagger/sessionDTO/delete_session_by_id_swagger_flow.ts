@@ -6,6 +6,7 @@ import {
   ApiNotFoundResponse,
   ApiOperation,
   ApiParam,
+  ApiResponse,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 
@@ -25,6 +26,7 @@ export function ApiTerminateSessionById() {
     }),
     ApiNoContentResponse({ description: 'No Content' }),
     ApiUnauthorizedResponse({ description: 'Unauthorized' }),
+    ApiResponse({ status: 498, description: 'Invalid refresh token' }),
     ApiForbiddenResponse({
       description: 'If try to delete the device of other user',
     }),

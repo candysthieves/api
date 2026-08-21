@@ -12,6 +12,7 @@ export enum DomainExceptionCode {
   ConfirmationCodeExpired = 13,
   PasswordRecoveryCodeExpired = 14,
   InvalidRecoveryCode = 15,
+  InvalidToken = 16,
 }
 
 export enum ErrorStatus {
@@ -43,6 +44,8 @@ export enum ErrorStatus {
   REFRESH_TOKEN_INVALID = 70,
   REFRESH_TOKEN_MISSING = 71,
   REFRESH_TOKEN_EXPIRED = 72,
+  ACCESS_TOKEN_INVALID = 73,
+  ACCESS_TOKEN_EXPIRED = 74,
 
   //Sessions
   SESSION_NOT_FOUND = 80,

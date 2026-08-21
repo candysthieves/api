@@ -49,10 +49,10 @@ export class RefreshTokenGuard implements CanActivate {
     }
 
     if (session.expiresAt.getTime() !== payload.exp * 1000) {
-      DomainExceptions.unauthorized(
+      DomainExceptions.invalidToken(
         ErrorStatus.REFRESH_TOKEN_INVALID,
         'token',
-        'Invalid or expired refresh token',
+        'Invalid refresh token',
       );
     }
 

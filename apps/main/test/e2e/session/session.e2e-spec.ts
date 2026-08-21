@@ -7,7 +7,7 @@ import { AppModule } from '../../../src/app.module.js';
 import { setupApp } from '../../../src/setup/app-setup.js';
 import { EmailAdapter } from '../../../src/core/adapters/email/email.adapter.js';
 import { PrismaService } from '../../../src/infrastructure/prisma/prisma.service.js';
-import { RegistrationDto } from '../../../src/modules/user-accounts/dto/registration.dto.js';
+import { RegistrationDto } from '../../../src/modules/user-accounts/api/dto/registration.dto.js';
 
 describe('Sessions e2e tests', () => {
   let app: INestApplication;
@@ -100,7 +100,7 @@ describe('Sessions e2e tests', () => {
     await request(httpServer)
       .get('/api/v1/security/session')
       .set('Cookie', 'refreshToken=invalid-token')
-      .expect(401);
+      .expect(498);
 
     const firstUser = await createTwoSessions({
       username: 'john_doe',
@@ -138,7 +138,7 @@ describe('Sessions e2e tests', () => {
     await request(httpServer)
       .delete('/api/v1/security/session')
       .set('Cookie', 'refreshToken=invalid-token')
-      .expect(401);
+      .expect(498);
 
     const firstUser = await createTwoSessions({
       username: 'john_doe',
@@ -205,7 +205,7 @@ describe('Sessions e2e tests', () => {
     await request(httpServer)
       .delete('/api/v1/security/session/123')
       .set('Cookie', 'refreshToken=invalid-token')
-      .expect(401);
+      .expect(498);
 
     const firstUser = await createTwoSessions({
       username: 'john_doe',

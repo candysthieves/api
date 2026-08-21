@@ -1,9 +1,9 @@
 import { applyDecorators } from '@nestjs/common';
 import {
   ApiBearerAuth,
-  ApiCookieAuth,
   ApiOkResponse,
   ApiOperation,
+  ApiResponse,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 
@@ -46,5 +46,6 @@ export function ApiGetProfile() {
     ApiUnauthorizedResponse({
       description: 'Unauthorized',
     }),
+    ApiResponse({ status: 498, description: 'Invalid access token' }),
   );
 }
