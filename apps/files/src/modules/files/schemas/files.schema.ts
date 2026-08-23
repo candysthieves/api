@@ -1,4 +1,14 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { HydratedDocument } from 'mongoose';
+
+export enum FileType {
+  POST = 'POST',
+  POST_PREVIEW = 'POST_PREVIEW',
+  AVATAR = 'AVATAR',
+  AVATAR_SMALL = 'AVATAR_SMALL',
+}
+
+export type FileDocument = HydratedDocument<File>;
 
 @Schema({
   collection: 'files',
@@ -14,8 +24,9 @@ export class File {
 
   @Prop({
     required: true,
+    enum: FileType,
   })
-  originalName: string;
+  type: FileType;
 
   @Prop({
     required: true,
@@ -25,10 +36,26 @@ export class File {
   @Prop({
     required: true,
   })
+  originalName: string;
+
+  @Prop({
+    required: true,
+  })
   size: number;
 
   @Prop({
     required: true,
+  })
+  width: number;
+
+  @Prop({
+    required: true,
+  })
+  height: number;
+
+  @Prop({
+    required: true,
+    default: 'image/webp',
   })
   mimeType: string;
 }
