@@ -18,8 +18,12 @@ export class UploadFileUseCase implements ICommandHandler<UploadFileCommand> {
     //   //file ERROR 'Maximum file size is 5MB'
     // }
 
-    await this.fileService.saveFile(file, type);
+    const result: File[] = [];
 
-    await this.fileService.saveFile(file, FileType.AVATAR_SMALL);
+    result.push(await this.fileService.saveFile(file, type));
+
+    result.push(await this.fileService.saveFile(file, FileType.AVATAR_SMALL));
+
+    return result;
   }
 }

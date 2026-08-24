@@ -5,7 +5,7 @@ import { FilesService } from '../files.service.js';
 export class UploadFilesCommand {
   constructor(
     public readonly files: Express.Multer.File[],
-    public type: FileType,
+    public readonly type: FileType,
   ) {}
 }
 
@@ -21,13 +21,13 @@ export class UploadFilesUseCase implements ICommandHandler<UploadFilesCommand> {
     const result: File[] = [];
 
     for (const [index, file] of files.entries()) {
-      const savedFile = await this.fileService.saveFile(file, type);
+      result.push(await this.fileService.saveFile(file, type));
 
-      if (index === 0) {
-        await this.fileService.saveFile(file, FileType.POST_PREVIEW);
+      if (index === 0 && type === FileType.POST) {
+        result.push(
+          await this.fileService.saveFile(file, FileType.POST_PREVIEW),
+        );
       }
-
-      result.push(savedFile);
     }
     return result;
   }
