@@ -1,34 +1,46 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { FileDocument, FileType } from '../../schemas/files.schema.js';
+import { File, FileDocument, FileType } from '../../schemas/files.schema.js';
 import { FilesService } from '../files.service.js';
 import { FileDataFactory } from '../factories/file-data.factory.js';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { S3Adapter } from '../../adapters/s3.adapter.js';
-import bytes from 'bytes';
 
 export class UploadFileCommand {
   constructor(
-    public readonly file: Express.Multer.File,
+    public readonly files: Express.Multer.File[],
     public type: FileType,
   ) {}
 }
 
 @CommandHandler(UploadFileCommand)
 export class UploadFileUseCase implements ICommandHandler<UploadFileCommand> {
-  // const fileMaxSIze = bytes('5MB');
-
   constructor(
     @InjectModel(File.name) private readonly fileModel: Model<FileDocument>,
     private readonly fileService: FilesService,
     private readonly s3Adapter: S3Adapter,
   ) {}
 
-  async execute({ file, type }: UploadFileCommand) {
+  async execute({ files, type }: UploadFileCommand) {
     // if (fileMaxSIze && file.size >= fileMaxSIze) {
     //   //file ERROR 'Maximum file size is 5MB'
     // }
 
+    const result: File[] = [];
+
+    for (const [index, file] of files.entries()) {
+      const savedFile = await this.processFile(file, type);
+
+      if (index === 0) {
+        await this.processFile(file, FileType.POST_PREVIEW);
+      }
+
+      result.push(savedFile);
+    }
+    return result;
+  }
+
+  private async processFile(file: Express.Multer.File, type: FileType) {
     const processed = await this.fileService.processImage(file, type);
 
     const createFileData = FileDataFactory.prepareCreateData({

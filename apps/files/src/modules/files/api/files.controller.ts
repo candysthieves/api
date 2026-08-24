@@ -2,27 +2,32 @@ import {
   Controller,
   Get,
   Post,
-  UploadedFile,
+  UploadedFiles,
   UseInterceptors,
 } from '@nestjs/common';
-import { CommandBus } from '@nestjs/cqrs';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { CommandBus, QueryBus } from '@nestjs/cqrs';
+import { FilesInterceptor } from '@nestjs/platform-express';
 import { UploadFileCommand } from '../application/use-cases/upload-file.usecase.js';
 import { FileType } from '../schemas/files.schema.js';
+import { GetFilesQuery } from '../application/use-cases/get-files.usecase.js';
 
 @Controller('upload')
 export class FilesController {
-  constructor(private readonly commandBus: CommandBus) {}
-  @Get('hi')
-  hello() {
-    return 'hi';
+  constructor(
+    private readonly commandBus: CommandBus,
+    private readonly queryBus: QueryBus,
+  ) {}
+
+  @Get()
+  getFiles() {
+    return this.queryBus.execute(new GetFilesQuery());
   }
 
   @Post('test-upload')
-  @UseInterceptors(FileInterceptor('file'))
-  async testUpload(@UploadedFile() file: Express.Multer.File) {
+  @UseInterceptors(FilesInterceptor('files', 8))
+  async testUpload(@UploadedFiles() files: Express.Multer.File[]) {
     return this.commandBus.execute<UploadFileCommand, void>(
-      new UploadFileCommand(file, FileType.POST),
+      new UploadFileCommand(files, FileType.POST),
     );
   }
 }

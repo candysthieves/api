@@ -6,14 +6,23 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { FileSchema, File } from './schemas/files.schema.js';
 import { S3Adapter } from './adapters/s3.adapter.js';
 import { FilesConfig } from '../../files.config.js';
+import { GetFilesQueryHandler } from './application/use-cases/get-files.usecase.js';
 
 const useCases = [UploadFileUseCase];
+
+const queryHandlers = [GetFilesQueryHandler];
 
 @Module({
   imports: [
     MongooseModule.forFeature([{ name: File.name, schema: FileSchema }]),
   ],
   controllers: [FilesController],
-  providers: [...useCases, FilesService, S3Adapter, FilesConfig],
+  providers: [
+    ...useCases,
+    ...queryHandlers,
+    FilesService,
+    S3Adapter,
+    FilesConfig,
+  ],
 })
 export class FilesModule {}

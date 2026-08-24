@@ -4,7 +4,7 @@ import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { FilesModule } from './modules/files/files.module.js';
 import { CqrsModule } from '@nestjs/cqrs';
-import { AppController } from './modules/app.controller.js';
+import { AppController } from './app.controller.js';
 
 @Module({
   controllers: [AppController],
