@@ -1,9 +1,24 @@
-import { Module } from '@nestjs/common';
 import { configModule } from './config.js';
-import { FilesConfig } from './files.config.js';
+import { ConfigService } from '@nestjs/config';
+import { Module } from '@nestjs/common';
+import { MongooseModule } from '@nestjs/mongoose';
+import { FilesModule } from './modules/files/files.module.js';
+import { CqrsModule } from '@nestjs/cqrs';
+import { AppController } from './modules/app.controller.js';
 
 @Module({
-  imports: [configModule],
-  providers: [FilesConfig],
+  controllers: [AppController],
+  imports: [
+    CqrsModule.forRoot(),
+    configModule,
+    FilesModule,
+
+    MongooseModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => ({
+        uri: configService.getOrThrow<string>('MONGODB_URI'),
+      }),
+    }),
+  ],
 })
 export class AppModule {}

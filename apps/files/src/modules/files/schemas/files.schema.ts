@@ -2,10 +2,10 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument } from 'mongoose';
 
 export enum FileType {
-  POST = 'POST',
-  POST_PREVIEW = 'POST_PREVIEW',
-  AVATAR = 'AVATAR',
-  AVATAR_SMALL = 'AVATAR_SMALL',
+  POST = 'post',
+  POST_PREVIEW = 'post_preview',
+  AVATAR = 'avatar',
+  AVATAR_SMALL = 'avatar_small',
 }
 
 export type FileDocument = HydratedDocument<File>;
@@ -16,6 +16,7 @@ export type FileDocument = HydratedDocument<File>;
 })
 export class File {
   @Prop({
+    name: 'file_id',
     required: true,
     unique: true,
     index: true,
@@ -34,6 +35,7 @@ export class File {
   key: string;
 
   @Prop({
+    name: 'original_name',
     required: true,
   })
   originalName: string;
@@ -54,6 +56,7 @@ export class File {
   height: number;
 
   @Prop({
+    name: 'mime_type',
     required: true,
     default: 'image/webp',
   })

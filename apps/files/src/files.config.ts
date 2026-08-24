@@ -9,8 +9,6 @@ export class FilesConfig {
   readonly s3Bucket: string;
   readonly s3AccessKeyId: string;
   readonly s3SecretAccessKey: string;
-  readonly s3Endpoint?: string;
-  readonly s3ForcePathStyle: boolean;
 
   constructor(configService: ConfigService) {
     this.port = configService.getOrThrow<number>('PORT');
@@ -20,10 +18,6 @@ export class FilesConfig {
     this.s3AccessKeyId = configService.getOrThrow<string>('S3_ACCESS_KEY_ID');
     this.s3SecretAccessKey = configService.getOrThrow<string>(
       'S3_SECRET_ACCESS_KEY',
-    );
-    this.s3Endpoint = configService.get<string>('S3_ENDPOINT');
-    this.s3ForcePathStyle = configService.getOrThrow<boolean>(
-      'S3_FORCE_PATH_STYLE',
     );
   }
 }
