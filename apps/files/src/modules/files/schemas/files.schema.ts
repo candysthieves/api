@@ -12,7 +12,10 @@ export type FileDocument = HydratedDocument<File>;
 
 @Schema({
   collection: 'files',
-  timestamps: true,
+  timestamps: {
+    createdAt: 'created_at',
+    updatedAt: 'updated_at',
+  },
 })
 export class File {
   @Prop({
@@ -61,6 +64,10 @@ export class File {
     default: 'image/webp',
   })
   mimeType: string;
+  createdAt: Date;
+  updatedAt: Date;
+  @Prop({ name: 'deleted_at' })
+  deletedAt?: Date;
 }
 
 export const FileSchema = SchemaFactory.createForClass(File);

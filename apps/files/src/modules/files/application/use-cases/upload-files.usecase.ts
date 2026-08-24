@@ -29,6 +29,7 @@ export class UploadFilesUseCase implements ICommandHandler<UploadFilesCommand> {
         );
       }
     }
+
     return result;
   }
 }
