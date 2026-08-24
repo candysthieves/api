@@ -1,9 +1,17 @@
 import { Injectable } from '@nestjs/common';
-import { FileType } from '../schemas/files.schema.js';
+import { FileDocument, FileType } from '../schemas/files.schema.js';
 import sharp from 'sharp';
+import { FileDataFactory } from './factories/file-data.factory.js';
+import { Model } from 'mongoose';
+import { S3Adapter } from '../adapters/s3.adapter.js';
+import { InjectModel } from '@nestjs/mongoose';
 
 @Injectable()
 export class FilesService {
+  constructor(
+    @InjectModel(File.name) private readonly fileModel: Model<FileDocument>,
+    private readonly s3Adapter: S3Adapter,
+  ) {}
   async processImage(file: Express.Multer.File, type: FileType) {
     let image = sharp(file.buffer);
     switch (type) {
@@ -35,5 +43,25 @@ export class FilesService {
       width: metadata.width,
       height: metadata.height,
     };
+  }
+
+  async saveFile(file: Express.Multer.File, type: FileType) {
+    const processed = await this.processImage(file, type);
+
+    const createFileData = FileDataFactory.prepareCreateData({
+      type,
+      originalName: file.originalname,
+      size: processed.size,
+      width: processed.width,
+      height: processed.height,
+    });
+
+    await this.s3Adapter.uploadFIle(
+      createFileData.key,
+      processed.buffer,
+      createFileData.mimeType,
+    );
+
+    return this.fileModel.create(createFileData);
   }
 }
