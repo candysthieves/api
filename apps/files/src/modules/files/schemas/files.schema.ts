@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument } from 'mongoose';
+import { HydratedDocument, Types } from 'mongoose';
 
 export enum FileType {
   POST = 'post',
@@ -18,6 +18,7 @@ export type FileDocument = HydratedDocument<File>;
   },
 })
 export class File {
+  _id: Types.ObjectId;
   @Prop({
     name: 'file_id',
     required: true,

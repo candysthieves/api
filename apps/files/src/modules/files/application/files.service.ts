@@ -3,8 +3,11 @@ import { FileDocument, FileType } from '../schemas/files.schema.js';
 import sharp from 'sharp';
 import { FileDataFactory } from './factories/file-data.factory.js';
 import { Model } from 'mongoose';
-import { S3Adapter } from '../adapters/s3.adapter.js';
+import { S3Adapter } from '../../../core/adapters/s3.adapter.js';
 import { InjectModel } from '@nestjs/mongoose';
+import { ObjectResult } from '../../../core/object-result.js';
+import bytes from 'bytes';
+import { UploadFileDto } from '../api/dto/upload-file.dto.js';
 
 @Injectable()
 export class FilesService {
@@ -12,7 +15,7 @@ export class FilesService {
     @InjectModel(File.name) private readonly fileModel: Model<FileDocument>,
     private readonly s3Adapter: S3Adapter,
   ) {}
-  async processImage(file: Express.Multer.File, type: FileType) {
+  async processImage(file: UploadFileDto, type: FileType) {
     let image = sharp(file.buffer);
     switch (type) {
       case FileType.POST:
@@ -30,7 +33,7 @@ export class FilesService {
         break;
 
       case FileType.AVATAR_SMALL:
-        image = image.resize(200, 200, { fit: 'inside' }).webp({ quality: 80 });
+        image = image.resize(204, 204, { fit: 'inside' }).webp({ quality: 80 });
         break;
     }
 
@@ -45,12 +48,12 @@ export class FilesService {
     };
   }
 
-  async saveFile(file: Express.Multer.File, type: FileType) {
+  async saveFile(file: UploadFileDto, type: FileType) {
     const processed = await this.processImage(file, type);
 
     const createFileData = FileDataFactory.prepareCreateData({
       type,
-      originalName: file.originalname,
+      originalName: file.originalName,
       size: processed.size,
       width: processed.width,
       height: processed.height,
@@ -63,5 +66,15 @@ export class FilesService {
     );
 
     return this.fileModel.create(createFileData);
+  }
+
+  validateFileSize(size: number): ObjectResult<true | null> {
+    const maxSize = bytes('5MB');
+
+    if (!maxSize || maxSize > size) {
+      return ObjectResult.failure('File size must not exceed 5 MB');
+    }
+
+    return ObjectResult.success(true);
   }
 }

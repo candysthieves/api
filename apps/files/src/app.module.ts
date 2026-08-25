@@ -9,8 +9,8 @@ import { AppController } from './app.controller.js';
 @Module({
   controllers: [AppController],
   imports: [
-    CqrsModule.forRoot(),
     configModule,
+    CqrsModule.forRoot(),
     FilesModule,
 
     MongooseModule.forRootAsync({

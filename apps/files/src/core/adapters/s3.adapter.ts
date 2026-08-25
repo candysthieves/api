@@ -4,7 +4,7 @@ import {
   PutObjectCommand,
   S3Client,
 } from '@aws-sdk/client-s3';
-import { FilesConfig } from '../../../files.config.js';
+import { FilesConfig } from '../../files.config.js';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import ms from 'ms';
 
