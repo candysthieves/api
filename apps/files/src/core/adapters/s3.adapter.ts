@@ -1,21 +1,16 @@
 import { Injectable } from '@nestjs/common';
-import {
-  GetObjectCommand,
-  PutObjectCommand,
-  S3Client,
-} from '@aws-sdk/client-s3';
+import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { FilesConfig } from '../../files.config.js';
-import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
-import ms from 'ms';
 
 @Injectable()
 export class S3Adapter {
   private readonly s3: S3Client;
   private readonly bucket: string;
-  imageExpiresIn: number = ms('1h') / 1000;
+  private readonly region: string;
 
   constructor(config: FilesConfig) {
     this.bucket = config.s3Bucket;
+    this.region = config.s3Region;
 
     this.s3 = new S3Client({
       region: config.s3Region,
@@ -37,14 +32,7 @@ export class S3Adapter {
     );
   }
 
-  async getUrl(key: string) {
-    const command = new GetObjectCommand({
-      Bucket: this.bucket,
-      Key: key,
-    });
-
-    return getSignedUrl(this.s3, command, {
-      expiresIn: this.imageExpiresIn,
-    });
+  getUrl(key: string) {
+    return `https://${this.bucket}.s3.${this.region}.amazonaws.com/${key}`;
   }
 }
