@@ -32,7 +32,7 @@ export class FilesService {
         image = image.webp({ quality: 80 });
         break;
 
-      case FileType.AVATAR_SMALL:
+      case FileType.AVATAR_PREVIEW:
         image = image.resize(204, 204, { fit: 'inside' }).webp({ quality: 80 });
         break;
     }

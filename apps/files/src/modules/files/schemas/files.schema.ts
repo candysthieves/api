@@ -2,10 +2,10 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, Types } from 'mongoose';
 
 export enum FileType {
-  POST = 'post',
-  POST_PREVIEW = 'post_preview',
-  AVATAR = 'avatar',
-  AVATAR_SMALL = 'avatar_small',
+  POST = 'POST',
+  POST_PREVIEW = 'POST_PREVIEW',
+  AVATAR = 'AVATAR',
+  AVATAR_PREVIEW = 'AVATAR_PREVIEW',
 }
 
 export type FileDocument = HydratedDocument<File>;
@@ -62,13 +62,13 @@ export class File {
   @Prop({
     name: 'mime_type',
     required: true,
-    default: 'image/webp',
+    default: 'webp',
   })
   mimeType: string;
   createdAt: Date;
   updatedAt: Date;
-  @Prop({ name: 'deleted_at' })
-  deletedAt?: Date;
+  @Prop({ type: Date, default: null, name: 'deleted_at' })
+  deletedAt: Date | null;
 }
 
 export const FileSchema = SchemaFactory.createForClass(File);

@@ -29,7 +29,7 @@ export class UploadAvatarUseCase implements ICommandHandler<UploadAvatarCommand>
 
     result.push(await this.fileService.saveFile(file, type));
 
-    result.push(await this.fileService.saveFile(file, FileType.AVATAR_SMALL));
+    result.push(await this.fileService.saveFile(file, FileType.AVATAR_PREVIEW));
 
     return ObjectResult.success(result);
   }
