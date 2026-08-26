@@ -14,19 +14,6 @@ export class FilesController {
     private readonly queryBus: QueryBus,
   ) {}
 
-  // @Get()
-  // getFiles() {
-  //   return this.queryBus.execute(new GetFilesQuery());
-  // }
-
-  // @Post('test-upload')
-  // @UseInterceptors(FilesInterceptor('files', 8))
-  // async testUpload(@UploadedFiles() files: Express.Multer.File[]) {
-  //   return this.commandBus.execute<UploadFilesCommand, void>(
-  //     new UploadFilesCommand(files, FileType.POST),
-  //   );
-  // }
-
   @MessagePattern({ cmd: 'upload-post-files' })
   async uploadPostFiles(@Payload() dto: UploadFilesDto) {
     await this.commandBus.execute<UploadPostFilesCommand, void>(
@@ -34,7 +21,7 @@ export class FilesController {
     );
   }
 
-  @MessagePattern({ cmd: 'upload-avatar-files' })
+  @MessagePattern({ cmd: 'upload-avatar-file' })
   async uploadAvatarFile(@Payload() dto: UploadFileDto) {
     await this.commandBus.execute<UploadAvatarCommand, void>(
       new UploadAvatarCommand(dto, FileType.AVATAR),

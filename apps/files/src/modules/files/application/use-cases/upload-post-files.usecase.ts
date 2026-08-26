@@ -3,22 +3,24 @@ import { File, FileType } from '../../schemas/files.schema.js';
 import { FilesService } from '../files.service.js';
 import { ObjectResult } from '../../../../core/object-result.js';
 import { UploadFileDto } from '../../api/dto/upload-file.dto.js';
+import { FileMapper } from '../../api/mappers/file.mapper.js';
+import { S3Adapter } from '../../../../core/adapters/s3.adapter.js';
 
 export class UploadPostFilesCommand {
   constructor(
     public readonly files: UploadFileDto[],
-    public readonly type: FileType.POST,
+    public readonly type: FileType,
   ) {}
 }
 
 @CommandHandler(UploadPostFilesCommand)
 export class UploadPostFilesUseCase implements ICommandHandler<UploadPostFilesCommand> {
-  constructor(private readonly fileService: FilesService) {}
+  constructor(
+    private readonly fileService: FilesService,
+    private readonly s3: S3Adapter,
+  ) {}
 
-  async execute({
-    files,
-    type,
-  }: UploadPostFilesCommand): Promise<ObjectResult<File[] | null>> {
+  async execute({ files, type }: UploadPostFilesCommand) {
     for (const file of files) {
       const fileResult = this.fileService.validateFileSize(file.size);
 
@@ -29,16 +31,25 @@ export class UploadPostFilesUseCase implements ICommandHandler<UploadPostFilesCo
 
     const result: File[] = [];
 
-    for (const [index, file] of files.entries()) {
-      result.push(await this.fileService.saveFile(file, type));
-
-      if (index === 0 && type === FileType.POST) {
-        result.push(
-          await this.fileService.saveFile(file, FileType.POST_PREVIEW),
-        );
-      }
+    for (const file of files) {
+      const savedFile = await this.fileService.saveFile(file, type);
+      result.push(savedFile);
     }
 
-    return ObjectResult.success(result);
+    const preview = await this.fileService.saveFile(
+      files[0],
+      FileType.POST_PREVIEW,
+    );
+
+    const filesView = result.map((file) =>
+      FileMapper.toFileView(file, this.s3.getUrl(file.key)),
+    );
+
+    const previewView = FileMapper.toFileView(
+      preview,
+      this.s3.getUrl(preview.key),
+    );
+
+    return FileMapper.toFilesResult(files[0].targetId, filesView, previewView);
   }
 }
