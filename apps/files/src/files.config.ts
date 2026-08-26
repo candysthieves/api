@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class FilesConfig {
+  readonly host: string;
   readonly port: number;
   readonly mongodbUri: string;
   readonly s3Region: string;
@@ -11,6 +12,7 @@ export class FilesConfig {
   readonly s3SecretAccessKey: string;
 
   constructor(configService: ConfigService) {
+    this.host = configService.getOrThrow<string>('HOST');
     this.port = configService.getOrThrow<number>('PORT');
     this.mongodbUri = configService.getOrThrow<string>('MONGODB_URI');
     this.s3Region = configService.getOrThrow<string>('S3_REGION');

@@ -2,11 +2,17 @@ import { NestFactory } from '@nestjs/core';
 import { FilesConfig } from './files.config.js';
 import { AppModule } from './app.module.js';
 import { ValidationPipe } from '@nestjs/common';
-import { RpcException } from '@nestjs/microservices';
+import { RpcException, Transport } from '@nestjs/microservices';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
-  app.setGlobalPrefix('api/files/v1');
+  const app = await NestFactory.createMicroservice(AppModule, {
+    transport: Transport.TCP,
+    options: {
+      host: process.env.HOST,
+      port: Number(process.env.PORT),
+    },
+  });
+
   const config = app.get(FilesConfig);
 
   app.useGlobalPipes(
@@ -18,14 +24,15 @@ async function bootstrap() {
           code: 'VALIDATION_ERROR',
           errors: errors.map((error) => ({
             property: error.property,
-            constraints: error.constraints,
+            message: Object.values(error.constraints || {})[0],
           })),
         });
       },
     }),
   );
 
-  await app.listen(config.port);
-  console.log('Files service started on port: ' + config.port);
+  await app.listen();
+
+  console.log(`Files service started on ${config.host}:${config.port}`);
 }
 bootstrap();
