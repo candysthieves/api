@@ -7,10 +7,7 @@ import { FileMapper } from '../../api/mappers/file.mapper.js';
 import { S3Adapter } from '../../../../core/adapters/s3.adapter.js';
 
 export class UploadPostFilesCommand {
-  constructor(
-    public readonly files: UploadFileDto[],
-    public readonly type: FileType,
-  ) {}
+  constructor(public readonly files: UploadFileDto[]) {}
 }
 
 @CommandHandler(UploadPostFilesCommand)
@@ -20,7 +17,7 @@ export class UploadPostFilesUseCase implements ICommandHandler<UploadPostFilesCo
     private readonly s3: S3Adapter,
   ) {}
 
-  async execute({ files, type }: UploadPostFilesCommand) {
+  async execute({ files }: UploadPostFilesCommand) {
     for (const file of files) {
       const fileResult = this.fileService.validateFileSize(file.size);
 
@@ -32,7 +29,7 @@ export class UploadPostFilesUseCase implements ICommandHandler<UploadPostFilesCo
     const result: File[] = [];
 
     for (const file of files) {
-      const savedFile = await this.fileService.saveFile(file, type);
+      const savedFile = await this.fileService.saveFile(file, FileType.POST);
       result.push(savedFile);
     }
 

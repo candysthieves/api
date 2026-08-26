@@ -8,10 +8,7 @@ import { S3Adapter } from '../../../../core/adapters/s3.adapter.js';
 import { FilesResultType } from '../../api/view-types/files-result.type.js';
 
 export class UploadAvatarCommand {
-  constructor(
-    public readonly file: UploadFileDto,
-    public readonly type: FileType,
-  ) {}
+  constructor(public readonly file: UploadFileDto) {}
 }
 
 @CommandHandler(UploadAvatarCommand)
@@ -23,7 +20,6 @@ export class UploadAvatarUseCase implements ICommandHandler<UploadAvatarCommand>
 
   async execute({
     file,
-    type,
   }: UploadAvatarCommand): Promise<ObjectResult<FilesResultType | null>> {
     const fileResult = this.fileService.validateFileSize(file.size);
 
@@ -31,7 +27,7 @@ export class UploadAvatarUseCase implements ICommandHandler<UploadAvatarCommand>
       return ObjectResult.failure(fileResult.error);
     }
 
-    const avatar = await this.fileService.saveFile(file, type);
+    const avatar = await this.fileService.saveFile(file, FileType.AVATAR);
 
     const avatarPreview = await this.fileService.saveFile(
       file,
