@@ -6,7 +6,10 @@ import { fileURLToPath } from 'node:url';
 type SupportedEnvironment =
   'production' | 'development' | 'development.local' | 'testing';
 
-const environmentDirectory = dirname(fileURLToPath(import.meta.url));
+const environmentDirectory = resolve(
+  dirname(fileURLToPath(import.meta.url)),
+  '../env',
+);
 
 // Files are ordered from the least to the most specific.
 const environmentFiles: Record<SupportedEnvironment, string[]> = {

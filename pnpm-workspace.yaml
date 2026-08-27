@@ -1,7 +1,11 @@
 allowBuilds:
   '@prisma/engines': true
   '@scarf/scarf': true
-  argon2: true
+  a: true
   esbuild: true
+  h: true
+  p: true
   prisma: true
+  r: true
+  s: true
   unrs-resolver: true
