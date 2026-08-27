@@ -98,6 +98,18 @@ export class EnvironmentVariables {
 
   @IsString()
   @IsNotEmpty()
+  RABBITMQ_URL!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  RABBITMQ_MAIN_TO_FILES_QUEUE!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  RABBITMQ_FILES_TO_MAIN_QUEUE!: string;
+
+  @IsString()
+  @IsNotEmpty()
   @Matches(/^\s*[^,\s]+(?:\s*,\s*[^,\s]+)*\s*$/)
   private _RECAPTCHA_ALLOWED_HOSTNAMES!: string;
 }

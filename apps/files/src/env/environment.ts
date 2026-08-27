@@ -44,4 +44,16 @@ export class EnvironmentVariables {
   @Transform(({ value }) => value === true || value === 'true')
   @IsBoolean()
   S3_FORCE_PATH_STYLE = false;
+
+  @IsString()
+  @IsNotEmpty()
+  RABBITMQ_URL!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  RABBITMQ_MAIN_TO_FILES_QUEUE!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  RABBITMQ_FILES_TO_MAIN_QUEUE!: string;
 }

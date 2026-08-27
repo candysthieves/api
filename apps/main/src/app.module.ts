@@ -5,6 +5,7 @@ import { Module } from '@nestjs/common';
 import { UserAccountsModule } from './modules/user-accounts/user-accounts.module.js';
 import { AppController } from './app.controller.js';
 import { CoreModule } from './core/core.module.js';
+import { RabbitMqTestController } from './core/rabbitmq/rabbitmq-test.controller.js';
 import { TestController } from './test.controller.js';
 
 @Module({
@@ -12,6 +13,6 @@ import { TestController } from './test.controller.js';
   controllers:
     process.env.NODE_ENV === 'testing'
       ? [AppController, TestController]
-      : [AppController],
+      : [AppController, RabbitMqTestController],
 })
 export class AppModule {}

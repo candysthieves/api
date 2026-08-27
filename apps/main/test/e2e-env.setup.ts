@@ -17,3 +17,6 @@ process.env.GITHUB_CLIENT_ID ??= 'test-github-client-id';
 process.env.GITHUB_CLIENT_SECRET ??= 'test-github-client-secret';
 process.env.RECAPTCHA_SECRET_KEY ??= 'test-secret';
 process.env.RECAPTCHA_ALLOWED_HOSTNAMES ??= 'example.com';
+process.env.RABBITMQ_URL ??= 'amqp://localhost:5672';
+process.env.RABBITMQ_MAIN_TO_FILES_QUEUE ??= 'lumos.main-to-files.test';
+process.env.RABBITMQ_FILES_TO_MAIN_QUEUE ??= 'lumos.files-to-main.test';
