@@ -51,15 +51,27 @@ export class JwtAdapter {
 
   async verifyAccessToken(accessToken: string): Promise<JwtAccessPayload> {
     try {
-      return this.jwtService.verifyAsync(accessToken, {
+      return await this.jwtService.verifyAsync(accessToken, {
         secret: this.jwt_secret_key,
       });
-    } catch {
-      DomainExceptions.unauthorized(
-        ErrorStatus.REFRESH_TOKEN_INVALID,
-        'token',
-        'Invalid or expired refresh token',
-      );
+    } catch (error) {
+      if (error instanceof Error && error.name === 'TokenExpiredError') {
+        DomainExceptions.unauthorized(
+          ErrorStatus.ACCESS_TOKEN_EXPIRED,
+          'token',
+          'Access token has expired',
+        );
+      }
+
+      if (error instanceof Error && error.name === 'JsonWebTokenError') {
+        DomainExceptions.invalidToken(
+          ErrorStatus.ACCESS_TOKEN_INVALID,
+          'token',
+          'Invalid access token',
+        );
+      }
+
+      throw error;
     }
   }
 
@@ -72,12 +84,24 @@ export class JwtAdapter {
       return await this.jwtService.verifyAsync(refreshToken, {
         secret: this.jwt_secret_refresh_key,
       });
-    } catch {
-      DomainExceptions.unauthorized(
-        ErrorStatus.REFRESH_TOKEN_INVALID,
-        'token',
-        'Invalid or expired refresh token',
-      );
+    } catch (error) {
+      if (error instanceof Error && error.name === 'TokenExpiredError') {
+        DomainExceptions.unauthorized(
+          ErrorStatus.REFRESH_TOKEN_EXPIRED,
+          'token',
+          'Refresh token has expired',
+        );
+      }
+
+      if (error instanceof Error && error.name === 'JsonWebTokenError') {
+        DomainExceptions.invalidToken(
+          ErrorStatus.REFRESH_TOKEN_INVALID,
+          'token',
+          'Invalid refresh token',
+        );
+      }
+
+      throw error;
     }
   }
 }

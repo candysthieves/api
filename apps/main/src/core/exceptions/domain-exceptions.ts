@@ -46,4 +46,14 @@ export class DomainExceptions {
       { field, message },
     ]);
   }
+
+  static invalidToken(
+    code: ErrorStatus,
+    field: string = 'token',
+    message = 'Invalid token',
+  ): never {
+    throw new DomainException(DomainExceptionCode.InvalidToken, code, [
+      { field, message },
+    ]);
+  }
 }

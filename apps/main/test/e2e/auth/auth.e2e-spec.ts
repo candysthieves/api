@@ -273,7 +273,7 @@ describe('Auth e2e tests', () => {
     await request(httpServer)
       .post('/api/v1/auth/refresh-token')
       .set('Cookie', 'refreshToken=wrong-refresh-token')
-      .expect(401);
+      .expect(498);
 
     // Регаем юзера
     await request(httpServer)
@@ -578,7 +578,7 @@ describe('Auth e2e tests', () => {
     await request(httpServer)
       .post('/api/v1/auth/logout')
       .set('Cookie', 'refreshToken=wrong-refresh-token')
-      .expect(401);
+      .expect(498);
 
     // Регистрируем, подтверждаем и логинимся
     const credentials = {

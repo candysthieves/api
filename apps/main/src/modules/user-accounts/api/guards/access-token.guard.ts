@@ -33,21 +33,13 @@ export class AccessTokenGuard implements CanActivate {
 
     const [, accessToken] = match;
 
-    try {
-      const payload: JwtAccessPayload =
-        await this.jwtAdapter.verifyAccessToken(accessToken);
+    const payload: JwtAccessPayload =
+      await this.jwtAdapter.verifyAccessToken(accessToken);
 
-      request.user = {
-        ...payload,
-      };
+    request.user = {
+      ...payload,
+    };
 
-      return true;
-    } catch {
-      DomainExceptions.unauthorized(
-        ErrorStatus.SESSION_NOT_FOUND,
-        'session',
-        'Session not found',
-      );
-    }
+    return true;
   }
 }

@@ -3,6 +3,7 @@ import {
   ApiCookieAuth,
   ApiNoContentResponse,
   ApiOperation,
+  ApiResponse,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 
@@ -16,5 +17,6 @@ export function ApiDeleteOtherSessionExceptCurrentOne() {
       description: 'No Content',
     }),
     ApiUnauthorizedResponse({ description: 'Unauthorized' }),
+    ApiResponse({ status: 498, description: 'Invalid refresh token' }),
   );
 }

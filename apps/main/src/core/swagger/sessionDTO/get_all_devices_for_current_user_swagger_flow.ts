@@ -2,6 +2,7 @@ import {
   ApiCookieAuth,
   ApiOkResponse,
   ApiOperation,
+  ApiResponse,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 import { applyDecorators } from '@nestjs/common';
@@ -53,5 +54,6 @@ export function ApiGetAllSessionsForTheCurrentUser() {
     ApiUnauthorizedResponse({
       description: 'Unauthorized',
     }),
+    ApiResponse({ status: 498, description: 'Invalid refresh token' }),
   );
 }

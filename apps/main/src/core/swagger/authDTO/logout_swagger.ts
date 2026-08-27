@@ -3,6 +3,7 @@ import {
   ApiCookieAuth,
   ApiNoContentResponse,
   ApiOperation,
+  ApiResponse,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 
@@ -19,5 +20,6 @@ export function ApiLogout() {
     ApiUnauthorizedResponse({
       description: 'Unauthorized',
     }),
+    ApiResponse({ status: 498, description: 'Invalid refresh token' }),
   );
 }
