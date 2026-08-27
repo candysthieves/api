@@ -25,6 +25,13 @@ async function bootstrap() {
   });
 
   //connect RabbitMQ
+  // app.connectMicroservice<MicroserviceOptions>({
+  //   transport: Transport.RMQ,
+  //   options: {
+  //     urls: [],
+  //     queue: '',
+  //   },
+  // });
 
   await app.startAllMicroservices();
 
@@ -48,6 +55,8 @@ async function bootstrap() {
 
   await app.listen(config.port);
   console.log('Files service started on port: ' + config.port);
-  console.log(`Files service started on ${config.tcpHost}:${config.tcpPort}`);
+  console.log(
+    `Files service started on TCP ${config.tcpHost}:${config.tcpPort}`,
+  );
 }
 bootstrap();

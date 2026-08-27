@@ -2,14 +2,16 @@ import { Controller } from '@nestjs/common';
 import { CommandBus } from '@nestjs/cqrs';
 import { UploadPostFilesCommand } from '../application/use-cases/upload-post-files.usecase.js';
 import { MessagePattern, Payload } from '@nestjs/microservices';
-import { UploadFilesContract } from './contracts/upload-files.contract.js';
-import { UploadFileContract } from './contracts/upload-file.contract.js';
 import { UploadAvatarCommand } from '../application/use-cases/upload-avatar.usecase.js';
-import { DeleteFilesContract } from './contracts/delete-files.contract.js';
 import { SoftDeleteFilesCommand } from '../application/use-cases/soft-delete-files.usecase.js';
 import { ObjectResult } from '../../../core/object-result.js';
 import { FilesResultType } from './view-types/files-result.type.js';
 import { DeleteFilesCommand } from '../application/use-cases/delete-files.usecase.js';
+import { UploadFilesContract } from './contracts/upload-files.contract.js';
+import { UploadFileContract } from './contracts/upload-file.contract.js';
+import { DeleteFilesContract } from './contracts/delete-files.contract.js';
+import { RestoreFilesCommand } from '../application/use-cases/restore-files.usecase.js';
+import { RestoreFilesContract } from './contracts/restore-files.contract.js';
 
 @Controller('upload')
 export class FilesController {
@@ -42,6 +44,13 @@ export class FilesController {
   async deleteFiles(@Payload() dto: DeleteFilesContract) {
     return this.commandBus.execute<DeleteFilesCommand, ObjectResult<null>>(
       new DeleteFilesCommand(dto.fileIds),
+    );
+  }
+
+  @MessagePattern({ cmd: 'restore-files' })
+  async restoreFiles(@Payload() dto: RestoreFilesContract) {
+    return this.commandBus.execute<RestoreFilesCommand, ObjectResult<null>>(
+      new RestoreFilesCommand(dto.fileIds),
     );
   }
 }

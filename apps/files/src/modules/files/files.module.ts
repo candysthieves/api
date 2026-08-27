@@ -9,12 +9,14 @@ import { UploadAvatarUseCase } from './application/use-cases/upload-avatar.useca
 import { UploadPostFilesUseCase } from './application/use-cases/upload-post-files.usecase.js';
 import { SoftDeleteFilesUseCase } from './application/use-cases/soft-delete-files.usecase.js';
 import { DeleteFilesUseCase } from './application/use-cases/delete-files.usecase.js';
+import { RestoreFilesUseCase } from './application/use-cases/restore-files.usecase.js';
 
 const useCases = [
   UploadPostFilesUseCase,
   UploadAvatarUseCase,
   SoftDeleteFilesUseCase,
   DeleteFilesUseCase,
+  RestoreFilesUseCase,
 ];
 
 @Module({
