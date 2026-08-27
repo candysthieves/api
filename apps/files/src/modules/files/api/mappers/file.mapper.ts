@@ -5,7 +5,6 @@ import { FilesResultType } from '../view-types/files-result.type.js';
 export class FileMapper {
   static toFileView(file: File, imageUrl: string): FileViewType {
     return {
-      _id: file._id.toString(),
       fileId: file.fileId,
       url: imageUrl,
       width: file.width,

@@ -2,37 +2,52 @@ import { NestFactory } from '@nestjs/core';
 import { FilesConfig } from './files.config.js';
 import { AppModule } from './app.module.js';
 import { ValidationPipe } from '@nestjs/common';
-import { RpcException, Transport } from '@nestjs/microservices';
+import {
+  MicroserviceOptions,
+  RpcException,
+  Transport,
+} from '@nestjs/microservices';
+import { ObjectResult } from './core/object-result.js';
 
 async function bootstrap() {
-  const app = await NestFactory.createMicroservice(AppModule, {
+  const app = await NestFactory.create(AppModule);
+
+  app.setGlobalPrefix('api/files/v1');
+
+  const config = app.get(FilesConfig);
+
+  app.connectMicroservice<MicroserviceOptions>({
     transport: Transport.TCP,
     options: {
-      host: process.env.HOST,
-      port: Number(process.env.PORT),
+      host: config.tcpHost,
+      port: config.tcpPort,
     },
   });
 
-  const config = app.get(FilesConfig);
+  //connect RabbitMQ
+
+  await app.startAllMicroservices();
 
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
       transform: true,
       exceptionFactory: (errors) => {
-        return new RpcException({
-          code: 'VALIDATION_ERROR',
+        const error = {
+          code: 'VALIDATION_ERROR' as const,
           errors: errors.map((error) => ({
-            property: error.property,
+            field: error.property,
             message: Object.values(error.constraints || {})[0],
           })),
-        });
+        };
+
+        return new RpcException(ObjectResult.failure(error));
       },
     }),
   );
 
-  await app.listen();
-
-  console.log(`Files service started on ${config.host}:${config.port}`);
+  await app.listen(config.port);
+  console.log('Files service started on port: ' + config.port);
+  console.log(`Files service started on ${config.tcpHost}:${config.tcpPort}`);
 }
 bootstrap();

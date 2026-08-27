@@ -1,6 +1,6 @@
 import { IsNotEmpty, IsNumber, IsString } from 'class-validator';
 
-export class UploadFileDto {
+export class UploadFileContract {
   @IsNotEmpty()
   @IsString()
   targetId: string;

@@ -1,5 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
+import {
+  DeleteObjectCommand,
+  PutObjectCommand,
+  S3Client,
+} from '@aws-sdk/client-s3';
 import { FilesConfig } from '../../files.config.js';
 
 @Injectable()
@@ -21,7 +25,8 @@ export class S3Adapter {
     });
   }
 
-  async uploadFIle(key: string, buffer: Buffer, contentType: string) {
+  async uploadFile(key: string, buffer: Buffer, format: string) {
+    const contentType = `image/${format}`;
     await this.s3.send(
       new PutObjectCommand({
         Bucket: this.bucket,
@@ -29,6 +34,12 @@ export class S3Adapter {
         Body: buffer,
         ContentType: contentType,
       }),
+    );
+  }
+
+  async deleteFile(key: string): Promise<void> {
+    await this.s3.send(
+      new DeleteObjectCommand({ Bucket: this.bucket, Key: key }),
     );
   }
 

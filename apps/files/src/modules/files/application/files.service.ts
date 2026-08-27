@@ -5,9 +5,7 @@ import { FileDataFactory } from './factories/file-data.factory.js';
 import { Model } from 'mongoose';
 import { S3Adapter } from '../../../core/adapters/s3.adapter.js';
 import { InjectModel } from '@nestjs/mongoose';
-import { ObjectResult } from '../../../core/object-result.js';
-import bytes from 'bytes';
-import { UploadFileDto } from '../api/dto/upload-file.dto.js';
+import { UploadFileContract } from '../api/contracts/upload-file.contract.js';
 
 @Injectable()
 export class FilesService {
@@ -15,7 +13,7 @@ export class FilesService {
     @InjectModel(File.name) private readonly fileModel: Model<FileDocument>,
     private readonly s3Adapter: S3Adapter,
   ) {}
-  async processImage(file: UploadFileDto, type: FileType) {
+  async processImage(file: UploadFileContract, type: FileType) {
     let image = sharp(file.buffer);
     switch (type) {
       case FileType.POST:
@@ -45,10 +43,11 @@ export class FilesService {
       size: buffer.length,
       width: metadata.width,
       height: metadata.height,
+      format: metadata.format,
     };
   }
 
-  async saveFile(file: UploadFileDto, type: FileType) {
+  async saveFile(file: UploadFileContract, type: FileType) {
     const processed = await this.processImage(file, type);
 
     const createFileData = FileDataFactory.prepareCreateData({
@@ -57,24 +56,21 @@ export class FilesService {
       size: processed.size,
       width: processed.width,
       height: processed.height,
+      format: processed.format,
     });
 
-    await this.s3Adapter.uploadFIle(
+    await this.s3Adapter.uploadFile(
       createFileData.key,
       processed.buffer,
-      createFileData.mimeType,
+      processed.format,
     );
 
     return this.fileModel.create(createFileData);
   }
 
-  validateFileSize(size: number): ObjectResult<true | null> {
-    const maxSize = bytes('5MB');
+  validateFileSize(size: number): boolean {
+    const maxSize = 5 * 1024 * 1024;
 
-    if (!maxSize || maxSize > size) {
-      return ObjectResult.failure('File size must not exceed 5 MB');
-    }
-
-    return ObjectResult.success(true);
+    return size <= maxSize;
   }
 }

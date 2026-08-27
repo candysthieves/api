@@ -2,25 +2,46 @@ import { Controller } from '@nestjs/common';
 import { CommandBus } from '@nestjs/cqrs';
 import { UploadPostFilesCommand } from '../application/use-cases/upload-post-files.usecase.js';
 import { MessagePattern, Payload } from '@nestjs/microservices';
-import { UploadFilesDto } from './dto/upload-files.dto.js';
-import { UploadFileDto } from './dto/upload-file.dto.js';
+import { UploadFilesContract } from './contracts/upload-files.contract.js';
+import { UploadFileContract } from './contracts/upload-file.contract.js';
 import { UploadAvatarCommand } from '../application/use-cases/upload-avatar.usecase.js';
+import { DeleteFilesContract } from './contracts/delete-files.contract.js';
+import { SoftDeleteFilesCommand } from '../application/use-cases/soft-delete-files.usecase.js';
+import { ObjectResult } from '../../../core/object-result.js';
+import { FilesResultType } from './view-types/files-result.type.js';
+import { DeleteFilesCommand } from '../application/use-cases/delete-files.usecase.js';
 
 @Controller('upload')
 export class FilesController {
   constructor(private readonly commandBus: CommandBus) {}
 
   @MessagePattern({ cmd: 'upload-post-files' })
-  async uploadPostFiles(@Payload() dto: UploadFilesDto) {
-    await this.commandBus.execute<UploadPostFilesCommand, void>(
-      new UploadPostFilesCommand(dto.files),
-    );
+  async uploadPostFiles(@Payload() dto: UploadFilesContract) {
+    return this.commandBus.execute<
+      UploadPostFilesCommand,
+      ObjectResult<FilesResultType | null>
+    >(new UploadPostFilesCommand(dto.files));
   }
 
   @MessagePattern({ cmd: 'upload-avatar-file' })
-  async uploadAvatarFile(@Payload() dto: UploadFileDto) {
-    await this.commandBus.execute<UploadAvatarCommand, void>(
-      new UploadAvatarCommand(dto),
+  async uploadAvatarFile(@Payload() dto: UploadFileContract) {
+    return this.commandBus.execute<
+      UploadAvatarCommand,
+      ObjectResult<FilesResultType | null>
+    >(new UploadAvatarCommand(dto));
+  }
+
+  @MessagePattern({ cmd: 'soft-delete-files' })
+  async softDeleteFiles(@Payload() dto: DeleteFilesContract) {
+    return this.commandBus.execute<SoftDeleteFilesCommand, ObjectResult<null>>(
+      new SoftDeleteFilesCommand(dto.fileIds),
+    );
+  }
+
+  @MessagePattern({ cmd: 'delete-files' })
+  async deleteFiles(@Payload() dto: DeleteFilesContract) {
+    return this.commandBus.execute<DeleteFilesCommand, ObjectResult<null>>(
+      new DeleteFilesCommand(dto.fileIds),
     );
   }
 }

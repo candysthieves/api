@@ -2,27 +2,41 @@ import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { File, FileType } from '../../schemas/files.schema.js';
 import { FilesService } from '../files.service.js';
 import { ObjectResult } from '../../../../core/object-result.js';
-import { UploadFileDto } from '../../api/dto/upload-file.dto.js';
+import { UploadFileContract } from '../../api/contracts/upload-file.contract.js';
 import { FileMapper } from '../../api/mappers/file.mapper.js';
 import { S3Adapter } from '../../../../core/adapters/s3.adapter.js';
+import { FilesResultType } from '../../api/view-types/files-result.type.js';
 
 export class UploadPostFilesCommand {
-  constructor(public readonly files: UploadFileDto[]) {}
+  constructor(public readonly files: UploadFileContract[]) {}
 }
 
 @CommandHandler(UploadPostFilesCommand)
-export class UploadPostFilesUseCase implements ICommandHandler<UploadPostFilesCommand> {
+export class UploadPostFilesUseCase implements ICommandHandler<
+  UploadPostFilesCommand,
+  ObjectResult<FilesResultType | null>
+> {
   constructor(
     private readonly fileService: FilesService,
     private readonly s3: S3Adapter,
   ) {}
 
-  async execute({ files }: UploadPostFilesCommand) {
-    for (const file of files) {
-      const fileResult = this.fileService.validateFileSize(file.size);
+  async execute({
+    files,
+  }: UploadPostFilesCommand): Promise<ObjectResult<FilesResultType | null>> {
+    for (const [index, file] of files.entries()) {
+      const isValid: boolean = this.fileService.validateFileSize(file.size);
 
-      if (fileResult.error) {
-        return ObjectResult.failure(fileResult.error);
+      if (!isValid) {
+        return ObjectResult.failure({
+          code: 'FILE_SIZE_EXCEEDED',
+          errors: [
+            {
+              field: `file[${index}]`,
+              message: 'File size must not exceed 5 MB',
+            },
+          ],
+        });
       }
     }
 
@@ -47,6 +61,8 @@ export class UploadPostFilesUseCase implements ICommandHandler<UploadPostFilesCo
       this.s3.getUrl(preview.key),
     );
 
-    return FileMapper.toFilesResult(files[0].targetId, filesView, previewView);
+    return ObjectResult.success(
+      FileMapper.toFilesResult(files[0].targetId, filesView, previewView),
+    );
   }
 }

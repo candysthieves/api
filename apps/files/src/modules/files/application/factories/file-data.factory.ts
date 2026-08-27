@@ -6,6 +6,7 @@ type CreateFileDataType = {
   size: number;
   width: number;
   height: number;
+  format: string;
 };
 
 export class FileDataFactory {
@@ -16,11 +17,11 @@ export class FileDataFactory {
       fileId: fileId,
       type: params.type,
       originalName: params.originalName,
-      key: `files/${params.type}/${fileId}.webp`,
+      key: `files/${params.type}/${fileId}.${params.format}`,
       size: params.size,
       width: params.width,
       height: params.height,
-      mimeType: 'image/webp',
+      format: params.format,
     };
   }
 }

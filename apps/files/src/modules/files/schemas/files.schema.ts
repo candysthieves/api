@@ -59,16 +59,13 @@ export class File {
   })
   height: number;
 
-  @Prop({
-    name: 'mime_type',
-    required: true,
-    default: 'webp',
-  })
-  mimeType: string;
+  @Prop({ type: String, default: 'webp' })
+  format: string;
+
   createdAt: Date;
   updatedAt: Date;
-  @Prop({ type: Date, default: null, name: 'deleted_at' })
-  deletedAt: Date | null;
+  @Prop({ type: Date, default: null, name: 'delete_at' })
+  deleteAt: Date | null;
 }
 
 export const FileSchema = SchemaFactory.createForClass(File);

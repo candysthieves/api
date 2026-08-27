@@ -7,7 +7,7 @@ import { AppModule } from '../../../src/app.module.js';
 import { setupApp } from '../../../src/setup/app-setup.js';
 import { EmailAdapter } from '../../../src/core/adapters/email/email.adapter.js';
 import { PrismaService } from '../../../src/infrastructure/prisma/prisma.service.js';
-import { RegistrationDto } from '../../../src/modules/user-accounts/dto/registration.dto.js';
+import { RegistrationDto } from '../../../src/modules/user-accounts/contracts/registration.contracts.js';
 
 describe('Sessions e2e tests', () => {
   let app: INestApplication;

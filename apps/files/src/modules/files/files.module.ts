@@ -7,8 +7,15 @@ import { S3Adapter } from '../../core/adapters/s3.adapter.js';
 import { FilesConfig } from '../../files.config.js';
 import { UploadAvatarUseCase } from './application/use-cases/upload-avatar.usecase.js';
 import { UploadPostFilesUseCase } from './application/use-cases/upload-post-files.usecase.js';
+import { SoftDeleteFilesUseCase } from './application/use-cases/soft-delete-files.usecase.js';
+import { DeleteFilesUseCase } from './application/use-cases/delete-files.usecase.js';
 
-const useCases = [UploadPostFilesUseCase, UploadAvatarUseCase];
+const useCases = [
+  UploadPostFilesUseCase,
+  UploadAvatarUseCase,
+  SoftDeleteFilesUseCase,
+  DeleteFilesUseCase,
+];
 
 @Module({
   imports: [
