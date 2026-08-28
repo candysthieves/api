@@ -12,7 +12,7 @@ import { ObjectResult } from './core/object-result.js';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  app.setGlobalPrefix('api/files/v1');
+  app.setGlobalPrefix('api/v1');
 
   const config = app.get(FilesConfig);
 
