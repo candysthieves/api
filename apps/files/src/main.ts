@@ -12,7 +12,7 @@ import { ObjectResult } from './core/object-result.js';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  app.setGlobalPrefix('api/v1');
+  // app.setGlobalPrefix('api/v1');
 
   const config = app.get(FilesConfig);
 
@@ -53,8 +53,8 @@ async function bootstrap() {
     }),
   );
 
-  await app.listen(config.port);
-  console.log('Files service started on port: ' + config.port);
+  // await app.listen(config.port);
+  // console.log('Files service started on port: ' + config.port);
   console.log(
     `Files service started on TCP ${config.tcpHost}:${config.tcpPort}`,
   );
