@@ -55,6 +55,11 @@ spec:
                  secretKeyRef:
                    name: lumosapp-backend-files-production-config-secret
                    key: S3_SECRET_ACCESS_KEY
+             - name: PORT
+               valueFrom:
+                 secretKeyRef:
+                   name: lumosapp-backend-files-production-config-secret
+                   key: PORT
              - name: TCP_HOST
                valueFrom:
                  secretKeyRef:
