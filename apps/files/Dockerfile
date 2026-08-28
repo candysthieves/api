@@ -21,9 +21,6 @@ COPY --chown=node . .
 
 RUN pnpm run build:${SERVICE}
 
-RUN mkdir -p dist/apps/files/assets \
-  && cp -R apps/files/src/assets/. dist/apps/files/assets/
-
 EXPOSE ${PORT}
 
 CMD npm run start:${SERVICE}
