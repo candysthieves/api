@@ -22,7 +22,7 @@ export class FilesService {
 
       case FileType.POST_PREVIEW:
         image = image
-          .resize(400, 400, { fit: 'inside', withoutEnlargement: true })
+          .resize(234, 238, { fit: 'inside', withoutEnlargement: true })
           .webp({ quality: 80 });
         break;
 
