@@ -9,6 +9,16 @@ async function bootstrap() {
   const config = app.get(FilesConfig);
 
   app.connectMicroservice<MicroserviceOptions>({
+    transport: Transport.RMQ,
+    options: {
+      urls: [config.rabbitMqUrl],
+      queue: config.rabbitMqMainToFilesQueue,
+      noAck: false,
+    },
+  });
+
+  await app.startAllMicroservices();
+  app.connectMicroservice<MicroserviceOptions>({
     transport: Transport.TCP,
     options: {
       host: config.tcpHost,
