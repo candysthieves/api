@@ -46,23 +46,23 @@ import { RecaptchaService } from '../../../core/services/recaptcha.service.js';
 import { GoogleOAuthLoginCommand } from '../application/use-cases/auth-use-cases/google-oauth-login.usecase.js';
 import { GithubOAuthLoginCommand } from '../application/use-cases/auth-use-cases/github-oauth-login.usecase.js';
 import { AppConfig } from '../../../app.config.js';
-import { ApiRegistrationNewUser } from '../../../core/swagger/authDTO/regestration_swagger_flow.js';
-import { ApiLogin } from '../../../core/swagger/authDTO/login_swagger_flow.js';
-import { ApiRefreshToken } from '../../../core/swagger/authDTO/refresh_token_swagger_flow.js';
-import { ApiRegistrationConfirmation } from '../../../core/swagger/authDTO/confirm_registration_swagger.js';
-import { ApiResendConfirmationEmail } from '../../../core/swagger/authDTO/resend_confirmation_email_swagger.js';
-import { ApiPasswordRecovery } from '../../../core/swagger/authDTO/password_recovery_swagger.js';
-import { ApiRecoveryPasswordValidate } from '../../../core/swagger/authDTO/recovery_password_validate.js';
-import { ApiNewPassword } from '../../../core/swagger/authDTO/new_password_swagger.js';
-import { ApiLogout } from '../../../core/swagger/authDTO/logout_swagger.js';
-import { ApiGoogleCallback } from '../../../core/swagger/authDTO/google_oAuth_callback_swagger.js';
-import { ApiGoogleAuth } from '../../../core/swagger/authDTO/google_oAuth_swagger.js';
-import { ApiGithubAuth } from '../../../core/swagger/authDTO/github_oAuth_swagger.js';
-import { ApiGithubCallback } from '../../../core/swagger/authDTO/github_oAuth_callback_swagger.js';
+import { ApiRegistrationNewUser } from '../../../core/swagger/auth-dto/regestration.swagger.js';
+import { ApiLogin } from '../../../core/swagger/auth-dto/login.swagger.js';
+import { ApiRefreshToken } from '../../../core/swagger/auth-dto/refresh-token.swagger.js';
+import { ApiRegistrationConfirmation } from '../../../core/swagger/auth-dto/confirm-registration.swagger.js';
+import { ApiResendConfirmationEmail } from '../../../core/swagger/auth-dto/resend-confirmation-email.swagger.js';
+import { ApiPasswordRecovery } from '../../../core/swagger/auth-dto/password-recovery.swagger.js';
+import { ApiRecoveryPasswordValidate } from '../../../core/swagger/auth-dto/recovery-password-validate.swagger.js';
+import { ApiNewPassword } from '../../../core/swagger/auth-dto/new-password.swagger.js';
+import { ApiLogout } from '../../../core/swagger/auth-dto/logout.swagger.js';
+import { ApiGoogleCallback } from '../../../core/swagger/auth-dto/google-oauth-callback.swagger.js';
+import { ApiGoogleAuth } from '../../../core/swagger/auth-dto/google-oauth.swagger.js';
+import { ApiGithubAuth } from '../../../core/swagger/auth-dto/github-oauth.swagger.js';
+import { ApiGithubCallback } from '../../../core/swagger/auth-dto/github-oauth-callback.swagger.js';
 import { ProfileViewType } from './view-types/auth/profile-view.type.js';
 import { ProfileQuery } from '../application/query-handler/auth/profile.usecase.js';
 import { AccessTokenGuard } from './guards/access-token.guard.js';
-import { ApiGetProfile } from '../../../core/swagger/authDTO/get-profile_swagger.js';
+import { ApiGetProfile } from '../../../core/swagger/auth-dto/get-profile.swagger.js';
 
 @ApiTags('Authentication')
 @Controller('auth')

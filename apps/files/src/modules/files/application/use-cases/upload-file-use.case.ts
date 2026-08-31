@@ -7,13 +7,16 @@ import { S3Adapter } from '../../../../core/adapters/s3.adapter.js';
 import { FilesResultType } from '../../api/view-types/files-result.type.js';
 import { UploadFileContract } from '../../api/contracts/upload-file.contract.js';
 
-export class UploadAvatarCommand {
-  constructor(public readonly file: UploadFileContract) {}
+export class UploadFileCommand {
+  constructor(
+    public readonly file: UploadFileContract,
+    public readonly type: FileType,
+  ) {}
 }
 
-@CommandHandler(UploadAvatarCommand)
-export class UploadAvatarUseCase implements ICommandHandler<
-  UploadAvatarCommand,
+@CommandHandler(UploadFileCommand)
+export class UploadFileUseCase implements ICommandHandler<
+  UploadFileCommand,
   ObjectResult<FilesResultType | null>
 > {
   constructor(
@@ -23,7 +26,8 @@ export class UploadAvatarUseCase implements ICommandHandler<
 
   async execute({
     file,
-  }: UploadAvatarCommand): Promise<ObjectResult<FilesResultType | null>> {
+    type,
+  }: UploadFileCommand): Promise<ObjectResult<FilesResultType | null>> {
     const isValid: boolean = this.fileService.validateFileSize(file.size);
 
     if (!isValid) {
@@ -38,11 +42,11 @@ export class UploadAvatarUseCase implements ICommandHandler<
       });
     }
 
-    const avatar = await this.fileService.saveFile(file, FileType.AVATAR);
+    const avatar = await this.fileService.saveFile(file, type);
 
     const avatarPreview = await this.fileService.saveFile(
       file,
-      FileType.AVATAR_PREVIEW,
+      `${type}_PREVIEW` as FileType,
     );
 
     const resultAvatar = FileMapper.toFileView(

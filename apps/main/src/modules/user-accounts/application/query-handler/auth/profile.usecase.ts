@@ -1,6 +1,6 @@
 import { IQueryHandler, QueryHandler } from '@nestjs/cqrs';
 import { UsersQueryRepository } from '../../../infrastructure/repositories/user-repositories/users.query.repository.js';
-import { UserMapper } from '../../../api/mappers/user.mapper.js';
+import { AuthMapper } from '../../../api/mappers/auth.mapper.js';
 import { ProfileViewType } from '../../../api/view-types/auth/profile-view.type.js';
 import { User } from '../../../../../generated/prisma/client.js';
 
@@ -19,6 +19,6 @@ export class ProfileQueryHandler implements IQueryHandler<
     const user: User =
       await this.usersQueryRepository.findByIdOrNotFound(userId);
 
-    return UserMapper.toProfileView(user);
+    return AuthMapper.toProfileView(user);
   }
 }

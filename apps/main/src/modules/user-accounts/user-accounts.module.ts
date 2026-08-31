@@ -2,7 +2,7 @@ import { CqrsModule } from '@nestjs/cqrs';
 import { RegistrationUseCase } from './application/use-cases/auth-use-cases/registration.usecase.js';
 import { LoginUseCase } from './application/use-cases/auth-use-cases/login.usecase.js';
 import { Module } from '@nestjs/common';
-import { UsersController } from './api/user.controller.js';
+import { UsersController } from './api/users.controller.js';
 import { AuthController } from './api/auth.controller.js';
 import { PrismaService } from '../../infrastructure/prisma/prisma.service.js';
 import { UsersRepository } from './infrastructure/repositories/user-repositories/users.repository.js';
@@ -29,6 +29,7 @@ import { AuthSessionService } from './application/auth-session.service.js';
 import { GoogleOAuthLoginUseCase } from './application/use-cases/auth-use-cases/google-oauth-login.usecase.js';
 import { GithubOAuthLoginUseCase } from './application/use-cases/auth-use-cases/github-oauth-login.usecase.js';
 import { ProfileQueryHandler } from './application/query-handler/auth/profile.usecase.js';
+import { GetUsersCountQueryHandler } from './application/query-handler/users/get-users-count-query-handler.js';
 
 const useCases = [
   RegistrationUseCase,
@@ -46,7 +47,11 @@ const useCases = [
   GoogleOAuthLoginUseCase,
   GithubOAuthLoginUseCase,
 ];
-const queryHandlers = [FindAllSessionsQueryHandler, ProfileQueryHandler];
+const queryHandlers = [
+  FindAllSessionsQueryHandler,
+  ProfileQueryHandler,
+  GetUsersCountQueryHandler,
+];
 const repositories = [UsersRepository, SessionsRepository, OAuthRepository];
 const queryRepositories = [SessionsQueryRepository, UsersQueryRepository];
 const services = [PrismaService, AuthSessionService, PasswordRecoveryService];

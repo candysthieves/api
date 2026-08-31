@@ -7,13 +7,16 @@ import { S3Adapter } from '../../../../core/adapters/s3.adapter.js';
 import { FilesResultType } from '../../api/view-types/files-result.type.js';
 import { UploadFileContract } from '../../api/contracts/upload-file.contract.js';
 
-export class UploadPostFilesCommand {
-  constructor(public readonly files: UploadFileContract[]) {}
+export class UploadFilesCommand {
+  constructor(
+    public readonly files: UploadFileContract[],
+    public readonly type: FileType,
+  ) {}
 }
 
-@CommandHandler(UploadPostFilesCommand)
-export class UploadPostFilesUseCase implements ICommandHandler<
-  UploadPostFilesCommand,
+@CommandHandler(UploadFilesCommand)
+export class UploadFilesUseCase implements ICommandHandler<
+  UploadFilesCommand,
   ObjectResult<FilesResultType | null>
 > {
   constructor(
@@ -23,7 +26,8 @@ export class UploadPostFilesUseCase implements ICommandHandler<
 
   async execute({
     files,
-  }: UploadPostFilesCommand): Promise<ObjectResult<FilesResultType | null>> {
+    type,
+  }: UploadFilesCommand): Promise<ObjectResult<FilesResultType | null>> {
     for (const [index, file] of files.entries()) {
       const isValid: boolean = this.fileService.validateFileSize(file.size);
 
@@ -43,13 +47,13 @@ export class UploadPostFilesUseCase implements ICommandHandler<
     const result: File[] = [];
 
     for (const file of files) {
-      const savedFile = await this.fileService.saveFile(file, FileType.POST);
+      const savedFile = await this.fileService.saveFile(file, type);
       result.push(savedFile);
     }
 
     const preview = await this.fileService.saveFile(
       files[0],
-      FileType.POST_PREVIEW,
+      `${type}_PREVIEW` as FileType,
     );
 
     const filesView = result.map((file) =>
