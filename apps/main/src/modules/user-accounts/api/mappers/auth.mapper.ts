@@ -1,7 +1,7 @@
 import { User } from '../../../../generated/prisma/client.js';
 import { ProfileViewType } from '../view-types/auth/profile-view.type.js';
 
-export class UserMapper {
+export class AuthMapper {
   static toProfileView(user: User): ProfileViewType {
     return {
       id: user.id,
