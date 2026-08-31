@@ -7,9 +7,16 @@ import { AppController } from './app.controller.js';
 import { CoreModule } from './core/core.module.js';
 import { RabbitMqTestController } from './core/rabbitmq/rabbitmq-test.controller.js';
 import { TestController } from './test.controller.js';
+import { RabbitMqModule } from './core/rabbitmq/rabbitmq.module.js';
 
 @Module({
-  imports: [configModule, CoreModule, CqrsModule.forRoot(), UserAccountsModule],
+  imports: [
+    configModule,
+    CoreModule,
+    CqrsModule.forRoot(),
+    RabbitMqModule,
+    UserAccountsModule,
+  ],
   controllers:
     process.env.NODE_ENV === 'testing'
       ? [AppController, TestController]
