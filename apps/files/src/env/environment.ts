@@ -17,6 +17,16 @@ export class EnvironmentVariables {
   @Max(65535)
   PORT!: number;
 
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(65535)
+  TCP_PORT!: number;
+
+  @IsString()
+  @IsNotEmpty()
+  TCP_HOST: string;
+
   @IsString()
   @IsNotEmpty()
   MONGODB_URI!: string;
