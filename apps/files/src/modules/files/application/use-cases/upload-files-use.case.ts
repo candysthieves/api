@@ -29,7 +29,7 @@ export class UploadFilesUseCase implements ICommandHandler<
     type,
   }: UploadFilesCommand): Promise<ObjectResult<FilesResultType | null>> {
     for (const [index, file] of files.entries()) {
-      const isValid: boolean = this.fileService.validateFileSize(file.size);
+      const isValid = this.fileService.validateFileSize(file.size);
 
       if (!isValid) {
         return ObjectResult.failure({

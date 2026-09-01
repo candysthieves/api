@@ -9,7 +9,10 @@ import type { MediaEvent } from '../events/post-media-events.service.js';
 export class MainRabbitMqConsumerController {
   constructor(private readonly events: PostMediaEventsService) {}
   @EventPattern('post.media.event')
-  async handlePostMediaEvent(@Payload() event: MediaEvent, @Ctx() context: RmqContext): Promise<void> {
+  async handlePostMediaEvent(
+    @Payload() event: MediaEvent,
+    @Ctx() context: RmqContext,
+  ): Promise<void> {
     const channel = context.getChannelRef() as Channel;
     const message = context.getMessage() as Message;
     await this.events.accept(event);

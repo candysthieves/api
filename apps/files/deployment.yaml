@@ -60,11 +60,6 @@ spec:
                  secretKeyRef:
                    name: lumosapp-backend-files-production-config-secret
                    key: PORT
-             - name: TCP_HOST
-               valueFrom:
-                 secretKeyRef:
-                   name: lumosapp-backend-files-production-config-secret
-                   key: TCP_HOST
              - name: RABBITMQ_URL
                valueFrom:
                  secretKeyRef:
@@ -80,3 +75,8 @@ spec:
                  secretKeyRef:
                    name: lumosapp-backend-files-production-config-secret
                    key: RABBITMQ_FILES_TO_MAIN_QUEUE
+             - name: TCP_HOST
+               valueFrom:
+                 secretKeyRef:
+                   name: lumosapp-backend-files-production-config-secret
+                   key: TCP_HOST

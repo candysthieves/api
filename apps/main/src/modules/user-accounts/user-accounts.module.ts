@@ -34,6 +34,8 @@ import { CreatePostUseCase } from './application/use-cases/posts-use-cases/creat
 import { PostRepository } from './infrastructure/repositories/post-repositories/post.repository.js';
 import { AccessTokenGuard } from './api/guards/access-token.guard.js';
 import { EventsModule } from '../../core/events/events.module.js';
+import { DeletePostUseCase } from './application/use-cases/posts-use-cases/delete-post.usecase.js';
+import { PostDeletionSchedulerService } from './application/post-deletion-scheduler.service.js';
 
 const useCases = [
   RegistrationUseCase,
@@ -51,6 +53,7 @@ const useCases = [
   GoogleOAuthLoginUseCase,
   GithubOAuthLoginUseCase,
   CreatePostUseCase,
+  DeletePostUseCase,
 ];
 const queryHandlers = [
   FindAllSessionsQueryHandler,
@@ -64,7 +67,11 @@ const repositories = [
   PostRepository,
 ];
 const queryRepositories = [SessionsQueryRepository, UsersQueryRepository];
-const services = [AuthSessionService, PasswordRecoveryService];
+const services = [
+  AuthSessionService,
+  PasswordRecoveryService,
+  PostDeletionSchedulerService,
+];
 const controllers = [
   UsersController,
   AuthController,

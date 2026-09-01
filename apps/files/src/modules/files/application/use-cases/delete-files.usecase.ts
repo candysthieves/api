@@ -23,18 +23,6 @@ export class DeleteFilesUseCase implements ICommandHandler<
       fileId: { $in: command.fileIds },
     });
 
-    if (command.fileIds.length !== files.length) {
-      return ObjectResult.failure({
-        code: 'FILE_NOT_FOUND',
-        errors: [
-          {
-            field: 'file',
-            message: 'Some files were not found',
-          },
-        ],
-      });
-    }
-
     for (const file of files) {
       await this.s3.deleteFile(file.key);
       await file.deleteOne();

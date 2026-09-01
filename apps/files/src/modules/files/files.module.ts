@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { FilesController } from './api/files.controller.js';
 import { FilesService } from './application/files.service.js';
+import { ImageProcessingService } from './application/image-processing.service.js';
 import { MongooseModule } from '@nestjs/mongoose';
 import { FileSchema, File } from './schemas/files.schema.js';
 import { S3Adapter } from '../../core/adapters/s3.adapter.js';
@@ -30,6 +31,7 @@ const useCases = [
   providers: [
     ...useCases,
     FilesService,
+    ImageProcessingService,
     S3Adapter,
     FilesConfig,
     PostMediaProcessingService,

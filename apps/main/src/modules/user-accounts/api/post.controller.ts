@@ -1,8 +1,11 @@
 import {
   Body,
   Controller,
+  Delete,
   HttpCode,
   HttpStatus,
+  Param,
+  ParseUUIDPipe,
   Post,
   UploadedFiles,
   UseGuards,
@@ -17,6 +20,8 @@ import { User } from './decorators/user.decorator.js';
 import { type JwtAccessPayload } from '../../../core/types/jwt-payload.type.js';
 import { CreatePostDto } from './dto/create-post.dto.js';
 import { ApiCreatePost } from '../../../core/swagger/postsDTO/create-post-swagger.js';
+import { ApiDeletePost } from '../../../core/swagger/postsDTO/delete-post-swagger.js';
+import { DeletePostCommand } from '../application/use-cases/posts-use-cases/delete-post.usecase.js';
 
 @ApiTags('Posts')
 @Controller('posts')
@@ -42,6 +47,19 @@ export class PostController {
         files,
         createDto.location,
       ),
+    );
+  }
+
+  @Delete(':postId')
+  @UseGuards(AccessTokenGuard)
+  @ApiDeletePost()
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async deletePost(
+    @Param('postId', ParseUUIDPipe) postId: string,
+    @User() user: JwtAccessPayload,
+  ): Promise<void> {
+    await this.commandBus.execute<DeletePostCommand, void>(
+      new DeletePostCommand(postId, user.userId),
     );
   }
 }
