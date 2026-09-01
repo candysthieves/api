@@ -60,8 +60,38 @@ spec:
                  secretKeyRef:
                    name: lumosapp-backend-files-production-config-secret
                    key: PORT
+             - name: RABBITMQ_URL
+               valueFrom:
+                 secretKeyRef:
+                   name: lumosapp-backend-files-production-config-secret
+                   key: RABBITMQ_URL
+             - name: RABBITMQ_MAIN_TO_FILES_QUEUE
+               valueFrom:
+                 secretKeyRef:
+                   name: lumosapp-backend-files-production-config-secret
+                   key: RABBITMQ_MAIN_TO_FILES_QUEUE
+             - name: RABBITMQ_FILES_TO_MAIN_QUEUE
+               valueFrom:
+                 secretKeyRef:
+                   name: lumosapp-backend-files-production-config-secret
+                   key: RABBITMQ_FILES_TO_MAIN_QUEUE
              - name: TCP_HOST
                valueFrom:
                  secretKeyRef:
                    name: lumosapp-backend-files-production-config-secret
                    key: TCP_HOST
+             - name: RABBITMQ_URL
+               valueFrom:
+                 secretKeyRef:
+                   name: lumosapp-backend-files-production-config-secret
+                   key: RABBITMQ_URL
+             - name: RABBITMQ_MAIN_TO_FILES_QUEUE
+               valueFrom:
+                 secretKeyRef:
+                   name: lumosapp-backend-files-production-config-secret
+                   key: RABBITMQ_MAIN_TO_FILES_QUEUE
+             - name: RABBITMQ_FILES_TO_MAIN_QUEUE
+               valueFrom:
+                 secretKeyRef:
+                   name: lumosapp-backend-files-production-config-secret
+                   key: RABBITMQ_FILES_TO_MAIN_QUEUE

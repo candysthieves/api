@@ -1,5 +1,5 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { File, FileType } from '../../schemas/files.schema.js';
+import { FileType } from '../../schemas/files.schema.js';
 import { FilesService } from '../files.service.js';
 import { ObjectResult } from '../../../../core/object-result.js';
 import { FileMapper } from '../../api/mappers/file.mapper.js';
@@ -28,7 +28,7 @@ export class UploadFileUseCase implements ICommandHandler<
     file,
     type,
   }: UploadFileCommand): Promise<ObjectResult<FilesResultType | null>> {
-    const isValid: boolean = this.fileService.validateFileSize(file.size);
+    const isValid = this.fileService.validateFileSize(file.size);
 
     if (!isValid) {
       return ObjectResult.failure({

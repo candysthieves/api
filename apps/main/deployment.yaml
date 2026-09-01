@@ -125,6 +125,16 @@ spec:
                  secretKeyRef:
                    name: lumosapp-backend-main-production-config-secret
                    key: RABBITMQ_FILES_TO_MAIN_QUEUE
+             - name: FILES_TCP_HOST
+               valueFrom:
+                 secretKeyRef:
+                   name: lumosapp-backend-main-production-config-secret
+                   key: FILES_TCP_HOST
+             - name: FILES_TCP_PORT
+               valueFrom:
+                 secretKeyRef:
+                   name: lumosapp-backend-main-production-config-secret
+                   key: FILES_TCP_PORT
              - name: JWT_SECRET_KEY
                valueFrom:
                  secretKeyRef:

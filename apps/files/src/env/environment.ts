@@ -25,7 +25,7 @@ export class EnvironmentVariables {
 
   @IsString()
   @IsNotEmpty()
-  TCP_HOST: string;
+  TCP_HOST!: string;
 
   @IsString()
   @IsNotEmpty()

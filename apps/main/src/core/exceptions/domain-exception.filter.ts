@@ -25,6 +25,10 @@ export class DomainExceptionFilter implements ExceptionFilter<DomainException> {
         status = HttpStatus.BAD_REQUEST;
         break;
 
+      case DomainExceptionCode.ServiceUnavailable:
+        status = HttpStatus.SERVICE_UNAVAILABLE;
+        break;
+
       case DomainExceptionCode.NotFound:
         status = HttpStatus.NOT_FOUND;
         break;

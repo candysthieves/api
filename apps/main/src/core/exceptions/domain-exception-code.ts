@@ -5,6 +5,7 @@ export enum DomainExceptionCode {
   InternalServerError = 3,
   Forbidden = 4,
   ValidationError = 5,
+  ServiceUnavailable = 6,
 
   // Auth
   Unauthorized = 11,
@@ -39,6 +40,13 @@ export enum ErrorStatus {
   RECAPTCHA_INVALID = 52,
   PASSWORDS_NOT_MATCH = 53,
   OAUTH_EMAIL_MISSING = 54,
+
+  //Posts
+
+  POST_NOT_FOUND = 55,
+  POST_ALREADY_EXISTS = 56,
+  FILES_SERVICE_UNAVAILABLE = 57,
+  POST_ACCESS_FORBIDDEN = 58,
 
   // Refresh token
   REFRESH_TOKEN_INVALID = 70,

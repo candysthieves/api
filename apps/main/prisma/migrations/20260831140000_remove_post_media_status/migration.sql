@@ -1,0 +1,3 @@
+ALTER TABLE "Post" DROP COLUMN IF EXISTS "media_status";
+ALTER TABLE "Post" DROP COLUMN IF EXISTS "media_error";
+DROP TYPE IF EXISTS "MediaStatus";
