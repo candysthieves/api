@@ -1,6 +1,5 @@
 import { Controller } from '@nestjs/common';
 import { CommandBus } from '@nestjs/cqrs';
-import { UploadPostFilesCommand } from '../application/use-cases/upload-post-files.usecase.js';
 import { MessagePattern, Payload } from '@nestjs/microservices';
 import { UploadAvatarCommand } from '../application/use-cases/upload-avatar.usecase.js';
 import { SoftDeleteFilesCommand } from '../application/use-cases/soft-delete-files.usecase.js';
@@ -12,17 +11,18 @@ import { UploadFileContract } from './contracts/upload-file.contract.js';
 import { DeleteFilesContract } from './contracts/delete-files.contract.js';
 import { RestoreFilesCommand } from '../application/use-cases/restore-files.usecase.js';
 import { RestoreFilesContract } from './contracts/restore-files.contract.js';
+import { PostMediaProcessingService } from '../application/post-media-processing.service.js';
 
 @Controller('upload')
 export class FilesController {
-  constructor(private readonly commandBus: CommandBus) {}
+  constructor(
+    private readonly commandBus: CommandBus,
+    private readonly postMediaProcessing: PostMediaProcessingService,
+  ) {}
 
   @MessagePattern({ cmd: 'upload-post-files' })
   async uploadPostFiles(@Payload() dto: UploadFilesContract) {
-    return this.commandBus.execute<
-      UploadPostFilesCommand,
-      ObjectResult<FilesResultType | null>
-    >(new UploadPostFilesCommand(dto.files));
+    return this.postMediaProcessing.accept(dto.files);
   }
 
   @MessagePattern({ cmd: 'upload-avatar-file' })

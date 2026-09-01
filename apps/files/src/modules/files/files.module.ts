@@ -6,13 +6,13 @@ import { FileSchema, File } from './schemas/files.schema.js';
 import { S3Adapter } from '../../core/adapters/s3.adapter.js';
 import { FilesConfig } from '../../files.config.js';
 import { UploadAvatarUseCase } from './application/use-cases/upload-avatar.usecase.js';
-import { UploadPostFilesUseCase } from './application/use-cases/upload-post-files.usecase.js';
 import { SoftDeleteFilesUseCase } from './application/use-cases/soft-delete-files.usecase.js';
 import { DeleteFilesUseCase } from './application/use-cases/delete-files.usecase.js';
 import { RestoreFilesUseCase } from './application/use-cases/restore-files.usecase.js';
+import { FilesEventsModule } from '../../events/files-events.module.js';
+import { PostMediaProcessingService } from './application/post-media-processing.service.js';
 
 const useCases = [
-  UploadPostFilesUseCase,
   UploadAvatarUseCase,
   SoftDeleteFilesUseCase,
   DeleteFilesUseCase,
@@ -21,9 +21,15 @@ const useCases = [
 
 @Module({
   imports: [
-    MongooseModule.forFeature([{ name: File.name, schema: FileSchema }]),
+    MongooseModule.forFeature([{ name: File.name, schema: FileSchema }]), FilesEventsModule,
   ],
   controllers: [FilesController],
-  providers: [...useCases, FilesService, S3Adapter, FilesConfig],
+  providers: [
+    ...useCases,
+    FilesService,
+    S3Adapter,
+    FilesConfig,
+    PostMediaProcessingService,
+  ],
 })
 export class FilesModule {}

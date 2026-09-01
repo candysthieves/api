@@ -17,6 +17,16 @@ export class DomainExceptions {
     );
   }
 
+  static serviceUnavailable(
+    code: ErrorStatus,
+    field: string = '',
+    message = 'Service unavailable',
+  ): never {
+    throw new DomainException(DomainExceptionCode.ServiceUnavailable, code, [
+      { field, message },
+    ]);
+  }
+
   static notFound(
     code: ErrorStatus,
     field: string,

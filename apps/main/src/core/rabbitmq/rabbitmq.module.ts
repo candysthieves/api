@@ -3,11 +3,13 @@ import { ConfigService } from '@nestjs/config';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { MainRabbitMqConsumerController } from './main-rabbitmq-consumer.controller.js';
 import { MainRabbitMqProducerService } from './main-rabbitmq-producer.service.js';
+import { EventsModule } from '../events/events.module.js';
 
 export const FILES_RMQ_CLIENT = 'FILES_RMQ_CLIENT';
 
 @Module({
   imports: [
+    EventsModule,
     ClientsModule.registerAsync([
       {
         name: FILES_RMQ_CLIENT,

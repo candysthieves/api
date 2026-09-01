@@ -4,7 +4,6 @@ import { LoginUseCase } from './application/use-cases/auth-use-cases/login.useca
 import { Module } from '@nestjs/common';
 import { UsersController } from './api/user.controller.js';
 import { AuthController } from './api/auth.controller.js';
-import { PrismaService } from '../../infrastructure/prisma/prisma.service.js';
 import { UsersRepository } from './infrastructure/repositories/user-repositories/users.repository.js';
 import { UsersQueryRepository } from './infrastructure/repositories/user-repositories/users.query.repository.js';
 import { SessionsRepository } from './infrastructure/repositories/session-repositories/sessions.repository.js';
@@ -29,6 +28,11 @@ import { AuthSessionService } from './application/auth-session.service.js';
 import { GoogleOAuthLoginUseCase } from './application/use-cases/auth-use-cases/google-oauth-login.usecase.js';
 import { GithubOAuthLoginUseCase } from './application/use-cases/auth-use-cases/github-oauth-login.usecase.js';
 import { ProfileQueryHandler } from './application/query-handler/auth/profile.usecase.js';
+import { PostController } from './api/post.controller.js';
+import { CreatePostUseCase } from './application/use-cases/posts-use-cases/create-post.use.case.js';
+import { PostRepository } from './infrastructure/repositories/post-repositories/post.repository.js';
+import { AccessTokenGuard } from './api/guards/access-token.guard.js';
+import { EventsModule } from '../../core/events/events.module.js';
 
 const useCases = [
   RegistrationUseCase,
@@ -45,17 +49,28 @@ const useCases = [
   OAuthLoginUseCase,
   GoogleOAuthLoginUseCase,
   GithubOAuthLoginUseCase,
+  CreatePostUseCase,
 ];
 const queryHandlers = [FindAllSessionsQueryHandler, ProfileQueryHandler];
-const repositories = [UsersRepository, SessionsRepository, OAuthRepository];
+const repositories = [
+  UsersRepository,
+  SessionsRepository,
+  OAuthRepository,
+  PostRepository,
+];
 const queryRepositories = [SessionsQueryRepository, UsersQueryRepository];
-const services = [PrismaService, AuthSessionService, PasswordRecoveryService];
-const controllers = [UsersController, AuthController, SessionsController];
+const services = [AuthSessionService, PasswordRecoveryService];
+const controllers = [
+  UsersController,
+  AuthController,
+  SessionsController,
+  PostController,
+];
 
 const strategies = [GoogleStrategy, GithubStrategy];
 
 @Module({
-  imports: [CqrsModule],
+  imports: [CqrsModule, EventsModule],
   controllers: [...controllers],
   providers: [
     ...useCases,
@@ -64,7 +79,7 @@ const strategies = [GoogleStrategy, GithubStrategy];
     ...queryRepositories,
     ...services,
     ...strategies,
+    AccessTokenGuard,
   ],
-  exports: [PrismaService],
 })
 export class UserAccountsModule {}

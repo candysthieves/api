@@ -1,5 +1,5 @@
-import { Type } from 'class-transformer';
-import { IsInt, IsNotEmpty, IsString, Max, Min } from 'class-validator';
+import { Transform, Type } from 'class-transformer';
+import { IsBoolean, IsInt, IsNotEmpty, IsOptional, IsString, IsUrl, Max, Min } from 'class-validator';
 
 export class EnvironmentVariables {
   @Type(() => Number)
@@ -7,6 +7,16 @@ export class EnvironmentVariables {
   @Min(1)
   @Max(65535)
   PORT!: number;
+
+  @IsString()
+  @IsNotEmpty()
+  TCP_HOST!: string;
+
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(65535)
+  TCP_PORT!: number;
 
   @IsString()
   @IsNotEmpty()
