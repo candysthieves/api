@@ -1,11 +1,11 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
+import { S3Adapter } from '../../../core/adapters/s3.adapter.js';
 import { ObjectResult } from '../../../core/object-result.js';
 import { FilesEventsService } from '../../../events/files-events.service.js';
 import {
   EventStatus,
-  StoredEvent,
   StoredEventDocument,
 } from '../../../events/schemas/event.schema.js';
 import { UploadFileContract } from '../api/contracts/upload-file.contract.js';
@@ -13,7 +13,6 @@ import { FileMapper } from '../api/mappers/file.mapper.js';
 import { FileViewType } from '../api/view-types/file-view.type.js';
 import { FileType } from '../schemas/files.schema.js';
 import { FilesService } from './files.service.js';
-import { S3Adapter } from '../../../core/adapters/s3.adapter.js';
 
 const REQUESTED_EVENT = 'post.media.process.requested';
 const SOURCE_BUFFER_MISSING = 'SOURCE_BUFFER_MISSING';
@@ -90,7 +89,7 @@ export class PostMediaProcessingService implements OnModuleInit {
       .findOneAndUpdate(
         { eventId, type: REQUESTED_EVENT, status: EventStatus.UNPROCESSED },
         { $set: { status: EventStatus.PROCESSING }, $inc: { attempts: 1 } },
-        { new: true },
+        { returnDocument: 'after' },
       )
       .exec();
     if (!job) return;
@@ -98,7 +97,11 @@ export class PostMediaProcessingService implements OnModuleInit {
     const sourceFiles = this.buffers.get(eventId);
     try {
       if (!sourceFiles) {
-        await this.fail(job, SOURCE_BUFFER_MISSING, 'Source buffers are missing');
+        await this.fail(
+          job,
+          SOURCE_BUFFER_MISSING,
+          'Source buffers are missing',
+        );
         return;
       }
 
@@ -107,7 +110,10 @@ export class PostMediaProcessingService implements OnModuleInit {
         const saved = await this.files.saveFile(file, FileType.POST);
         images.push(FileMapper.toFileView(saved, this.s3.getUrl(saved.key)));
       }
-      const preview = await this.files.saveFile(sourceFiles[0], FileType.POST_PREVIEW);
+      const preview = await this.files.saveFile(
+        sourceFiles[0],
+        FileType.POST_PREVIEW,
+      );
       const media = FileMapper.toFilesResult(
         sourceFiles[0].targetId,
         images,
@@ -122,7 +128,9 @@ export class PostMediaProcessingService implements OnModuleInit {
       await this.jobs
         .updateOne(
           { _id: job._id },
-          { $set: { status: EventStatus.OK, lastError: null, errorCode: null } },
+          {
+            $set: { status: EventStatus.OK, lastError: null, errorCode: null },
+          },
         )
         .exec();
     } catch (error) {
@@ -148,7 +156,13 @@ export class PostMediaProcessingService implements OnModuleInit {
     await this.jobs
       .updateOne(
         { _id: job._id },
-        { $set: { status: EventStatus.ERROR, errorCode: code, lastError: message } },
+        {
+          $set: {
+            status: EventStatus.ERROR,
+            errorCode: code,
+            lastError: message,
+          },
+        },
       )
       .exec();
   }

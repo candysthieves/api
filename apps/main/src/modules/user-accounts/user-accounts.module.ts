@@ -1,89 +1,81 @@
-import { CqrsModule } from '@nestjs/cqrs';
-import { RegistrationUseCase } from './application/use-cases/auth-use-cases/registration.usecase.js';
-import { LoginUseCase } from './application/use-cases/auth-use-cases/login.usecase.js';
 import { Module } from '@nestjs/common';
-import { UsersController } from './api/users.controller.js';
-import { AuthController } from './api/auth.controller.js';
-import { UsersRepository } from './infrastructure/repositories/user-repositories/users.repository.js';
-import { UsersQueryRepository } from './infrastructure/repositories/user-repositories/users.query.repository.js';
-import { SessionsRepository } from './infrastructure/repositories/session-repositories/sessions.repository.js';
-import { SessionsQueryRepository } from './infrastructure/repositories/session-repositories/sessions.query.repository.js';
-import { SessionsController } from './api/sessions.controller.js';
-import { FindAllSessionsQueryHandler } from './application/query-handler/sessions/find-sessions-query-handler.js';
-import { LogoutUseCase } from './application/use-cases/auth-use-cases/logout.usecase.js';
-import { RefreshTokenUseCase } from './application/use-cases/auth-use-cases/refresh-token,usecase.js';
-import { DeleteOtherSessionsUseCase } from './application/use-cases/sessions-use-cases/delete-other-sessions-use.case.js';
-import { DeactivateSessionUseCase } from './application/use-cases/sessions-use-cases/deactivate-session.usecase.js';
-import { ConfirmEmailUseCase } from './application/use-cases/auth-use-cases/confirm-email.usecase.js';
-import { ResendEmailUseCase } from './application/use-cases/auth-use-cases/resend-email.usecase.js';
-import { PasswordRecoveryUseCase } from './application/use-cases/auth-use-cases/password-recovery.usecase.js';
-import { ValidatePasswordRecoveryCodeUseCase } from './application/use-cases/auth-use-cases/validate-password-recovery-code.usecase.js';
-import { NewPasswordUseCase } from './application/use-cases/auth-use-cases/new-password.usecase.js';
-import { PasswordRecoveryService } from './application/password-recovery.service.js';
-import { OAuthLoginUseCase } from './application/use-cases/auth-use-cases/oauth-login.usecase.js';
-import { GoogleStrategy } from './infrastructure/strategies/google.strategy.js';
-import { GithubStrategy } from './infrastructure/strategies/github.strategy.js';
-import { OAuthRepository } from './infrastructure/repositories/oauth-repositories/oauth.repository.js';
-import { AuthSessionService } from './application/auth-session.service.js';
-import { GoogleOAuthLoginUseCase } from './application/use-cases/auth-use-cases/google-oauth-login.usecase.js';
-import { GithubOAuthLoginUseCase } from './application/use-cases/auth-use-cases/github-oauth-login.usecase.js';
-import { ProfileQueryHandler } from './application/query-handler/auth/profile.usecase.js';
-import { GetUsersCountQueryHandler } from './application/query-handler/users/get-users-count-query-handler.js';
-import { PostController } from './api/post.controller.js';
-import { CreatePostUseCase } from './application/use-cases/posts-use-cases/create-post.use.case.js';
-import { PostRepository } from './infrastructure/repositories/post-repositories/post.repository.js';
-import { AccessTokenGuard } from './api/guards/access-token.guard.js';
+import { CqrsModule } from '@nestjs/cqrs';
 import { EventsModule } from '../../core/events/events.module.js';
-
-const useCases = [
-  RegistrationUseCase,
-  LoginUseCase,
-  LogoutUseCase,
-  RefreshTokenUseCase,
-  DeleteOtherSessionsUseCase,
-  DeactivateSessionUseCase,
-  ConfirmEmailUseCase,
-  ResendEmailUseCase,
-  PasswordRecoveryUseCase,
-  ValidatePasswordRecoveryCodeUseCase,
-  NewPasswordUseCase,
-  OAuthLoginUseCase,
-  GoogleOAuthLoginUseCase,
-  GithubOAuthLoginUseCase,
-  CreatePostUseCase,
-];
-const queryHandlers = [
-  FindAllSessionsQueryHandler,
-  ProfileQueryHandler,
-  GetUsersCountQueryHandler,
-];
-const repositories = [
-  UsersRepository,
-  SessionsRepository,
-  OAuthRepository,
-  PostRepository,
-];
-const queryRepositories = [SessionsQueryRepository, UsersQueryRepository];
-const services = [AuthSessionService, PasswordRecoveryService];
-const controllers = [
-  UsersController,
-  AuthController,
-  SessionsController,
-  PostController,
-];
-
-const strategies = [GoogleStrategy, GithubStrategy];
+import { AuthSessionService } from './application/auth-session.service.js';
+import { PasswordRecoveryService } from './application/password-recovery.service.js';
+import { PostDeletionSchedulerService } from './application/post-deletion-scheduler.service.js';
+import { ProfileQueryHandler } from './application/query-handler/auth/profile.usecase.js';
+import { FindAllSessionsQueryHandler } from './application/query-handler/sessions/find-sessions-query-handler.js';
+import { GetUsersCountQueryHandler } from './application/query-handler/users/get-users-count-query-handler.js';
+import { ConfirmEmailUseCase } from './application/use-cases/auth-use-cases/confirm-email.usecase.js';
+import { GithubOAuthLoginUseCase } from './application/use-cases/auth-use-cases/github-oauth-login.usecase.js';
+import { GoogleOAuthLoginUseCase } from './application/use-cases/auth-use-cases/google-oauth-login.usecase.js';
+import { LoginUseCase } from './application/use-cases/auth-use-cases/login.usecase.js';
+import { LogoutUseCase } from './application/use-cases/auth-use-cases/logout.usecase.js';
+import { NewPasswordUseCase } from './application/use-cases/auth-use-cases/new-password.usecase.js';
+import { OAuthLoginUseCase } from './application/use-cases/auth-use-cases/oauth-login.usecase.js';
+import { PasswordRecoveryUseCase } from './application/use-cases/auth-use-cases/password-recovery.usecase.js';
+import { RefreshTokenUseCase } from './application/use-cases/auth-use-cases/refresh-token,usecase.js';
+import { RegistrationUseCase } from './application/use-cases/auth-use-cases/registration.usecase.js';
+import { ResendEmailUseCase } from './application/use-cases/auth-use-cases/resend-email.usecase.js';
+import { ValidatePasswordRecoveryCodeUseCase } from './application/use-cases/auth-use-cases/validate-password-recovery-code.usecase.js';
+import { CreatePostUseCase } from './application/use-cases/posts-use-cases/create-post.use.case.js';
+import { DeletePostUseCase } from './application/use-cases/posts-use-cases/delete-post.usecase.js';
+import { DeactivateSessionUseCase } from './application/use-cases/sessions-use-cases/deactivate-session.usecase.js';
+import { DeleteOtherSessionsUseCase } from './application/use-cases/sessions-use-cases/delete-other-sessions-use.case.js';
+import { AuthController } from './api/auth.controller.js';
+import { AccessTokenGuard } from './api/guards/access-token.guard.js';
+import { PostController } from './api/post.controller.js';
+import { SessionsController } from './api/sessions.controller.js';
+import { UsersController } from './api/users.controller.js';
+import { OAuthRepository } from './infrastructure/repositories/oauth-repositories/oauth.repository.js';
+import { PostRepository } from './infrastructure/repositories/post-repositories/post.repository.js';
+import { SessionsQueryRepository } from './infrastructure/repositories/session-repositories/sessions.query.repository.js';
+import { SessionsRepository } from './infrastructure/repositories/session-repositories/sessions.repository.js';
+import { UsersQueryRepository } from './infrastructure/repositories/user-repositories/users.query.repository.js';
+import { UsersRepository } from './infrastructure/repositories/user-repositories/users.repository.js';
+import { GithubStrategy } from './infrastructure/strategies/github.strategy.js';
+import { GoogleStrategy } from './infrastructure/strategies/google.strategy.js';
 
 @Module({
   imports: [CqrsModule, EventsModule],
-  controllers: [...controllers],
+  controllers: [
+    UsersController,
+    AuthController,
+    SessionsController,
+    PostController,
+  ],
   providers: [
-    ...useCases,
-    ...queryHandlers,
-    ...repositories,
-    ...queryRepositories,
-    ...services,
-    ...strategies,
+    RegistrationUseCase,
+    LoginUseCase,
+    LogoutUseCase,
+    RefreshTokenUseCase,
+    DeleteOtherSessionsUseCase,
+    DeactivateSessionUseCase,
+    ConfirmEmailUseCase,
+    ResendEmailUseCase,
+    PasswordRecoveryUseCase,
+    ValidatePasswordRecoveryCodeUseCase,
+    NewPasswordUseCase,
+    OAuthLoginUseCase,
+    GoogleOAuthLoginUseCase,
+    GithubOAuthLoginUseCase,
+    CreatePostUseCase,
+    DeletePostUseCase,
+    FindAllSessionsQueryHandler,
+    ProfileQueryHandler,
+    GetUsersCountQueryHandler,
+    UsersRepository,
+    SessionsRepository,
+    OAuthRepository,
+    PostRepository,
+    SessionsQueryRepository,
+    UsersQueryRepository,
+    AuthSessionService,
+    PasswordRecoveryService,
+    PostDeletionSchedulerService,
+    GoogleStrategy,
+    GithubStrategy,
     AccessTokenGuard,
   ],
 })

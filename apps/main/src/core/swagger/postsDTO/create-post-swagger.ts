@@ -6,9 +6,11 @@ import {
   ApiConsumes,
   ApiCreatedResponse,
   ApiOperation,
+  ApiResponse,
   ApiServiceUnavailableResponse,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
+import { ErrorStatus } from '../../exceptions/domain-exception-code.js';
 
 export function ApiCreatePost() {
   return applyDecorators(
@@ -59,7 +61,50 @@ export function ApiCreatePost() {
         'Request validation failed or the uploaded media was rejected.',
     }),
     ApiUnauthorizedResponse({
-      description: 'Missing, invalid, or expired access token.',
+      description: 'Access token has expired.',
+      schema: {
+        type: 'object',
+        required: ['code', 'errorsMessages'],
+        properties: {
+          code: { type: 'number', example: ErrorStatus.ACCESS_TOKEN_EXPIRED },
+          errorsMessages: {
+            type: 'array',
+            items: {
+              type: 'object',
+              required: ['field', 'message'],
+              properties: {
+                field: { type: 'string', example: 'token' },
+                message: {
+                  type: 'string',
+                  example: 'Access token has expired',
+                },
+              },
+            },
+          },
+        },
+      },
+    }),
+    ApiResponse({
+      status: 498,
+      description: 'Access token is invalid.',
+      schema: {
+        type: 'object',
+        required: ['code', 'errorsMessages'],
+        properties: {
+          code: { type: 'number', example: ErrorStatus.ACCESS_TOKEN_INVALID },
+          errorsMessages: {
+            type: 'array',
+            items: {
+              type: 'object',
+              required: ['field', 'message'],
+              properties: {
+                field: { type: 'string', example: 'token' },
+                message: { type: 'string', example: 'Invalid access token' },
+              },
+            },
+          },
+        },
+      },
     }),
     ApiServiceUnavailableResponse({
       description: 'Files service is unavailable.',
