@@ -1,6 +1,6 @@
-// import { RequestWithUser } from '../../../core/types/request-with-user.type.js';
+// import { RequestWithUser } from '../../../core/types/request-with-user.types.js';
 // import { createParamDecorator, ExecutionContext } from '@nestjs/common';
-// import { AuthUser } from '../../../core/types/jwt-payload.type.js';
+// import { AuthUser } from '../../../core/types/jwt-payload.types.js';
 //
 // export const User = createParamDecorator(
 //   (data: keyof AuthUser | undefined, ctx: ExecutionContext) => {

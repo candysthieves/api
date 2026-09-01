@@ -9,7 +9,7 @@ export class AppController {
   // @ApiOperation({ summary: 'Get the API welcome message' })
   // @ApiOkResponse({
   //   description: 'Welcome message returned successfully.',
-  //   schema: { type: 'string', example: 'Main!' },
+  //   schema: { types: 'string', example: 'Main!' },
   // })
   getHello(): string {
     return 'Main!';
