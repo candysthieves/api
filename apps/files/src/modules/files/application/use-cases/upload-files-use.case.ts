@@ -46,27 +46,41 @@ export class UploadFilesUseCase implements ICommandHandler<
 
     const result: File[] = [];
 
-    for (const file of files) {
-      const savedFile = await this.fileService.saveFile(file, type);
-      result.push(savedFile);
+    try {
+      for (const file of files) {
+        result.push(await this.fileService.saveFile(file, type));
+      }
+
+      const preview = await this.fileService.saveFile(
+        files[0],
+        `${type}_PREVIEW` as FileType,
+      );
+
+      const filesView = result.map((file) =>
+        FileMapper.toFileView(file, this.s3.getUrl(file.key)),
+      );
+
+      const previewView = FileMapper.toFileView(
+        preview,
+        this.s3.getUrl(preview.key),
+      );
+
+      return ObjectResult.success(
+        FileMapper.toFilesResult(files[0].targetId, filesView, previewView),
+      );
+    } catch (error) {
+      return ObjectResult.failure({
+        code: 'IMAGE_PROCESSING_FAILED',
+        errors: [
+          {
+            field: 'files',
+            message:
+              error instanceof Error
+                ? error.message
+                : 'Unable to process images',
+          },
+        ],
+      });
     }
-
-    const preview = await this.fileService.saveFile(
-      files[0],
-      `${type}_PREVIEW` as FileType,
-    );
-
-    const filesView = result.map((file) =>
-      FileMapper.toFileView(file, this.s3.getUrl(file.key)),
-    );
-
-    const previewView = FileMapper.toFileView(
-      preview,
-      this.s3.getUrl(preview.key),
-    );
-
-    return ObjectResult.success(
-      FileMapper.toFilesResult(files[0].targetId, filesView, previewView),
-    );
   }
 }

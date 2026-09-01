@@ -11,8 +11,8 @@ import { UploadFilesContract } from './contracts/upload-files.contract.js';
 import { UploadFileContract } from './contracts/upload-file.contract.js';
 import { DeleteFilesContract } from './contracts/delete-files.contract.js';
 import { RestoreFilesContract } from './contracts/restore-files.contract.js';
+import { PostMediaProcessingService } from '../application/post-media-processing.service.js';
 import { UploadFileCommand } from '../application/use-cases/upload-file-use.case.js';
-import { UploadFilesCommand } from '../application/use-cases/upload-files-use.case.js';
 import { RpcValidationPipe } from '../../../core/pipes/rpc-validation.pipe.js';
 import { ValidationRpcExceptionFilter } from '../../../core/filters/validation-rpc-exception.filter.js';
 
@@ -20,14 +20,14 @@ import { ValidationRpcExceptionFilter } from '../../../core/filters/validation-r
 @UseFilters(ValidationRpcExceptionFilter)
 @Controller('upload')
 export class FilesController {
-  constructor(private readonly commandBus: CommandBus) {}
+  constructor(
+    private readonly commandBus: CommandBus,
+    private readonly postMediaProcessing: PostMediaProcessingService,
+  ) {}
 
   @MessagePattern({ cmd: 'upload-post-files' })
-  async uploadPostFiles(@Payload() dto: UploadFilesContract) {
-    return this.commandBus.execute<
-      UploadFilesCommand,
-      ObjectResult<FilesResultType | null>
-    >(new UploadFilesCommand(dto.files, FileType.POST));
+  uploadPostFiles(@Payload() dto: UploadFilesContract) {
+    return this.postMediaProcessing.accept(dto.files);
   }
 
   @MessagePattern({ cmd: 'upload-avatar-file' })
