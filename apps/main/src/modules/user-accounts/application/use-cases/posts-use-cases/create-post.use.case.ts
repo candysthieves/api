@@ -1,7 +1,7 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { PostRepository } from '../../../infrastructure/repositories/post-repositories/post.repository.js';
 import { CreatePostLocationDto } from '../../../api/dto/create-post.dto.js';
-import { Prisma } from '../../../../../generated/prisma/client.js';
+import { MediaStatus, Prisma } from '../../../../../generated/prisma/client.js';
 import {
   FilesTcpClient,
   type PostMediaJobAcceptance,
@@ -35,6 +35,7 @@ export class CreatePostUseCase implements ICommandHandler<CreatePostCommand> {
       description: command.description,
       images: [] as Prisma.InputJsonValue,
       preview: Prisma.JsonNull,
+      mediaStatus: MediaStatus.PROCESSING,
       locations: command.locations as unknown as Prisma.InputJsonValue,
       userId: command.userId,
     });

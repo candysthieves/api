@@ -24,6 +24,12 @@ enum EventStatus {
   ERROR
 }
 
+enum MediaStatus {
+  PROCESSING
+  READY
+  FAILED
+}
+
 model User {
   id        String  @id @default(uuid())
   email     String  @unique
@@ -67,6 +73,8 @@ model Post {
   locations   Json      @default("[]") @db.JsonB
   images      Json      @default("[]") @db.JsonB
   preview     Json?     @db.JsonB
+  mediaStatus MediaStatus @default(PROCESSING) @map("media_status")
+  mediaError  String?     @map("media_error")
   userId String @map("user_id")
   user   User   @relation(fields: [userId], references: [id])
 

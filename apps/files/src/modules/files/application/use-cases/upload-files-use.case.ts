@@ -6,7 +6,6 @@ import { FileMapper } from '../../api/mappers/file.mapper.js';
 import { S3Adapter } from '../../../../core/adapters/s3.adapter.js';
 import { FilesResultType } from '../../api/view-types/files-result.type.js';
 import { UploadFileContract } from '../../api/contracts/upload-file.contract.js';
-import { FilesEventsService } from '../../../../events/files-events.service.js';
 
 export class UploadFilesCommand {
   constructor(
@@ -23,7 +22,6 @@ export class UploadFilesUseCase implements ICommandHandler<
   constructor(
     private readonly fileService: FilesService,
     private readonly s3: S3Adapter,
-    private readonly events: FilesEventsService,
   ) {}
 
   async execute({
@@ -49,37 +47,40 @@ export class UploadFilesUseCase implements ICommandHandler<
     const result: File[] = [];
 
     try {
-      for (const file of files) result.push(await this.fileService.saveFile(file, FileType.POST));
-      const preview = await this.fileService.saveFile(files[0], FileType.POST_PREVIEW);
-      const filesView = result.map((file) => FileMapper.toFileView(file, this.s3.getUrl(file.key)));
-      const previewView = FileMapper.toFileView(preview, this.s3.getUrl(preview.key));
-      const media = FileMapper.toFilesResult(files[0].targetId, filesView, previewView);
-      await this.events.create('post.media.processed', { postId: media.targetId, images: media.files, preview: media.preview });
-      return ObjectResult.success(media);
+      for (const file of files) {
+        result.push(await this.fileService.saveFile(file, type));
+      }
+
+      const preview = await this.fileService.saveFile(
+        files[0],
+        `${type}_PREVIEW` as FileType,
+      );
+
+      const filesView = result.map((file) =>
+        FileMapper.toFileView(file, this.s3.getUrl(file.key)),
+      );
+
+      const previewView = FileMapper.toFileView(
+        preview,
+        this.s3.getUrl(preview.key),
+      );
+
+      return ObjectResult.success(
+        FileMapper.toFilesResult(files[0].targetId, filesView, previewView),
+      );
     } catch (error) {
-      await this.events.create('post.media.failed', { postId: files[0]?.targetId, code: 'IMAGE_PROCESSING_FAILED' });
-      return ObjectResult.failure({ code: 'IMAGE_PROCESSING_FAILED', errors: [{ field: 'files', message: error instanceof Error ? error.message : 'Unable to process images' }] });
-    for (const file of files) {
-      const savedFile = await this.fileService.saveFile(file, type);
-      result.push(savedFile);
+      return ObjectResult.failure({
+        code: 'IMAGE_PROCESSING_FAILED',
+        errors: [
+          {
+            field: 'files',
+            message:
+              error instanceof Error
+                ? error.message
+                : 'Unable to process images',
+          },
+        ],
+      });
     }
-
-    const preview = await this.fileService.saveFile(
-      files[0],
-      `${type}_PREVIEW` as FileType,
-    );
-
-    const filesView = result.map((file) =>
-      FileMapper.toFileView(file, this.s3.getUrl(file.key)),
-    );
-
-    const previewView = FileMapper.toFileView(
-      preview,
-      this.s3.getUrl(preview.key),
-    );
-
-    return ObjectResult.success(
-      FileMapper.toFilesResult(files[0].targetId, filesView, previewView),
-    );
   }
 }

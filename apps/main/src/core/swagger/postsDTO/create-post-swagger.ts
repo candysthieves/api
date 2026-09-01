@@ -13,7 +13,9 @@ import {
 export function ApiCreatePost() {
   return applyDecorators(
     ApiBearerAuth('accessToken'),
-    ApiOperation({ summary: 'Create a post with up to eight images' }),
+    ApiOperation({
+      summary: 'Create a post and try to save images',
+    }),
     ApiConsumes('multipart/form-data'),
     ApiBody({
       schema: {
@@ -22,30 +24,30 @@ export function ApiCreatePost() {
         properties: {
           description: {
             type: 'string',
-            example: 'A walk through the city at sunset.',
+            description: 'Description of your post',
+            example: 'Mom was washing the frame',
           },
           files: {
             type: 'array',
+            minItems: 1,
             maxItems: 8,
             items: { type: 'string', format: 'binary' },
-            description: 'One to eight image files; each file is limited to 5 MB.',
+            description: '1-8 images, up to 5 MB each.',
           },
           location: {
-            type: 'array',
-            items: {
-              type: 'object',
-              required: ['id', 'address'],
-              properties: {
-                id: { type: 'string', example: 'place-123' },
-                address: { type: 'string', example: 'Minsk, Belarus' },
-              },
-            },
+            type: 'string',
+            format: 'json',
+            description:
+              'Optional JSON array: [{id:"string", address:"string"}].',
+            example: '[{"id":"place-123","address":"Minsk, Belarus"}]',
           },
         },
       },
     }),
+
     ApiCreatedResponse({
-      description: 'Post was created and its media was accepted for processing.',
+      description:
+        'Post was created and its media was accepted for processing.',
       schema: {
         type: 'object',
         required: ['postId'],
@@ -53,9 +55,14 @@ export function ApiCreatePost() {
       },
     }),
     ApiBadRequestResponse({
-      description: 'Request validation failed or the uploaded media was rejected.',
+      description:
+        'Request validation failed or the uploaded media was rejected.',
     }),
-    ApiUnauthorizedResponse({ description: 'Missing, invalid, or expired access token.' }),
-    ApiServiceUnavailableResponse({ description: 'Files service is unavailable.' }),
+    ApiUnauthorizedResponse({
+      description: 'Missing, invalid, or expired access token.',
+    }),
+    ApiServiceUnavailableResponse({
+      description: 'Files service is unavailable.',
+    }),
   );
 }

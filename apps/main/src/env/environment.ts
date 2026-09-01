@@ -110,6 +110,16 @@ export class EnvironmentVariables {
 
   @IsString()
   @IsNotEmpty()
+  FILES_TCP_HOST!: string;
+
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(65535)
+  FILES_TCP_PORT!: number;
+
+  @IsString()
+  @IsNotEmpty()
   @Matches(/^\s*[^,\s]+(?:\s*,\s*[^,\s]+)*\s*$/)
   private _RECAPTCHA_ALLOWED_HOSTNAMES!: string;
 }

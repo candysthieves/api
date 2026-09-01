@@ -30,7 +30,7 @@ export class PostController {
   @UseGuards(AccessTokenGuard)
   @ApiCreatePost()
   @HttpCode(HttpStatus.CREATED)
-  async createPost(
+  createPost(
     @Body() createDto: CreatePostDto,
     @User() user: JwtAccessPayload,
     @UploadedFiles() files: Express.Multer.File[],

@@ -9,7 +9,7 @@ export type PostMediaJobAcceptance = {
 @Injectable()
 export class FilesTcpClient {
   constructor(@Inject(FILES_TCP_CLIENT) private readonly client: ClientProxy) {}
-  async uploadPostFiles(
+  uploadPostFiles(
     postId: string,
     files: Express.Multer.File[],
   ): Promise<PostMediaJobAcceptance> {
@@ -30,5 +30,11 @@ export class FilesTcpClient {
         .pipe(timeout(15_000)),
     );
   }
-  async acknowledge(eventId: string): Promise<void> { await lastValueFrom(this.client.send({ cmd: 'post-media-event-ack' }, { eventId }).pipe(timeout(5000))); }
+  acknowledge(eventId: string): Promise<void> {
+    return lastValueFrom(
+      this.client
+        .send({ cmd: 'post-media-event-ack' }, { eventId })
+        .pipe(timeout(5_000)),
+    );
+  }
 }

@@ -5,15 +5,12 @@ import { PostUncheckedCreateInput } from '../../../../../generated/prisma/models
 
 @Injectable()
 export class PostRepository {
-  private readonly prismaPost: PrismaService['post'];
-  constructor(private readonly prisma: PrismaService) {
-    this.prismaPost = prisma.post;
-  }
+  constructor(private readonly prisma: PrismaService) {}
 
-  async createPost(data: PostUncheckedCreateInput): Promise<Post> {
-    return this.prismaPost.create({ data });
+  createPost(data: PostUncheckedCreateInput): Promise<Post> {
+    return this.prisma.post.create({ data });
   }
-  async deletePost(id: string): Promise<void> {
-    await this.prismaPost.delete({ where: { id } });
+  deletePost(id: string): Promise<void> {
+    return this.prisma.post.delete({ where: { id } }).then(() => undefined);
   }
 }

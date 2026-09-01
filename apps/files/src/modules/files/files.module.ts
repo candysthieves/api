@@ -5,7 +5,6 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { FileSchema, File } from './schemas/files.schema.js';
 import { S3Adapter } from '../../core/adapters/s3.adapter.js';
 import { FilesConfig } from '../../files.config.js';
-import { UploadAvatarUseCase } from './application/use-cases/upload-avatar.usecase.js';
 import { SoftDeleteFilesUseCase } from './application/use-cases/soft-delete-files.usecase.js';
 import { DeleteFilesUseCase } from './application/use-cases/delete-files.usecase.js';
 import { RestoreFilesUseCase } from './application/use-cases/restore-files.usecase.js';
@@ -15,7 +14,6 @@ import { UploadFileUseCase } from './application/use-cases/upload-file-use.case.
 import { UploadFilesUseCase } from './application/use-cases/upload-files-use.case.js';
 
 const useCases = [
-  UploadAvatarUseCase,
   UploadFileUseCase,
   UploadFilesUseCase,
   SoftDeleteFilesUseCase,
@@ -25,7 +23,8 @@ const useCases = [
 
 @Module({
   imports: [
-    MongooseModule.forFeature([{ name: File.name, schema: FileSchema }]), FilesEventsModule,
+    MongooseModule.forFeature([{ name: File.name, schema: FileSchema }]),
+    FilesEventsModule,
   ],
   controllers: [FilesController],
   providers: [

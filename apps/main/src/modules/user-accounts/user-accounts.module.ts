@@ -57,8 +57,6 @@ const queryHandlers = [
   ProfileQueryHandler,
   GetUsersCountQueryHandler,
 ];
-const repositories = [UsersRepository, SessionsRepository, OAuthRepository];
-const queryHandlers = [FindAllSessionsQueryHandler, ProfileQueryHandler];
 const repositories = [
   UsersRepository,
   SessionsRepository,
