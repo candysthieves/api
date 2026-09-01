@@ -77,6 +77,7 @@ export class PostMediaEventsService implements OnModuleInit, OnModuleDestroy {
     const claim = await this.prisma.inputEvent.updateMany({
       where: { id: event.id, status: EventStatus.UNPROCESSED },
       data: { status: EventStatus.PROCESSING, attempts: { increment: 1 } },
+      data: { status: EventStatus.SENDED, attempts: { increment: 1 } },
     });
 
     return claim.count ? event : null;
@@ -90,6 +91,7 @@ export class PostMediaEventsService implements OnModuleInit, OnModuleDestroy {
 
     if (event.type === 'post.media.processed') {
       const updatedPost = await this.prisma.post.updateMany({
+      await this.prisma.post.update({
         where: { id: data.postId },
         data: {
           images: data.images as Prisma.InputJsonValue,
@@ -107,6 +109,7 @@ export class PostMediaEventsService implements OnModuleInit, OnModuleDestroy {
         if (result.error) throw new Error(result.error.code);
       }
     } else if (event.type === 'post.media.failed') {
+      await this.prisma.post.update({
       await this.prisma.post.updateMany({
         where: { id: data.postId },
         data: {
@@ -118,6 +121,8 @@ export class PostMediaEventsService implements OnModuleInit, OnModuleDestroy {
   }
 
   private async markCompleted(id: string): Promise<void> {
+    await this.prisma.inputEvent.update({
+      where: { id },
     await this.prisma.inputEvent.updateMany({
       where: { id, status: EventStatus.PROCESSING },
       data: { status: EventStatus.OK, lastError: null },
@@ -125,6 +130,8 @@ export class PostMediaEventsService implements OnModuleInit, OnModuleDestroy {
   }
 
   private async scheduleRetry(id: string, error: unknown): Promise<void> {
+    await this.prisma.inputEvent.update({
+      where: { id },
     await this.prisma.inputEvent.updateMany({
       where: { id, status: EventStatus.PROCESSING },
       data: {

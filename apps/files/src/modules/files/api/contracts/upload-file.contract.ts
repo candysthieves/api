@@ -18,5 +18,6 @@ export class UploadFileContract {
   @Transform(({ value }) =>
     Buffer.isBuffer(value) ? value : Buffer.from(value?.data ?? value),
   )
+  @Transform(({ value }) => Buffer.isBuffer(value) ? value : Buffer.from(value?.data ?? value))
   buffer: Buffer;
 }

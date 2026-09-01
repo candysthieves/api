@@ -105,6 +105,7 @@ export function ApiCreatePost() {
           },
         },
       },
+      description: 'Missing, invalid, or expired access token.',
     }),
     ApiServiceUnavailableResponse({
       description: 'Files service is unavailable.',

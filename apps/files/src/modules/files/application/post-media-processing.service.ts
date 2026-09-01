@@ -5,6 +5,7 @@ import { ObjectResult } from '../../../core/object-result.js';
 import { FilesEventsService } from '../../../events/files-events.service.js';
 import {
   EventStatus,
+  StoredEvent,
   StoredEventDocument,
 } from '../../../events/schemas/event.schema.js';
 import { UploadFileContract } from '../api/contracts/upload-file.contract.js';
@@ -26,6 +27,7 @@ export class PostMediaProcessingService implements OnModuleInit {
 
   constructor(
     @InjectModel('InputEvent')
+    private readonly jobs: Model<StoredEventDocument>,
     private readonly jobsModel: Model<StoredEventDocument>,
     private readonly files: FilesService,
     private readonly s3: S3Adapter,
@@ -39,8 +41,12 @@ export class PostMediaProcessingService implements OnModuleInit {
   async accept(
     files: UploadFileContract[],
   ): Promise<ObjectResult<AcceptedPostMediaJob | null>> {
+    const validationError = this.validate(files);
+    if (validationError) return ObjectResult.failure(validationError);
+
     const postId = files[0].targetId;
     const job = await this.jobsModel.create({
+    const job = await this.jobs.create({
       eventId: crypto.randomUUID(),
       consumer: 'FILES',
       type: REQUESTED_EVENT,
@@ -55,12 +61,41 @@ export class PostMediaProcessingService implements OnModuleInit {
     return ObjectResult.success({ accepted: true, eventId: job.eventId });
   }
   //TODO обсудить с Владом правильный флоу эвентов
+
+  private validate(files: UploadFileContract[]) {
+    if (!files.length) {
+      return {
+        code: 'FILES_REQUIRED',
+        errors: [{ field: 'files', message: 'At least one image is required' }],
+      };
+    }
+
+    const postId = files[0].targetId;
+    for (const [index, file] of files.entries()) {
+      if (
+        file.targetId !== postId ||
+        !Buffer.isBuffer(file.buffer) ||
+        !file.buffer.length ||
+        !file.mimeType.startsWith('image/') ||
+        file.size !== file.buffer.length ||
+        !this.files.validateFileSize(file.buffer.length)
+      ) {
+        return {
+          code: 'INVALID_FILE',
+          errors: [{ field: `files[${index}]`, message: 'Invalid image file' }],
+        };
+      }
+    }
+  }
+
   private async process(eventId: string): Promise<void> {
     const job = await this.jobsModel
+    const job = await this.jobs
       .findOneAndUpdate(
         { eventId, type: REQUESTED_EVENT, status: EventStatus.UNPROCESSED },
         { $set: { status: EventStatus.PROCESSING }, $inc: { attempts: 1 } },
         { returnDocument: 'after' },
+        { new: true },
       )
       .exec();
     if (!job) return;
@@ -73,6 +108,7 @@ export class PostMediaProcessingService implements OnModuleInit {
           SOURCE_BUFFER_MISSING,
           'Source buffers are missing',
         );
+        await this.fail(job, SOURCE_BUFFER_MISSING, 'Source buffers are missing');
         return;
       }
 
@@ -86,6 +122,12 @@ export class PostMediaProcessingService implements OnModuleInit {
         sourceFiles[0],
         FileType.POST_PREVIEW,
       );
+      const images: FileViewType[] = [];
+      for (const file of sourceFiles) {
+        const saved = await this.files.saveFile(file, FileType.POST);
+        images.push(FileMapper.toFileView(saved, this.s3.getUrl(saved.key)));
+      }
+      const preview = await this.files.saveFile(sourceFiles[0], FileType.POST_PREVIEW);
       const media = FileMapper.toFilesResult(
         sourceFiles[0].targetId,
         images,
@@ -97,9 +139,11 @@ export class PostMediaProcessingService implements OnModuleInit {
         images: media.files,
         preview: media.preview,
       });
+      await this.jobs
       await this.jobsModel
         .updateOne(
           { _id: job._id },
+          { $set: { status: EventStatus.OK, lastError: null, errorCode: null } },
           {
             $set: { status: EventStatus.OK, lastError: null, errorCode: null },
           },
@@ -126,6 +170,7 @@ export class PostMediaProcessingService implements OnModuleInit {
       code,
     });
     await this.jobsModel
+    await this.jobs
       .updateOne(
         { _id: job._id },
         {
@@ -135,12 +180,14 @@ export class PostMediaProcessingService implements OnModuleInit {
             lastError: message,
           },
         },
+        { $set: { status: EventStatus.ERROR, errorCode: code, lastError: message } },
       )
       .exec();
   }
 
   private async failInterruptedJobs(): Promise<void> {
     const interrupted = await this.jobsModel
+    const interrupted = await this.jobs
       .find({
         type: REQUESTED_EVENT,
         status: { $in: [EventStatus.UNPROCESSED, EventStatus.PROCESSING] },
