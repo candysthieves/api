@@ -11,9 +11,13 @@ import { DeleteFilesUseCase } from './application/use-cases/delete-files.usecase
 import { RestoreFilesUseCase } from './application/use-cases/restore-files.usecase.js';
 import { FilesEventsModule } from '../../events/files-events.module.js';
 import { PostMediaProcessingService } from './application/post-media-processing.service.js';
+import { UploadFileUseCase } from './application/use-cases/upload-file-use.case.js';
+import { UploadFilesUseCase } from './application/use-cases/upload-files-use.case.js';
 
 const useCases = [
   UploadAvatarUseCase,
+  UploadFileUseCase,
+  UploadFilesUseCase,
   SoftDeleteFilesUseCase,
   DeleteFilesUseCase,
   RestoreFilesUseCase,

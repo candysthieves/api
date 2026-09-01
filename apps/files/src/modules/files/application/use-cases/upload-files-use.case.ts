@@ -8,13 +8,16 @@ import { FilesResultType } from '../../api/view-types/files-result.type.js';
 import { UploadFileContract } from '../../api/contracts/upload-file.contract.js';
 import { FilesEventsService } from '../../../../events/files-events.service.js';
 
-export class UploadPostFilesCommand {
-  constructor(public readonly files: UploadFileContract[]) {}
+export class UploadFilesCommand {
+  constructor(
+    public readonly files: UploadFileContract[],
+    public readonly type: FileType,
+  ) {}
 }
 
-@CommandHandler(UploadPostFilesCommand)
-export class UploadPostFilesUseCase implements ICommandHandler<
-  UploadPostFilesCommand,
+@CommandHandler(UploadFilesCommand)
+export class UploadFilesUseCase implements ICommandHandler<
+  UploadFilesCommand,
   ObjectResult<FilesResultType | null>
 > {
   constructor(
@@ -25,7 +28,8 @@ export class UploadPostFilesUseCase implements ICommandHandler<
 
   async execute({
     files,
-  }: UploadPostFilesCommand): Promise<ObjectResult<FilesResultType | null>> {
+    type,
+  }: UploadFilesCommand): Promise<ObjectResult<FilesResultType | null>> {
     for (const [index, file] of files.entries()) {
       const isValid: boolean = this.fileService.validateFileSize(file.size);
 
@@ -55,6 +59,27 @@ export class UploadPostFilesUseCase implements ICommandHandler<
     } catch (error) {
       await this.events.create('post.media.failed', { postId: files[0]?.targetId, code: 'IMAGE_PROCESSING_FAILED' });
       return ObjectResult.failure({ code: 'IMAGE_PROCESSING_FAILED', errors: [{ field: 'files', message: error instanceof Error ? error.message : 'Unable to process images' }] });
+    for (const file of files) {
+      const savedFile = await this.fileService.saveFile(file, type);
+      result.push(savedFile);
     }
+
+    const preview = await this.fileService.saveFile(
+      files[0],
+      `${type}_PREVIEW` as FileType,
+    );
+
+    const filesView = result.map((file) =>
+      FileMapper.toFileView(file, this.s3.getUrl(file.key)),
+    );
+
+    const previewView = FileMapper.toFileView(
+      preview,
+      this.s3.getUrl(preview.key),
+    );
+
+    return ObjectResult.success(
+      FileMapper.toFilesResult(files[0].targetId, filesView, previewView),
+    );
   }
 }

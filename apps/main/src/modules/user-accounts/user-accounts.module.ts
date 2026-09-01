@@ -2,7 +2,7 @@ import { CqrsModule } from '@nestjs/cqrs';
 import { RegistrationUseCase } from './application/use-cases/auth-use-cases/registration.usecase.js';
 import { LoginUseCase } from './application/use-cases/auth-use-cases/login.usecase.js';
 import { Module } from '@nestjs/common';
-import { UsersController } from './api/user.controller.js';
+import { UsersController } from './api/users.controller.js';
 import { AuthController } from './api/auth.controller.js';
 import { UsersRepository } from './infrastructure/repositories/user-repositories/users.repository.js';
 import { UsersQueryRepository } from './infrastructure/repositories/user-repositories/users.query.repository.js';
@@ -28,6 +28,7 @@ import { AuthSessionService } from './application/auth-session.service.js';
 import { GoogleOAuthLoginUseCase } from './application/use-cases/auth-use-cases/google-oauth-login.usecase.js';
 import { GithubOAuthLoginUseCase } from './application/use-cases/auth-use-cases/github-oauth-login.usecase.js';
 import { ProfileQueryHandler } from './application/query-handler/auth/profile.usecase.js';
+import { GetUsersCountQueryHandler } from './application/query-handler/users/get-users-count-query-handler.js';
 import { PostController } from './api/post.controller.js';
 import { CreatePostUseCase } from './application/use-cases/posts-use-cases/create-post.use.case.js';
 import { PostRepository } from './infrastructure/repositories/post-repositories/post.repository.js';
@@ -51,6 +52,12 @@ const useCases = [
   GithubOAuthLoginUseCase,
   CreatePostUseCase,
 ];
+const queryHandlers = [
+  FindAllSessionsQueryHandler,
+  ProfileQueryHandler,
+  GetUsersCountQueryHandler,
+];
+const repositories = [UsersRepository, SessionsRepository, OAuthRepository];
 const queryHandlers = [FindAllSessionsQueryHandler, ProfileQueryHandler];
 const repositories = [
   UsersRepository,
