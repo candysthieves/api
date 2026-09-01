@@ -61,7 +61,7 @@ export function ApiCreatePost() {
         'Request validation failed or the uploaded media was rejected.',
     }),
     ApiUnauthorizedResponse({
-      description: 'Missing or expired access token.',
+      description: 'Access token has expired.',
       schema: {
         type: 'object',
         required: ['code', 'errorsMessages'],
@@ -105,7 +105,6 @@ export function ApiCreatePost() {
           },
         },
       },
-      description: 'Missing, invalid, or expired access token.',
     }),
     ApiServiceUnavailableResponse({
       description: 'Files service is unavailable.',

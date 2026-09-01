@@ -31,13 +31,6 @@ const useCases = [
   providers: [
     ...useCases,
     FilesService,
-    S3Adapter,
-    FilesConfig,
-    PostMediaProcessingService,
-  ],
-  providers: [
-    ...useCases,
-    FilesService,
     ImageProcessingService,
     S3Adapter,
     FilesConfig,
