@@ -7,25 +7,27 @@ import { PostUncheckedCreateInput } from '../../../../../generated/prisma/models
 export class PostRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  createPost(data: PostUncheckedCreateInput): Promise<Post> {
+  async createPost(data: PostUncheckedCreateInput): Promise<Post> {
     return this.prisma.post.create({ data });
   }
 
-  findById(id: string): Promise<Post | null> {
+  async findById(id: string): Promise<Post | null> {
     return this.prisma.post.findUnique({ where: { id } });
   }
 
-  deletePost(id: string): Promise<void> {
-    return this.prisma.post.delete({ where: { id } }).then(() => undefined);
+  async deletePost(id: string): Promise<void> {
+    await this.prisma.post.delete({ where: { id } });
   }
 
-  markForDeletion(id: string, willBeDeleted: Date): Promise<void> {
-    return this.prisma.post
-      .update({ where: { id }, data: { willBeDeleted } })
-      .then(() => undefined);
+  async updateDescription(id: string, description: string): Promise<void> {
+    await this.prisma.post.update({ where: { id }, data: { description } });
   }
 
-  findPostsDueForDeletion(now: Date): Promise<Post[]> {
+  async markForDeletion(id: string, willBeDeleted: Date): Promise<void> {
+    await this.prisma.post.update({ where: { id }, data: { willBeDeleted } });
+  }
+
+  async findPostsDueForDeletion(now: Date): Promise<Post[]> {
     return this.prisma.post.findMany({
       where: { willBeDeleted: { lte: now } },
       orderBy: { willBeDeleted: 'asc' },
