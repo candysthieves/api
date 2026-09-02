@@ -1,6 +1,7 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
+import { InjectConnection, InjectModel } from '@nestjs/mongoose';
+import { mongo, Model } from 'mongoose';
+import type { Connection } from 'mongoose';
 import { S3Adapter } from '../../../core/adapters/s3.adapter.js';
 import { ObjectResult } from '../../../core/object-result.js';
 import { FilesEventsService } from '../../../events/files-events.service.js';
@@ -17,16 +18,27 @@ import { FilesService } from './files.service.js';
 const REQUESTED_EVENT = 'post.media.process.requested';
 const SOURCE_BUFFER_MISSING = 'SOURCE_BUFFER_MISSING';
 const PROCESSING_FAILED = 'IMAGE_PROCESSING_FAILED';
+const MAX_PROCESSING_ATTEMPTS = 3;
+const RETRY_DELAY_MS = 1_000;
+const PROCESSING_LEASE_MS = 10 * 60_000;
 
 type AcceptedPostMediaJob = { accepted: true; eventId: string };
+type StoredSource = Omit<UploadFileContract, 'buffer'> & { sourceId: string };
+type PostMediaJobData = { postId: string; sources?: StoredSource[] };
 
 @Injectable()
-export class PostMediaProcessingService implements OnModuleInit {
-  private readonly buffers = new Map<string, UploadFileContract[]>();
+export class PostMediaProcessingService
+  implements OnModuleInit, OnModuleDestroy
+{
+  private readonly startedAt = new Date();
+  private timer?: NodeJS.Timeout;
+  private isProcessing = false;
 
   constructor(
     @InjectModel('InputEvent')
     private readonly jobs: Model<StoredEventDocument>,
+    @InjectConnection()
+    private readonly connection: Connection,
     private readonly files: FilesService,
     private readonly s3: S3Adapter,
     private readonly events: FilesEventsService,
@@ -34,6 +46,11 @@ export class PostMediaProcessingService implements OnModuleInit {
 
   onModuleInit(): void {
     void this.failInterruptedJobs();
+    this.timer = setInterval(() => void this.processPending(), 1_000);
+  }
+
+  onModuleDestroy(): void {
+    if (this.timer) clearInterval(this.timer);
   }
 
   async accept(
@@ -43,17 +60,26 @@ export class PostMediaProcessingService implements OnModuleInit {
     if (validationError) return ObjectResult.failure(validationError);
 
     const postId = files[0].targetId;
-    const job = await this.jobs.create({
-      eventId: crypto.randomUUID(),
-      consumer: 'FILES',
-      type: REQUESTED_EVENT,
-      data: { postId },
-      status: EventStatus.UNPROCESSED,
-      attempts: 0,
-    });
+    const eventId = crypto.randomUUID();
+    const sources = await Promise.all(
+      files.map((file) => this.storeSource(file)),
+    );
+    let job: StoredEventDocument;
+    try {
+      job = await this.jobs.create({
+        eventId,
+        consumer: 'FILES',
+        type: REQUESTED_EVENT,
+        data: { postId, sources },
+        status: EventStatus.UNPROCESSED,
+        attempts: 0,
+      });
+    } catch (error) {
+      await this.deleteSources(sources);
+      throw error;
+    }
 
-    this.buffers.set(job.eventId, files);
-    setImmediate(() => void this.process(job.eventId));
+    setImmediate(() => void this.processPending());
 
     return ObjectResult.success({ accepted: true, eventId: job.eventId });
   }
@@ -84,26 +110,51 @@ export class PostMediaProcessingService implements OnModuleInit {
     }
   }
 
-  private async process(eventId: string): Promise<void> {
-    const job = await this.jobs
+  private async processPending(): Promise<void> {
+    if (this.isProcessing) return;
+    this.isProcessing = true;
+
+    try {
+      await this.requeueStaleProcessingJobs();
+      while (true) {
+        const job = await this.claimNextJob();
+        if (!job) return;
+        await this.process(job);
+      }
+    } finally {
+      this.isProcessing = false;
+    }
+  }
+
+  private async claimNextJob(): Promise<StoredEventDocument | null> {
+    return this.jobs
       .findOneAndUpdate(
-        { eventId, type: REQUESTED_EVENT, status: EventStatus.UNPROCESSED },
+        {
+          type: REQUESTED_EVENT,
+          status: EventStatus.UNPROCESSED,
+          $or: [
+            { nextAttemptAt: null },
+            { nextAttemptAt: { $lte: new Date() } },
+          ],
+        },
         { $set: { status: EventStatus.PROCESSING }, $inc: { attempts: 1 } },
-        { returnDocument: 'after' },
+        { returnDocument: 'after', sort: { createdAt: 1 } },
       )
       .exec();
-    if (!job) return;
+  }
 
-    const sourceFiles = this.buffers.get(eventId);
+  private async process(job: StoredEventDocument): Promise<void> {
+    let releaseSources = false;
+    const data = this.getJobData(job);
     try {
-      if (!sourceFiles) {
-        await this.fail(
-          job,
-          SOURCE_BUFFER_MISSING,
-          'Source buffers are missing',
-        );
+      if (!data.sources?.length) {
+        await this.fail(job, SOURCE_BUFFER_MISSING, 'Source files are missing');
+        releaseSources = true;
         return;
       }
+      const sourceFiles = await Promise.all(
+        data.sources.map((source) => this.loadSource(source)),
+      );
 
       const images: FileViewType[] = [];
       for (const file of sourceFiles) {
@@ -133,14 +184,30 @@ export class PostMediaProcessingService implements OnModuleInit {
           },
         )
         .exec();
+      releaseSources = true;
     } catch (error) {
-      await this.fail(
-        job,
-        PROCESSING_FAILED,
-        error instanceof Error ? error.message : String(error),
-      );
+      const message = error instanceof Error ? error.message : String(error);
+      if (job.attempts < MAX_PROCESSING_ATTEMPTS) {
+        await this.jobs
+          .updateOne(
+            { _id: job._id, status: EventStatus.PROCESSING },
+            {
+              $set: {
+                status: EventStatus.UNPROCESSED,
+                lastError: message,
+                nextAttemptAt: new Date(Date.now() + RETRY_DELAY_MS),
+              },
+            },
+          )
+          .exec();
+      } else {
+        await this.fail(job, PROCESSING_FAILED, message);
+        releaseSources = true;
+      }
     } finally {
-      this.buffers.delete(eventId);
+      if (releaseSources && data.sources?.length) {
+        await this.deleteSources(data.sources);
+      }
     }
   }
 
@@ -150,7 +217,7 @@ export class PostMediaProcessingService implements OnModuleInit {
     message: string,
   ): Promise<void> {
     await this.events.create('post.media.failed', {
-      postId: job.data.postId,
+      postId: this.getJobData(job).postId,
       code,
     });
     await this.jobs
@@ -172,11 +239,108 @@ export class PostMediaProcessingService implements OnModuleInit {
       .find({
         type: REQUESTED_EVENT,
         status: { $in: [EventStatus.UNPROCESSED, EventStatus.PROCESSING] },
+        createdAt: { $lt: this.startedAt },
+        'data.sources': { $exists: false },
       })
       .exec();
 
     for (const job of interrupted) {
-      await this.fail(job, SOURCE_BUFFER_MISSING, 'Source buffers are missing');
+      const result = await this.jobs
+        .updateOne(
+          {
+            _id: job._id,
+            status: { $in: [EventStatus.UNPROCESSED, EventStatus.PROCESSING] },
+          },
+          {
+            $set: {
+              status: EventStatus.ERROR,
+              errorCode: SOURCE_BUFFER_MISSING,
+              lastError: 'Source buffers are missing',
+            },
+          },
+        )
+        .exec();
+      if (result.modifiedCount) {
+        await this.events.create('post.media.failed', {
+          postId: this.getJobData(job).postId,
+          code: SOURCE_BUFFER_MISSING,
+        });
+      }
     }
+  }
+
+  private get bucket(): mongo.GridFSBucket {
+    return new mongo.GridFSBucket(this.connection.db!, {
+      bucketName: 'post_media_sources',
+    });
+  }
+
+  private getJobData(job: StoredEventDocument): PostMediaJobData {
+    return job.data as unknown as PostMediaJobData;
+  }
+
+  private async storeSource(file: UploadFileContract): Promise<StoredSource> {
+    const sourceId = new mongo.ObjectId();
+    const stream = this.bucket.openUploadStreamWithId(
+      sourceId,
+      file.originalName,
+      {
+        metadata: { contentType: file.mimeType },
+      },
+    );
+    await new Promise<void>((resolve, reject) => {
+      stream.once('error', reject);
+      stream.once('finish', resolve);
+      stream.end(file.buffer);
+    });
+    return {
+      sourceId: sourceId.toHexString(),
+      targetId: file.targetId,
+      originalName: file.originalName,
+      mimeType: file.mimeType,
+      size: file.size,
+    };
+  }
+
+  private async loadSource(source: StoredSource): Promise<UploadFileContract> {
+    const chunks: Buffer[] = [];
+    for await (const chunk of this.bucket.openDownloadStream(
+      new mongo.ObjectId(source.sourceId),
+    )) {
+      chunks.push(Buffer.from(chunk as Uint8Array));
+    }
+    const buffer = Buffer.concat(chunks);
+    if (buffer.length !== source.size) {
+      throw new Error(`Source file ${source.sourceId} has an invalid size`);
+    }
+    return { ...source, buffer };
+  }
+
+  private async deleteSources(sources: StoredSource[]): Promise<void> {
+    await Promise.allSettled(
+      sources.map((source) =>
+        this.bucket.delete(new mongo.ObjectId(source.sourceId)),
+      ),
+    );
+  }
+
+  private async requeueStaleProcessingJobs(): Promise<void> {
+    await this.jobs
+      .updateMany(
+        {
+          type: REQUESTED_EVENT,
+          status: EventStatus.PROCESSING,
+          updatedAt: { $lt: new Date(Date.now() - PROCESSING_LEASE_MS) },
+          'data.sources.0': { $exists: true },
+        },
+        {
+          $set: {
+            status: EventStatus.UNPROCESSED,
+            nextAttemptAt: null,
+            lastError: 'PROCESSING_LEASE_EXPIRED',
+          },
+        },
+      )
+      .exec();
   }
 }
