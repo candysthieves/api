@@ -10,10 +10,12 @@ import {
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 
-export function ApiHardDeletePost() {
+export function ApiSoftDeletePost() {
   return applyDecorators(
     ApiBearerAuth('accessToken'),
-    ApiOperation({ summary: 'Permanently delete a post by ID' }),
+    ApiOperation({
+      summary: 'Schedule a post for permanent deletion in one hour',
+    }),
     ApiParam({
       name: 'postId',
       description: 'Post ID.',
@@ -21,7 +23,7 @@ export function ApiHardDeletePost() {
       example: '550e8400-e29b-41d4-a716-446655440000',
     }),
     ApiNoContentResponse({
-      description: 'Post was permanently deleted.',
+      description: 'Post was scheduled for permanent deletion in one hour.',
     }),
     ApiBadRequestResponse({ description: 'Post ID must be a UUID.' }),
     ApiUnauthorizedResponse({
