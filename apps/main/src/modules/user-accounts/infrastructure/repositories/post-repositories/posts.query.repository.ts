@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../../../infrastructure/prisma/prisma.service.js';
+import { Post } from '../../../../../generated/prisma/client.js';
 
 @Injectable()
 export class PostsQueryRepository {
@@ -10,5 +11,26 @@ export class PostsQueryRepository {
 
   async countPostsByUserId(userId: string): Promise<number> {
     return this.prismaPost.count({ where: { userId: userId } });
+  }
+
+  async getPostsWithPagination(
+    cursor: string | undefined,
+    limit: number,
+  ): Promise<Post[]> {
+    return this.prismaPost.findMany({
+      where: cursor
+        ? {
+            createdAt: {
+              lt: new Date(cursor),
+            },
+          }
+        : undefined,
+
+      orderBy: {
+        createdAt: 'desc',
+      },
+
+      take: limit + 1,
+    });
   }
 }

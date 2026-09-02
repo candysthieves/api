@@ -54,15 +54,13 @@ export function ApiGetUserProfile() {
       description: 'User not found',
       schema: {
         example: {
-          error: {
-            code: 'USER_NOT_FOUND',
-            errors: [
-              {
-                field: 'user',
-                message: 'User not found',
-              },
-            ],
-          },
+          code: 33,
+          errorsMessages: [
+            {
+              field: 'user',
+              message: 'User not found',
+            },
+          ],
         },
       },
     }),
