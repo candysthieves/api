@@ -4,7 +4,7 @@ import { EventsModule } from '../../core/events/events.module.js';
 import { AuthSessionService } from './application/auth-session.service.js';
 import { PasswordRecoveryService } from './application/password-recovery.service.js';
 import { PostDeletionSchedulerService } from './application/post-deletion-scheduler.service.js';
-import { ProfileQueryHandler } from './application/query-handler/auth/profile.usecase.js';
+import { ProfileQueryHandler } from './application/query-handler/auth/profile-query-handler.js';
 import { FindAllSessionsQueryHandler } from './application/query-handler/sessions/find-sessions-query-handler.js';
 import { GetUsersCountQueryHandler } from './application/query-handler/users/get-users-count-query-handler.js';
 import { ConfirmEmailUseCase } from './application/use-cases/auth-use-cases/confirm-email.usecase.js';
@@ -29,13 +29,15 @@ import { PostController } from './api/post.controller.js';
 import { SessionsController } from './api/sessions.controller.js';
 import { UsersController } from './api/users.controller.js';
 import { OAuthRepository } from './infrastructure/repositories/oauth-repositories/oauth.repository.js';
-import { PostRepository } from './infrastructure/repositories/post-repositories/post.repository.js';
+import { PostsRepository } from './infrastructure/repositories/post-repositories/posts.repository.js';
 import { SessionsQueryRepository } from './infrastructure/repositories/session-repositories/sessions.query.repository.js';
 import { SessionsRepository } from './infrastructure/repositories/session-repositories/sessions.repository.js';
 import { UsersQueryRepository } from './infrastructure/repositories/user-repositories/users.query.repository.js';
 import { UsersRepository } from './infrastructure/repositories/user-repositories/users.repository.js';
 import { GithubStrategy } from './infrastructure/strategies/github.strategy.js';
 import { GoogleStrategy } from './infrastructure/strategies/google.strategy.js';
+import { GetUserProfileQueryHandler } from './application/query-handler/users/get-user-profile-query-handler.js';
+import { PostsQueryRepository } from './infrastructure/repositories/post-repositories/posts.query.repository.js';
 
 @Module({
   imports: [CqrsModule, EventsModule],
@@ -65,10 +67,12 @@ import { GoogleStrategy } from './infrastructure/strategies/google.strategy.js';
     FindAllSessionsQueryHandler,
     ProfileQueryHandler,
     GetUsersCountQueryHandler,
+    GetUserProfileQueryHandler,
     UsersRepository,
     SessionsRepository,
     OAuthRepository,
-    PostRepository,
+    PostsRepository,
+    PostsQueryRepository,
     SessionsQueryRepository,
     UsersQueryRepository,
     AuthSessionService,

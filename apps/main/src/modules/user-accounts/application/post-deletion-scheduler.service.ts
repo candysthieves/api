@@ -5,7 +5,7 @@ import {
   OnModuleInit,
 } from '@nestjs/common';
 import { FilesTcpClient } from '../../../core/events/files-tcp.client.js';
-import { PostRepository } from '../infrastructure/repositories/post-repositories/post.repository.js';
+import { PostsRepository } from '../infrastructure/repositories/post-repositories/posts.repository.js';
 
 @Injectable()
 export class PostDeletionSchedulerService
@@ -16,7 +16,7 @@ export class PostDeletionSchedulerService
   private processing = false;
 
   constructor(
-    private readonly postsRepository: PostRepository,
+    private readonly postsRepository: PostsRepository,
     private readonly filesClient: FilesTcpClient,
   ) {}
 
