@@ -1,34 +1,68 @@
 import { DomainException } from './domain-exception.js';
-import { DomainExceptionCode } from './domain-exception-code.js';
+import { DomainExceptionCode, ErrorStatus } from './domain-exception-code.js';
 import { DomainError } from './domain-error.js';
 
-//TODO переделать на нормальные ошибки (спросить у Влада)
-
 export class DomainExceptions {
-  static badRequest(field: string, message: string): never {
-    throw new DomainException(DomainExceptionCode.BadRequest, [
+  static badRequest(code: ErrorStatus, field: string, message: string): never {
+    throw new DomainException(DomainExceptionCode.BadRequest, code, [
       { field, message },
     ]);
   }
 
   static validation(errors: DomainError[]): never {
-    throw new DomainException(DomainExceptionCode.ValidationError, errors);
+    throw new DomainException(
+      DomainExceptionCode.ValidationError,
+      ErrorStatus.VALIDATION_ERROR,
+      errors,
+    );
   }
 
-  static notFound(field: string, message = 'Not found'): never {
-    throw new DomainException(DomainExceptionCode.NotFound, [
+  static serviceUnavailable(
+    code: ErrorStatus,
+    field: string = '',
+    message = 'Service unavailable',
+  ): never {
+    throw new DomainException(DomainExceptionCode.ServiceUnavailable, code, [
       { field, message },
     ]);
   }
 
-  static forbidden(field: string = '', message = 'Forbidden'): never {
-    throw new DomainException(DomainExceptionCode.Forbidden, [
+  static notFound(
+    code: ErrorStatus,
+    field: string,
+    message = 'Not found',
+  ): never {
+    throw new DomainException(DomainExceptionCode.NotFound, code, [
       { field, message },
     ]);
   }
 
-  static unauthorized(field: string = '', message = 'Unauthorized'): never {
-    throw new DomainException(DomainExceptionCode.Unauthorized, [
+  static forbidden(
+    code: ErrorStatus,
+    field: string = '',
+    message = 'Forbidden',
+  ): never {
+    throw new DomainException(DomainExceptionCode.Forbidden, code, [
+      { field, message },
+    ]);
+  }
+
+  static unauthorized(
+    code: ErrorStatus,
+    field: string = '',
+    message = 'Unauthorized',
+  ): never {
+    throw new DomainException(DomainExceptionCode.Unauthorized, code, [
+      { field, message },
+    ]);
+  }
+
+  static invalidToken(
+    code: ErrorStatus,
+    field: string = 'token',
+    message = 'Invalid token',
+  ): never {
+    throw new DomainException(DomainExceptionCode.InvalidToken, code, [
       { field, message },
     ]);
   }

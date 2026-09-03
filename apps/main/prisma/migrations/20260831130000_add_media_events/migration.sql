@@ -1,0 +1,10 @@
+CREATE TYPE "MediaStatus" AS ENUM ('PROCESSING', 'READY', 'FAILED');
+CREATE TYPE "EventStatus" AS ENUM ('UNPROCESSED', 'SENDED', 'OK', 'ERROR');
+ALTER TABLE "Post" ADD COLUMN "media_status" "MediaStatus" NOT NULL DEFAULT 'PROCESSING';
+ALTER TABLE "Post" ADD COLUMN "media_error" TEXT;
+CREATE TABLE "OutputEvent" ("id" UUID NOT NULL DEFAULT gen_random_uuid(), "event_id" UUID NOT NULL, "consumer" TEXT NOT NULL, "type" TEXT NOT NULL, "data" JSONB NOT NULL, "status" "EventStatus" NOT NULL DEFAULT 'UNPROCESSED', "attempts" INTEGER NOT NULL DEFAULT 0, "last_error" TEXT, "next_attempt_at" TIMESTAMP(3), "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP, "updated_at" TIMESTAMP(3) NOT NULL, CONSTRAINT "OutputEvent_pkey" PRIMARY KEY ("id"));
+CREATE UNIQUE INDEX "OutputEvent_event_id_key" ON "OutputEvent"("event_id");
+CREATE INDEX "OutputEvent_status_next_attempt_at_idx" ON "OutputEvent"("status", "next_attempt_at");
+CREATE TABLE "InputEvent" ("id" UUID NOT NULL DEFAULT gen_random_uuid(), "event_id" UUID NOT NULL, "consumer" TEXT NOT NULL, "type" TEXT NOT NULL, "data" JSONB NOT NULL, "status" "EventStatus" NOT NULL DEFAULT 'UNPROCESSED', "attempts" INTEGER NOT NULL DEFAULT 0, "last_error" TEXT, "next_attempt_at" TIMESTAMP(3), "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP, "updated_at" TIMESTAMP(3) NOT NULL, CONSTRAINT "InputEvent_pkey" PRIMARY KEY ("id"));
+CREATE UNIQUE INDEX "InputEvent_event_id_key" ON "InputEvent"("event_id");
+CREATE INDEX "InputEvent_status_next_attempt_at_idx" ON "InputEvent"("status", "next_attempt_at");

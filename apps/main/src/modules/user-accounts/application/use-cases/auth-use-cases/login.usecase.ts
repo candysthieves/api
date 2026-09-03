@@ -1,11 +1,13 @@
 import { AccessAndRefreshTokensType } from '../../../../../core/types/access-and-refresh-tokens.type.js';
-import { LoginDto } from '../../../dto/login.dto.js';
+import { LoginDto } from '../../../api/dto/login.dto.js';
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { HashAdapter } from '../../../../../core/adapters/hash.adapter.js';
-import { UsersRepository } from '../../../repositories/user-repositories/users.repository.js';
-import { UserEntity } from '../../../domain/entities/user.entity.js';
+import { UsersRepository } from '../../../infrastructure/repositories/user-repositories/users.repository.js';
 import { DomainExceptions } from '../../../../../core/exceptions/domain-exceptions.js';
 import { AuthSessionService } from '../../auth-session.service.js';
+import { ErrorStatus } from '../../../../../core/exceptions/domain-exception-code.js';
+import { OAuthRepository } from '../../../infrastructure/repositories/oauth-repositories/oauth.repository.js';
+import { User } from '../../../../../generated/prisma/client.js';
 
 export class LoginCommand {
   constructor(
@@ -21,27 +23,52 @@ export class LoginUseCase implements ICommandHandler<LoginCommand> {
     private readonly hashAdapter: HashAdapter,
     private readonly authSessionService: AuthSessionService,
     private readonly usersRepository: UsersRepository,
+    private readonly oAuthRepository: OAuthRepository,
   ) {}
   async execute({
     dto,
     ip,
     userAgent,
   }: LoginCommand): Promise<AccessAndRefreshTokensType> {
-    const user: UserEntity | null = await this.usersRepository.findByEmail(
-      dto.email,
-    );
+    const user: User | null = await this.usersRepository.findByEmail(dto.email);
 
-    if (!user) {
-      DomainExceptions.unauthorized('credentials', 'Invalid email or password');
+    if (user) {
+      const oAuthAccount = await this.oAuthRepository.findByUserId(user.id);
+
+      if (oAuthAccount) {
+        DomainExceptions.badRequest(
+          ErrorStatus.INVALID_CREDENTIALS,
+          'credentials',
+          `Could not log in. Please check your email and password or use password recovery.`,
+        );
+      }
     }
 
+    if (!user) {
+      DomainExceptions.unauthorized(
+        ErrorStatus.INVALID_CREDENTIALS,
+        'credentials',
+        'Invalid email or password',
+      );
+    }
+    if (!user.isEmailConfirmed) {
+      DomainExceptions.unauthorized(
+        ErrorStatus.EMAIL_NOT_CONFIRMED,
+        'email',
+        'Email is not confirmed',
+      );
+    }
     const isPasswordCorrect: boolean = await this.hashAdapter.compare(
       dto.password,
       user.password,
     );
 
     if (!isPasswordCorrect) {
-      DomainExceptions.unauthorized('credentials', 'Invalid email or password');
+      DomainExceptions.unauthorized(
+        ErrorStatus.INVALID_CREDENTIALS,
+        'credentials',
+        'Invalid email or password',
+      );
     }
 
     return this.authSessionService.createSessionAndTokens(

@@ -1,10 +1,3 @@
-//TODO если что, удалить тип
-export type JwtPayload = {
-  userId: string;
-  iat?: number;
-  exp?: number;
-};
-
 export type JwtRefreshPayload = {
   userId: string;
   sessionId: string;
@@ -12,4 +5,8 @@ export type JwtRefreshPayload = {
   exp: number;
 };
 
-// export type AuthUser = JwtPayload | JwtRefreshPayload;
+export type JwtAccessPayload = {
+  userId: string;
+  iat: number;
+  exp: number;
+};

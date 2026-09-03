@@ -5,6 +5,7 @@ export enum DomainExceptionCode {
   InternalServerError = 3,
   Forbidden = 4,
   ValidationError = 5,
+  ServiceUnavailable = 6,
 
   // Auth
   Unauthorized = 11,
@@ -12,8 +13,50 @@ export enum DomainExceptionCode {
   ConfirmationCodeExpired = 13,
   PasswordRecoveryCodeExpired = 14,
   InvalidRecoveryCode = 15,
+  InvalidToken = 16,
+}
 
-  // Users
-  UserAlreadyExists = 21,
-  UserAlreadyConfirmed = 22,
+export enum ErrorStatus {
+  // Email
+  EMAIL_ALREADY_CONFIRMED = 20,
+  EMAIL_NOT_EXISTS = 21,
+  EMAIL_NOT_CONFIRMED = 22,
+  EMAIL_ALREADY_EXISTS = 23,
+
+  // Username
+  USERNAME_ALREADY_EXISTS = 30,
+  USER_NOT_FOUND = 33,
+
+  //Confirmation code
+  CONFIRMATION_CODE_EXPIRED = 40,
+  CONFIRMATION_CODE_INVALID = 41,
+
+  //Recovery code
+  RECOVERY_CODE_EXPIRED = 42,
+  RECOVERY_CODE_INVALID = 43,
+
+  VALIDATION_ERROR = 50,
+  INVALID_CREDENTIALS = 51,
+  RECAPTCHA_INVALID = 52,
+  PASSWORDS_NOT_MATCH = 53,
+  OAUTH_EMAIL_MISSING = 54,
+
+  //Posts
+
+  POST_NOT_FOUND = 55,
+  POST_ALREADY_EXISTS = 56,
+  FILES_SERVICE_UNAVAILABLE = 57,
+  POST_ACCESS_FORBIDDEN = 58,
+
+  // Refresh token
+  REFRESH_TOKEN_INVALID = 70,
+  REFRESH_TOKEN_MISSING = 71,
+  REFRESH_TOKEN_EXPIRED = 72,
+  ACCESS_TOKEN_INVALID = 73,
+  ACCESS_TOKEN_EXPIRED = 74,
+
+  //Sessions
+  SESSION_NOT_FOUND = 80,
+  SESSION_USER_MISMATCH = 82,
+  SESSION_ACCESS_FORBIDDEN = 83,
 }

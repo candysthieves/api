@@ -6,11 +6,15 @@ import { CookieAdapter } from './adapters/cookie.adapter.js';
 import { AppConfig } from '../app.config.js';
 import { EmailAdapter } from './adapters/email/email.adapter.js';
 import { RecaptchaService } from './services/recaptcha.service.js';
+import { RabbitMqModule } from './rabbitmq/rabbitmq.module.js';
+import { SeeController } from './sse/sse.controller.js';
+import { SseService } from './sse/sse.service.js';
 
 //глобальный модуль для провайдеров и модулей необходимых во всех частях приложения (например LoggerService, CqrsModule, etc...)
 @Global()
 @Module({
-  imports: [JwtModule.register({})],
+  imports: [JwtModule.register({}), RabbitMqModule],
+  controllers: [SeeController],
   providers: [
     AppConfig,
     HashAdapter,
@@ -18,6 +22,7 @@ import { RecaptchaService } from './services/recaptcha.service.js';
     CookieAdapter,
     EmailAdapter,
     RecaptchaService,
+    SseService,
   ],
   exports: [
     AppConfig,
@@ -27,6 +32,7 @@ import { RecaptchaService } from './services/recaptcha.service.js';
     CookieAdapter,
     EmailAdapter,
     RecaptchaService,
+    SseService,
   ],
 })
 export class CoreModule {}

@@ -2,6 +2,7 @@ import {
   IsInt,
   IsNotEmpty,
   IsString,
+  IsUrl,
   Max,
   Matches,
   Min,
@@ -35,6 +36,11 @@ export class EnvironmentVariables {
 
   @IsString()
   @IsNotEmpty()
+  @IsUrl({ require_tld: false })
+  APP_URL!: string;
+
+  @IsString()
+  @IsNotEmpty()
   JWT_SECRET_KEY!: string;
 
   @IsString()
@@ -55,7 +61,62 @@ export class EnvironmentVariables {
 
   @IsString()
   @IsNotEmpty()
+  EMAIL_CONFIRMATION_EXPIRES_IN!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  SMTP_USER!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  SMTP_PASSWORD!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  GOOGLE_CLIENT_ID!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  GOOGLE_CLIENT_SECRET!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  GITHUB_CLIENT_ID!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  GITHUB_CLIENT_SECRET!: string;
+
+  @IsString()
+  @IsNotEmpty()
   RECAPTCHA_SECRET_KEY!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @IsUrl({ require_tld: false })
+  CLIENT_URL!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  RABBITMQ_URL!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  RABBITMQ_MAIN_TO_FILES_QUEUE!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  RABBITMQ_FILES_TO_MAIN_QUEUE!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  FILES_TCP_HOST!: string;
+
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(65535)
+  FILES_TCP_PORT!: number;
 
   @IsString()
   @IsNotEmpty()

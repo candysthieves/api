@@ -100,6 +100,41 @@ spec:
                  secretKeyRef:
                    name: lumosapp-backend-main-production-config-secret
                    key: CLIENT_URL
+             - name: GITHUB_CLIENT_ID
+               valueFrom:
+                 secretKeyRef:
+                   name: lumosapp-backend-main-production-config-secret
+                   key: GITHUB_CLIENT_ID
+             - name: GITHUB_CLIENT_SECRET
+               valueFrom:
+                 secretKeyRef:
+                   name: lumosapp-backend-main-production-config-secret
+                   key: GITHUB_CLIENT_SECRET
+             - name: RABBITMQ_URL
+               valueFrom:
+                 secretKeyRef:
+                   name: lumosapp-backend-main-production-config-secret
+                   key: RABBITMQ_URL
+             - name: RABBITMQ_MAIN_TO_FILES_QUEUE
+               valueFrom:
+                 secretKeyRef:
+                   name: lumosapp-backend-main-production-config-secret
+                   key: RABBITMQ_MAIN_TO_FILES_QUEUE
+             - name: RABBITMQ_FILES_TO_MAIN_QUEUE
+               valueFrom:
+                 secretKeyRef:
+                   name: lumosapp-backend-main-production-config-secret
+                   key: RABBITMQ_FILES_TO_MAIN_QUEUE
+             - name: FILES_TCP_HOST
+               valueFrom:
+                 secretKeyRef:
+                   name: lumosapp-backend-main-production-config-secret
+                   key: FILES_TCP_HOST
+             - name: FILES_TCP_PORT
+               valueFrom:
+                 secretKeyRef:
+                   name: lumosapp-backend-main-production-config-secret
+                   key: FILES_TCP_PORT
              - name: JWT_SECRET_KEY
                valueFrom:
                  secretKeyRef:

@@ -11,63 +11,73 @@ import {
   Query,
 } from '@nestjs/common';
 import { type Request, type Response } from 'express';
-import { CommandBus } from '@nestjs/cqrs';
-import {
-  ApiBadRequestResponse,
-  ApiCreatedResponse,
-  ApiOkResponse,
-  ApiOperation,
-  ApiTags,
-  ApiUnauthorizedResponse,
-  ApiForbiddenResponse,
-} from '@nestjs/swagger';
+import { CommandBus, QueryBus } from '@nestjs/cqrs';
+import { ApiTags } from '@nestjs/swagger';
 import { RegistrationCommand } from '../application/use-cases/auth-use-cases/registration.usecase.js';
-import { RegistrationDto } from '../dto/registration.dto.js';
-import { LoginDto } from '../dto/login.dto.js';
+import { RegistrationDto } from './dto/registration.dto.js';
+import { LoginDto } from './dto/login.dto.js';
 import { AccessTokenType } from '../../../core/types/access-token.type.js';
 import { LoginCommand } from '../application/use-cases/auth-use-cases/login.usecase.js';
 import { AccessAndRefreshTokensType } from '../../../core/types/access-and-refresh-tokens.type.js';
 import { CookieAdapter } from '../../../core/adapters/cookie.adapter.js';
-import { RefreshTokenGuard } from '../guards/refresh-token.guard.js';
+import { RefreshTokenGuard } from './guards/refresh-token.guard.js';
 import { LogoutCommand } from '../application/use-cases/auth-use-cases/logout.usecase.js';
-import { User } from '../decorators/user.decorator.js';
-import type { JwtRefreshPayload } from '../../../core/types/jwt-payload.type.js';
+import { User } from './decorators/user.decorator.js';
+import {
+  type JwtAccessPayload,
+  type JwtRefreshPayload,
+} from '../../../core/types/jwt-payload.type.js';
 import { RefreshTokenCommand } from '../application/use-cases/auth-use-cases/refresh-token,usecase.js';
-import { RegistrationConfirmationDto } from '../dto/registration-confirmation.dto.js';
+import { RegistrationConfirmationDto } from './dto/registration-confirmation.dto.js';
 import { ConfirmEmailCommand } from '../application/use-cases/auth-use-cases/confirm-email.usecase.js';
-import { ResendEmailDto } from '../dto/resend-email.dto.js';
+import { ResendEmailDto } from './dto/resend-email.dto.js';
 import { ResendEmailCommand } from '../application/use-cases/auth-use-cases/resend-email.usecase.js';
-import { PasswordRecoveryDto } from '../dto/password-recovery.dto.js';
+import { PasswordRecoveryDto } from './dto/password-recovery.dto.js';
 import { PasswordRecoveryCommand } from '../application/use-cases/auth-use-cases/password-recovery.usecase.js';
-import { ValidatePasswordRecoveryCodeDto } from '../dto/validate-password-recovery-code.dto.js';
+import { ValidatePasswordRecoveryCodeDto } from './dto/validate-password-recovery-code.dto.js';
 import { ValidatePasswordRecoveryCodeCommand } from '../application/use-cases/auth-use-cases/validate-password-recovery-code.usecase.js';
-import { NewPasswordDto } from '../dto/new-password.dto.js';
+import { NewPasswordDto } from './dto/new-password.dto.js';
 import { NewPasswordCommand } from '../application/use-cases/auth-use-cases/new-password.usecase.js';
 import { type RequestWithUser } from '../../../core/types/request-with-user.type.js';
-import { OAuthLoginCommand } from '../application/use-cases/auth-use-cases/oauth-login.usecase.js';
-import { OAuthProfileDto } from '../dto/oauth-profile.dto.js';
-import { GoogleAuthGuard } from '../guards/google-auth.guard.js';
+import { OAuthProfileDto } from './dto/oauth-profile.dto.js';
+import { GoogleAuthGuard } from './guards/google-auth.guard.js';
+import { GithubAuthGuard } from './guards/github-auth.guard.js';
 import { RecaptchaService } from '../../../core/services/recaptcha.service.js';
-import { apiErrorResponseSchema } from '../../../core/exceptions/api-error-response.swagger.js';
+import { GoogleOAuthLoginCommand } from '../application/use-cases/auth-use-cases/google-oauth-login.usecase.js';
+import { GithubOAuthLoginCommand } from '../application/use-cases/auth-use-cases/github-oauth-login.usecase.js';
+import { AppConfig } from '../../../app.config.js';
+import { ApiRegistrationNewUser } from '../../../core/swagger/auth-dto/regestration.swagger.js';
+import { ApiLogin } from '../../../core/swagger/auth-dto/login.swagger.js';
+import { ApiRefreshToken } from '../../../core/swagger/auth-dto/refresh-token.swagger.js';
+import { ApiRegistrationConfirmation } from '../../../core/swagger/auth-dto/confirm-registration.swagger.js';
+import { ApiResendConfirmationEmail } from '../../../core/swagger/auth-dto/resend-confirmation-email.swagger.js';
+import { ApiPasswordRecovery } from '../../../core/swagger/auth-dto/password-recovery.swagger.js';
+import { ApiRecoveryPasswordValidate } from '../../../core/swagger/auth-dto/recovery-password-validate.swagger.js';
+import { ApiNewPassword } from '../../../core/swagger/auth-dto/new-password.swagger.js';
+import { ApiLogout } from '../../../core/swagger/auth-dto/logout.swagger.js';
+import { ApiGoogleCallback } from '../../../core/swagger/auth-dto/google-oauth-callback.swagger.js';
+import { ApiGoogleAuth } from '../../../core/swagger/auth-dto/google-oauth.swagger.js';
+import { ApiGithubAuth } from '../../../core/swagger/auth-dto/github-oauth.swagger.js';
+import { ApiGithubCallback } from '../../../core/swagger/auth-dto/github-oauth-callback.swagger.js';
+import { ProfileViewType } from './view-types/auth/profile-view.type.js';
+import { ProfileQuery } from '../application/query-handler/auth/profile-query-handler.js';
+import { AccessTokenGuard } from './guards/access-token.guard.js';
+import { ApiGetProfile } from '../../../core/swagger/auth-dto/get-profile.swagger.js';
 
 @ApiTags('Authentication')
 @Controller('auth')
 export class AuthController {
   constructor(
+    private readonly config: AppConfig,
     private readonly commandBus: CommandBus,
+    private readonly queryBus: QueryBus,
     private readonly cookieAdapter: CookieAdapter,
     private readonly recaptchaService: RecaptchaService,
   ) {}
 
   @Post('registration')
+  @ApiRegistrationNewUser()
   @HttpCode(HttpStatus.CREATED)
-  @ApiOperation({ summary: 'Register a new user' })
-  @ApiCreatedResponse({ description: 'User registered successfully.' })
-  @ApiBadRequestResponse({
-    description:
-      'Validation failed, passwords do not match, or the email or username is already registered.',
-    schema: apiErrorResponseSchema,
-  })
   async registration(@Body() registrationDto: RegistrationDto) {
     await this.commandBus.execute<RegistrationCommand, void>(
       new RegistrationCommand(registrationDto),
@@ -75,29 +85,8 @@ export class AuthController {
   }
 
   @Post('login')
+  @ApiLogin()
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Log in and receive an access token' })
-  @ApiOkResponse({
-    description: 'Access token issued successfully.',
-    schema: {
-      type: 'object',
-      required: ['accessToken'],
-      properties: {
-        accessToken: {
-          type: 'string',
-          example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
-        },
-      },
-    },
-  })
-  @ApiBadRequestResponse({
-    description: 'Request validation failed.',
-    schema: apiErrorResponseSchema,
-  })
-  @ApiUnauthorizedResponse({
-    description: 'Invalid email or password.',
-    schema: apiErrorResponseSchema,
-  })
   async login(
     @Res({ passthrough: true }) res: Response,
     @Req() req: Request,
@@ -115,7 +104,6 @@ export class AuthController {
           : '',
       ),
     );
-
     this.cookieAdapter.setRefreshCookie(res, refreshToken);
 
     return { accessToken };
@@ -123,6 +111,7 @@ export class AuthController {
 
   @Post('refresh-token')
   @UseGuards(RefreshTokenGuard)
+  @ApiRefreshToken()
   @HttpCode(HttpStatus.OK)
   async refreshToken(
     @Res({ passthrough: true }) res: Response,
@@ -132,13 +121,12 @@ export class AuthController {
       RefreshTokenCommand,
       AccessAndRefreshTokensType
     >(new RefreshTokenCommand(user));
-
     this.cookieAdapter.setRefreshCookie(res, refreshToken);
-
     return { accessToken };
   }
 
   @Post('registration-confirmation')
+  @ApiRegistrationConfirmation()
   @HttpCode(HttpStatus.NO_CONTENT)
   async registrationConfirmation(@Body() dto: RegistrationConfirmationDto) {
     await this.commandBus.execute<ConfirmEmailCommand, void>(
@@ -147,6 +135,7 @@ export class AuthController {
   }
 
   @Post('resend-confirmation-email')
+  @ApiResendConfirmationEmail()
   @HttpCode(HttpStatus.NO_CONTENT)
   async resendConfirmationEmail(@Body() dto: ResendEmailDto) {
     return this.commandBus.execute<ResendEmailCommand, void>(
@@ -155,16 +144,8 @@ export class AuthController {
   }
 
   @Post('password-recovery')
+  @ApiPasswordRecovery()
   @HttpCode(HttpStatus.NO_CONTENT)
-  @ApiOperation({ summary: 'Send a password recovery email' })
-  @ApiBadRequestResponse({
-    description: 'User with this email does not exist.',
-    schema: apiErrorResponseSchema,
-  })
-  @ApiForbiddenResponse({
-    description: 'reCAPTCHA verification failed.',
-    schema: apiErrorResponseSchema,
-  })
   async passwordRecovery(@Body() dto: PasswordRecoveryDto): Promise<void> {
     await this.recaptchaService.verifyPasswordRecovery(dto.recaptchaToken);
     await this.commandBus.execute<PasswordRecoveryCommand, void>(
@@ -173,12 +154,8 @@ export class AuthController {
   }
 
   @Get('password-recovery/validate')
+  @ApiRecoveryPasswordValidate()
   @HttpCode(HttpStatus.NO_CONTENT)
-  @ApiOperation({ summary: 'Validate a password recovery code' })
-  @ApiBadRequestResponse({
-    description: 'Invalid or expired recovery code.',
-    schema: apiErrorResponseSchema,
-  })
   async validatePasswordRecoveryCode(
     @Query() dto: ValidatePasswordRecoveryCodeDto,
   ): Promise<void> {
@@ -188,12 +165,8 @@ export class AuthController {
   }
 
   @Post('new-password')
+  @ApiNewPassword()
   @HttpCode(HttpStatus.NO_CONTENT)
-  @ApiOperation({ summary: 'Set a new password using a recovery code' })
-  @ApiBadRequestResponse({
-    description: 'Validation failed or recovery code is invalid.',
-    schema: apiErrorResponseSchema,
-  })
   async newPassword(@Body() dto: NewPasswordDto): Promise<void> {
     await this.commandBus.execute<NewPasswordCommand, void>(
       new NewPasswordCommand(dto),
@@ -202,6 +175,7 @@ export class AuthController {
 
   @Post('logout')
   @UseGuards(RefreshTokenGuard)
+  @ApiLogout()
   @HttpCode(HttpStatus.NO_CONTENT)
   async logout(
     @Res({ passthrough: true }) res: Response,
@@ -214,21 +188,73 @@ export class AuthController {
 
   @Get('google')
   @UseGuards(GoogleAuthGuard)
+  @ApiGoogleAuth()
+  // TODO: добавить и проверять OAuth state для защиты callback от CSRF.
   googleLogin(): void {}
 
   @Get('google/callback')
   @UseGuards(GoogleAuthGuard)
+  @ApiGoogleCallback()
   async googleCallback(
+    @Res() res: Response,
     @Req() req: RequestWithUser<OAuthProfileDto>,
-  ): Promise<AccessTokenType> {
-    return this.commandBus.execute<OAuthLoginCommand, AccessTokenType>(
-      new OAuthLoginCommand(
+  ) {
+    const { refreshToken } = await this.commandBus.execute<
+      GoogleOAuthLoginCommand,
+      AccessAndRefreshTokensType
+    >(
+      new GoogleOAuthLoginCommand(
         req.user,
         req.ip ?? '',
         typeof req.headers['user-agent'] === 'string'
           ? req.headers['user-agent']
           : '',
       ),
+    );
+
+    this.cookieAdapter.setRefreshCookie(res, refreshToken);
+
+    return res.redirect(`${this.config.clientUrl}/oauth/success`);
+  }
+
+  @Get('github')
+  @UseGuards(GithubAuthGuard)
+  @ApiGithubAuth()
+  // TODO: добавить и проверять OAuth state для защиты callback от CSRF.
+  githubLogin(): void {}
+
+  @Get('github/callback')
+  @UseGuards(GithubAuthGuard)
+  @ApiGithubCallback()
+  async githubCallback(
+    @Res() res: Response,
+    @Req() req: RequestWithUser<OAuthProfileDto>,
+  ) {
+    const { refreshToken } = await this.commandBus.execute<
+      GithubOAuthLoginCommand,
+      AccessAndRefreshTokensType
+    >(
+      new GithubOAuthLoginCommand(
+        req.user,
+        req.ip ?? '',
+        typeof req.headers['user-agent'] === 'string'
+          ? req.headers['user-agent']
+          : '',
+      ),
+    );
+
+    this.cookieAdapter.setRefreshCookie(res, refreshToken);
+
+    return res.redirect(`${this.config.clientUrl}/oauth/success`);
+  }
+
+  @Get('me')
+  @ApiGetProfile()
+  @UseGuards(AccessTokenGuard)
+  async profile(@User() user: JwtAccessPayload): Promise<ProfileViewType> {
+    const { userId } = user;
+    return this.queryBus.execute<ProfileQuery, ProfileViewType>(
+      new ProfileQuery(userId),
     );
   }
 }

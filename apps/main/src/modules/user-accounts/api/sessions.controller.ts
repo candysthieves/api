@@ -10,26 +10,20 @@ import {
 } from '@nestjs/common';
 import type { Response } from 'express';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
-import {
-  ApiTags,
-  ApiCookieAuth,
-  ApiNoContentResponse,
-  ApiNotFoundResponse,
-  ApiOperation,
-  ApiParam,
-  ApiUnauthorizedResponse,
-} from '@nestjs/swagger';
+import { ApiTags } from '@nestjs/swagger';
 import { FindAllSessionsQuery } from '../application/query-handler/sessions/find-sessions-query-handler.js';
 import { SessionView } from './view-types/sessions/session-view.type.js';
 import { DeleteOtherSessionsCommand } from '../application/use-cases/sessions-use-cases/delete-other-sessions-use.case.js';
-import { RefreshTokenGuard } from '../guards/refresh-token.guard.js';
-import { User } from '../decorators/user.decorator.js';
+import { RefreshTokenGuard } from './guards/refresh-token.guard.js';
+import { User } from './decorators/user.decorator.js';
 import type { JwtRefreshPayload } from '../../../core/types/jwt-payload.type.js';
 import { DeactivateSessionCommand } from '../application/use-cases/sessions-use-cases/deactivate-session.usecase.js';
 import { CookieAdapter } from '../../../core/adapters/cookie.adapter.js';
-import { apiErrorResponseSchema } from '../../../core/exceptions/api-error-response.swagger.js';
+import { ApiGetAllSessionsForTheCurrentUser } from '../../../core/swagger/session-dto/get-all-devices-for-current-user.swagger.js';
+import { ApiDeleteOtherSessionExceptCurrentOne } from '../../../core/swagger/session-dto/delete-other-session.swagger.js';
+import { ApiTerminateSessionById } from '../../../core/swagger/session-dto/delete-session-by-id.swagger.js';
 
-@ApiTags('Security')
+@ApiTags('SecurityDevices')
 @Controller('security')
 export class SessionsController {
   constructor(
@@ -38,15 +32,10 @@ export class SessionsController {
     private readonly cookieAdapter: CookieAdapter,
   ) {}
 
-  @ApiCookieAuth('refreshToken')
-  @ApiOperation({ summary: 'Get active sessions for the current user' })
-  @ApiUnauthorizedResponse({
-    description: 'A valid active refresh session is required.',
-    schema: apiErrorResponseSchema,
-  })
+  @Get('session')
   @UseGuards(RefreshTokenGuard)
+  @ApiGetAllSessionsForTheCurrentUser()
   @HttpCode(HttpStatus.OK)
-  @Get('devices')
   async getAllSessionsForUser(
     @User() user: JwtRefreshPayload,
   ): Promise<SessionView[]> {
@@ -55,8 +44,9 @@ export class SessionsController {
     );
   }
 
-  @Delete('devices')
+  @Delete('session')
   @UseGuards(RefreshTokenGuard)
+  @ApiDeleteOtherSessionExceptCurrentOne()
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteOtherSessions(@User() user: JwtRefreshPayload): Promise<void> {
     await this.commandBus.execute<DeleteOtherSessionsCommand, void>(
@@ -64,28 +54,10 @@ export class SessionsController {
     );
   }
 
-  @ApiCookieAuth('refreshToken')
-  @ApiOperation({
-    summary: "Deactivate one of the current user's device sessions",
-  })
-  @ApiParam({
-    name: 'deviceId',
-    description: 'Identifier of the device session',
-  })
-  @ApiNoContentResponse({
-    description: 'Device session deactivated successfully.',
-  })
-  @ApiNotFoundResponse({
-    description: 'Device session was not found.',
-    schema: apiErrorResponseSchema,
-  })
-  @ApiUnauthorizedResponse({
-    description: 'A valid active refresh session is required.',
-    schema: apiErrorResponseSchema,
-  })
+  @Delete('session/:sessionId')
   @UseGuards(RefreshTokenGuard)
+  @ApiTerminateSessionById()
   @HttpCode(HttpStatus.NO_CONTENT)
-  @Delete('sessions/:sessionId')
   async deactivateSession(
     @Param('sessionId') sessionId: string,
     @User() user: JwtRefreshPayload,
@@ -94,8 +66,6 @@ export class SessionsController {
     await this.commandBus.execute<DeactivateSessionCommand, void>(
       new DeactivateSessionCommand(user.userId, user.sessionId, sessionId),
     );
-    // sessionId id полученная из query
-    // user.sessionId id полученная из токена
     if (sessionId === user.sessionId) {
       this.cookieAdapter.clearRefreshCookie(res);
     }
