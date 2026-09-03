@@ -7,6 +7,7 @@ import {
   Param,
   ParseUUIDPipe,
   Post,
+  Put,
   UploadedFiles,
   UseGuards,
   UseInterceptors,
@@ -26,6 +27,9 @@ import { HardDeletePostCommand } from '../application/use-cases/posts-use-cases/
 import { RestorePostCommand } from '../application/use-cases/posts-use-cases/restore-post.usecase.js';
 import { SoftDeletePostCommand } from '../application/use-cases/posts-use-cases/soft-delete-post.usecase.js';
 import { ApiSoftDeletePost } from '../../../core/swagger/postsDTO/soft-delete-post-swagger.js';
+import { UpdatePostDto } from './dto/update-post.dto.js';
+import { UpdatePostCommand } from '../application/use-cases/posts-use-cases/update-post.usecase.js';
+import { ApiUpdatePost } from '../../../core/swagger/postsDTO/update-post-swagger.js';
 
 @ApiTags('Posts')
 @Controller('posts')
@@ -51,6 +55,20 @@ export class PostController {
         files,
         createDto.location,
       ),
+    );
+  }
+
+  @Put(':postId')
+  @UseGuards(AccessTokenGuard)
+  @ApiUpdatePost()
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async updatePost(
+    @Param('postId', ParseUUIDPipe) postId: string,
+    @Body() updateDto: UpdatePostDto,
+    @User() user: JwtAccessPayload,
+  ): Promise<void> {
+    await this.commandBus.execute<UpdatePostCommand, void>(
+      new UpdatePostCommand(postId, user.userId, updateDto.description),
     );
   }
 

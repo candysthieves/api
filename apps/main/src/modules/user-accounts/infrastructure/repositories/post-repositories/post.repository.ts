@@ -19,6 +19,10 @@ export class PostRepository {
     await this.prisma.post.delete({ where: { id } });
   }
 
+  async updateDescription(id: string, description: string): Promise<void> {
+    await this.prisma.post.update({ where: { id }, data: { description } });
+  }
+
   async markForDeletion(id: string, willBeDeleted: Date): Promise<void> {
     await this.prisma.post.update({ where: { id }, data: { willBeDeleted } });
   }
