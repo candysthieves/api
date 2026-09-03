@@ -64,11 +64,17 @@ export class FilesTcpClient {
 }
 
 function getFileIds(value: unknown): string[] {
-  const media = Array.isArray(value) ? value : [value];
+  const media: unknown[] = Array.isArray(value) ? value : [value];
 
-  return media.flatMap((file) =>
-    file && typeof file === 'object' && typeof file.fileId === 'string'
-      ? [file.fileId]
-      : [],
-  );
+  return media.flatMap((file): string[] => {
+    if (
+      typeof file === 'object' &&
+      file !== null &&
+      'fileId' in file &&
+      typeof file.fileId === 'string'
+    ) {
+      return [file.fileId];
+    }
+    return [];
+  });
 }

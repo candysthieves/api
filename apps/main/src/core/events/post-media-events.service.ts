@@ -17,6 +17,7 @@ export type MediaEvent = {
 @Injectable()
 export class PostMediaEventsService implements OnModuleInit, OnModuleDestroy {
   private timer?: NodeJS.Timeout;
+  private isProcessing = false;
 
   constructor(
     private readonly prisma: PrismaService,
@@ -42,19 +43,28 @@ export class PostMediaEventsService implements OnModuleInit, OnModuleDestroy {
       },
       update: {},
     });
+    setImmediate(() => void this.processPending());
   }
 
   private async processPending(): Promise<void> {
-    await this.expireStaleProcessingEvents();
-    const event = await this.claimNextEvent();
-    if (!event) return;
-
+    if (this.isProcessing) return;
+    this.isProcessing = true;
     try {
-      await this.applyMediaEvent(event);
-      await this.files.acknowledge(event.eventId);
-      await this.markCompleted(event.id);
-    } catch (error) {
-      await this.scheduleRetry(event.id, error);
+      await this.expireStaleProcessingEvents();
+
+      while (true) {
+        const event = await this.claimNextEvent();
+        if (!event) return;
+        try {
+          await this.applyMediaEvent(event);
+          await this.files.acknowledge(event.eventId);
+          await this.markCompleted(event.id);
+        } catch (error) {
+          await this.scheduleRetry(event.id, error);
+        }
+      }
+    } finally {
+      this.isProcessing = false;
     }
   }
 
@@ -91,13 +101,8 @@ export class PostMediaEventsService implements OnModuleInit, OnModuleDestroy {
           mediaError: null,
         },
       });
-
       if (!updatedPost.count) {
-        const result = await this.files.deletePostMedia(
-          data.images,
-          data.preview,
-        );
-        if (result.error) throw new Error(result.error.code);
+        throw new Error(`POST_NOT_FOUND:${data.postId}`);
       }
     } else if (event.type === 'post.media.failed') {
       await this.prisma.post.updateMany({

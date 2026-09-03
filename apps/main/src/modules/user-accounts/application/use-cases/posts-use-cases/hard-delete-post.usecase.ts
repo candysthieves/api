@@ -3,7 +3,7 @@ import { DomainExceptions } from '../../../../../core/exceptions/domain-exceptio
 import { ErrorStatus } from '../../../../../core/exceptions/domain-exception-code.js';
 import { PostsRepository } from '../../../infrastructure/repositories/post-repositories/posts.repository.js';
 
-export class DeletePostCommand {
+export class HardDeletePostCommand {
   constructor(
     public readonly postId: string,
     public readonly userId: string,
@@ -13,8 +13,11 @@ export class DeletePostCommand {
 @CommandHandler(DeletePostCommand)
 export class DeletePostUseCase implements ICommandHandler<DeletePostCommand> {
   constructor(private readonly postsRepository: PostsRepository) {}
+@CommandHandler(HardDeletePostCommand)
+export class HardDeletePostUseCase implements ICommandHandler<HardDeletePostCommand> {
+  constructor(private readonly postsRepository: PostRepository) {}
 
-  async execute(command: DeletePostCommand): Promise<void> {
+  async execute(command: HardDeletePostCommand): Promise<void> {
     const post = await this.postsRepository.findById(command.postId);
 
     if (!post) {

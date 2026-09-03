@@ -9,6 +9,7 @@ import {
   ParseUUIDPipe,
   Post,
   Query,
+  Put,
   UploadedFiles,
   UseGuards,
   UseInterceptors,
@@ -26,6 +27,15 @@ import { ApiDeletePost } from '../../../core/swagger/postsDTO/delete-post-swagge
 import { DeletePostCommand } from '../application/use-cases/posts-use-cases/delete-post.usecase.js';
 import { GetPostsQuery } from '../application/query-handler/posts/get-posts.query-handler.js';
 import { GetPostsQueryParamsDto } from './dto/get-posts-query-params.dto.js';
+import { ApiHardDeletePost } from '../../../core/swagger/postsDTO/delete-post-swagger.js';
+import { ApiRestorePost } from '../../../core/swagger/postsDTO/restore-post-swagger.js';
+import { HardDeletePostCommand } from '../application/use-cases/posts-use-cases/hard-delete-post.usecase.js';
+import { RestorePostCommand } from '../application/use-cases/posts-use-cases/restore-post.usecase.js';
+import { SoftDeletePostCommand } from '../application/use-cases/posts-use-cases/soft-delete-post.usecase.js';
+import { ApiSoftDeletePost } from '../../../core/swagger/postsDTO/soft-delete-post-swagger.js';
+import { UpdatePostDto } from './dto/update-post.dto.js';
+import { UpdatePostCommand } from '../application/use-cases/posts-use-cases/update-post.usecase.js';
+import { ApiUpdatePost } from '../../../core/swagger/postsDTO/update-post-swagger.js';
 
 @ApiTags('Posts')
 @Controller('posts')
@@ -64,16 +74,56 @@ export class PostController {
     );
   }
 
-  @Delete(':postId')
+  @Put(':postId')
   @UseGuards(AccessTokenGuard)
-  @ApiDeletePost()
+  @ApiUpdatePost()
   @HttpCode(HttpStatus.NO_CONTENT)
-  async deletePost(
+  async updatePost(
+    @Param('postId', ParseUUIDPipe) postId: string,
+    @Body() updateDto: UpdatePostDto,
+    @User() user: JwtAccessPayload,
+  ): Promise<void> {
+    await this.commandBus.execute<UpdatePostCommand, void>(
+      new UpdatePostCommand(postId, user.userId, updateDto.description),
+    );
+  }
+
+  @Delete(':postId/hard-delete')
+  @UseGuards(AccessTokenGuard)
+  @ApiHardDeletePost()
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async hardDeletePost(
     @Param('postId', ParseUUIDPipe) postId: string,
     @User() user: JwtAccessPayload,
   ): Promise<void> {
-    await this.commandBus.execute<DeletePostCommand, void>(
-      new DeletePostCommand(postId, user.userId),
+    await this.commandBus.execute<HardDeletePostCommand, void>(
+      new HardDeletePostCommand(postId, user.userId),
+    );
+  }
+
+  @Delete(':postId/soft-delete')
+  @UseGuards(AccessTokenGuard)
+  @ApiSoftDeletePost()
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async softDeletePost(
+    @Param('postId', ParseUUIDPipe) postId: string,
+    @User() user: JwtAccessPayload,
+  ): Promise<void> {
+    await this.commandBus.execute<SoftDeletePostCommand, void>(
+      new SoftDeletePostCommand(postId, user.userId),
+    );
+  }
+
+  @Post(':postId/restore')
+  @UseGuards(AccessTokenGuard)
+  @ApiRestorePost()
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async restorePost(
+    @Param('postId', ParseUUIDPipe) postId: string,
+    @User() user: JwtAccessPayload,
+  ): Promise<void> {
+    await this.commandBus.execute<RestorePostCommand, void>(
+      new RestorePostCommand(postId, user.userId),
     );
   }
 }

@@ -8,9 +8,12 @@ import {
   StoredEventDocument,
 } from './schemas/event.schema.js';
 
+const PUBLISH_CONFIRMATION_TIMEOUT_MS = 3_000;
+
 @Injectable()
 export class FilesEventsService implements OnModuleInit, OnModuleDestroy {
   private timer?: NodeJS.Timeout;
+  private isPublishing = false;
 
   constructor(
     @InjectModel(StoredEvent.name)
@@ -27,7 +30,7 @@ export class FilesEventsService implements OnModuleInit, OnModuleDestroy {
   }
 
   async create(type: string, data: Record<string, unknown>) {
-    return this.output.create({
+    const event = await this.output.create({
       eventId: crypto.randomUUID(),
       consumer: 'MAIN',
       type,
@@ -35,6 +38,7 @@ export class FilesEventsService implements OnModuleInit, OnModuleDestroy {
       status: EventStatus.UNPROCESSED,
       attempts: 0,
     });
+    return event;
   }
 
   async acknowledge(eventId: string): Promise<boolean> {
@@ -48,39 +52,70 @@ export class FilesEventsService implements OnModuleInit, OnModuleDestroy {
   }
 
   private async publishPending(): Promise<void> {
-    const now = new Date();
-    const event = await this.output
-      .findOneAndUpdate(
+    if (this.isPublishing) return;
+    this.isPublishing = true;
+    try {
+      await this.requeueUnconfirmedEvents();
+
+      while (true) {
+        const now = new Date();
+        const event = await this.output
+          .findOneAndUpdate(
+            {
+              status: EventStatus.UNPROCESSED,
+              $or: [{ nextAttemptAt: null }, { nextAttemptAt: { $lte: now } }],
+            },
+            { $set: { status: EventStatus.SENDED }, $inc: { attempts: 1 } },
+            { returnDocument: 'after' },
+          )
+          .exec();
+        if (!event) return;
+
+        try {
+          await this.producer.publishMediaEvent({
+            eventId: event.eventId,
+            consumer: event.consumer,
+            type: event.type,
+            data: event.data,
+          });
+        } catch (error) {
+          await this.output
+            .updateOne(
+              { _id: event._id, status: EventStatus.SENDED },
+              {
+                $set: {
+                  status: EventStatus.UNPROCESSED,
+                  lastError:
+                    error instanceof Error ? error.message : String(error),
+                  nextAttemptAt: new Date(Date.now() + 10_000),
+                },
+              },
+            )
+            .exec();
+        }
+      }
+    } finally {
+      this.isPublishing = false;
+    }
+  }
+
+  private async requeueUnconfirmedEvents(): Promise<void> {
+    await this.output
+      .updateMany(
         {
-          status: EventStatus.UNPROCESSED,
-          $or: [{ nextAttemptAt: null }, { nextAttemptAt: { $lte: now } }],
+          status: EventStatus.SENDED,
+          updatedAt: {
+            $lte: new Date(Date.now() - PUBLISH_CONFIRMATION_TIMEOUT_MS),
+          },
         },
-        { $set: { status: EventStatus.SENDED }, $inc: { attempts: 1 } },
-        { returnDocument: 'after' },
+        {
+          $set: {
+            status: EventStatus.UNPROCESSED,
+            nextAttemptAt: null,
+            lastError: 'DELIVERY_CONFIRMATION_TIMEOUT',
+          },
+        },
       )
       .exec();
-    if (!event) return;
-
-    try {
-      await this.producer.publishMediaEvent({
-        eventId: event.eventId,
-        consumer: event.consumer,
-        type: event.type,
-        data: event.data,
-      });
-    } catch (error) {
-      await this.output
-        .updateOne(
-          { _id: event._id, status: EventStatus.SENDED },
-          {
-            $set: {
-              status: EventStatus.UNPROCESSED,
-              lastError: error instanceof Error ? error.message : String(error),
-              nextAttemptAt: new Date(Date.now() + 10_000),
-            },
-          },
-        )
-        .exec();
-    }
   }
 }
