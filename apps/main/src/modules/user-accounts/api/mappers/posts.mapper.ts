@@ -9,7 +9,7 @@ export class PostsMapper {
       id: post.id,
       description: post.description,
       images: post.images as FileType[],
-      preview: post.preview as FileType[],
+      preview: post.preview as FileType,
       createdAt: post.createdAt.toISOString(),
       willBeDeleted: post.willBeDeleted?.toISOString() || null,
     };
