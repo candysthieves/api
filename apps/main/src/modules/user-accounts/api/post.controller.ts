@@ -72,7 +72,6 @@ export class PostController {
     );
   }
 
-  @Delete(':postId')
   @Delete(':postId/hard-delete')
   @UseGuards(AccessTokenGuard)
   @ApiHardDeletePost()

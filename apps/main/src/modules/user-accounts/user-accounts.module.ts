@@ -20,7 +20,6 @@ import { RegistrationUseCase } from './application/use-cases/auth-use-cases/regi
 import { ResendEmailUseCase } from './application/use-cases/auth-use-cases/resend-email.usecase.js';
 import { ValidatePasswordRecoveryCodeUseCase } from './application/use-cases/auth-use-cases/validate-password-recovery-code.usecase.js';
 import { CreatePostUseCase } from './application/use-cases/posts-use-cases/create-post.use.case.js';
-import { DeletePostUseCase } from './application/use-cases/posts-use-cases/delete-post.usecase.js';
 import { UpdatePostUseCase } from './application/use-cases/posts-use-cases/update-post.usecase.js';
 import { HardDeletePostUseCase } from './application/use-cases/posts-use-cases/hard-delete-post.usecase.js';
 import { RestorePostUseCase } from './application/use-cases/posts-use-cases/restore-post.usecase.js';
@@ -68,7 +67,6 @@ import { GoogleStrategy } from './infrastructure/strategies/google.strategy.js';
     HardDeletePostUseCase,
     RestorePostUseCase,
     SoftDeletePostUseCase,
-    DeletePostUseCase,
     UpdatePostUseCase,
     FindAllSessionsQueryHandler,
     ProfileQueryHandler,
