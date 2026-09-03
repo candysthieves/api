@@ -45,7 +45,16 @@ export class CreatePostUseCase implements ICommandHandler<CreatePostCommand> {
     let result: PostMediaJobAcceptance;
     try {
       result = await this.filesClient.uploadPostFiles(post.id, command.files);
-    } catch {
+    } catch (error) {
+      const transportError = getErrorDetails(error);
+      this.logger.error(
+        JSON.stringify({
+          event: 'files_upload_transport_failed',
+          postId: post.id,
+          error: transportError,
+        }),
+        transportError.stack,
+      );
       await this.postRepository.deletePost(post.id);
       DomainExceptions.serviceUnavailable(
         ErrorStatus.FILES_SERVICE_UNAVAILABLE,
@@ -73,4 +82,21 @@ export class CreatePostUseCase implements ICommandHandler<CreatePostCommand> {
 
     return { postId: post.id };
   }
+}
+
+function getErrorDetails(error: unknown): {
+  name: string;
+  code?: string;
+  message: string;
+  stack?: string;
+} {
+  if (error instanceof Error) {
+    const code =
+      'code' in error && typeof error.code === 'string'
+        ? error.code
+        : undefined;
+    return { name: error.name, code, message: error.message, stack: error.stack };
+  }
+
+  return { name: 'UnknownError', message: String(error) };
 }
