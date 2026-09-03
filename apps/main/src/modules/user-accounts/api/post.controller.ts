@@ -2,11 +2,13 @@ import {
   Body,
   Controller,
   Delete,
+  Get,
   HttpCode,
   HttpStatus,
   Param,
   ParseUUIDPipe,
   Post,
+  Query,
   Put,
   UploadedFiles,
   UseGuards,
@@ -14,13 +16,15 @@ import {
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { FilesInterceptor } from '@nestjs/platform-express';
-import { CommandBus } from '@nestjs/cqrs';
+import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { CreatePostCommand } from '../application/use-cases/posts-use-cases/create-post.use.case.js';
 import { AccessTokenGuard } from './guards/access-token.guard.js';
 import { User } from './decorators/user.decorator.js';
 import { type JwtAccessPayload } from '../../../core/types/jwt-payload.type.js';
 import { CreatePostDto } from './dto/create-post.dto.js';
 import { ApiCreatePost } from '../../../core/swagger/postsDTO/create-post-swagger.js';
+import { GetPostsQuery } from '../application/query-handler/posts/get-posts.query-handler.js';
+import { GetPostsQueryParamsDto } from './dto/get-posts-query-params.dto.js';
 import { ApiHardDeletePost } from '../../../core/swagger/postsDTO/delete-post-swagger.js';
 import { ApiRestorePost } from '../../../core/swagger/postsDTO/restore-post-swagger.js';
 import { HardDeletePostCommand } from '../application/use-cases/posts-use-cases/hard-delete-post.usecase.js';
@@ -34,7 +38,17 @@ import { ApiUpdatePost } from '../../../core/swagger/postsDTO/update-post-swagge
 @ApiTags('Posts')
 @Controller('posts')
 export class PostController {
-  constructor(private readonly commandBus: CommandBus) {}
+  constructor(
+    private readonly commandBus: CommandBus,
+    private readonly queryBus: QueryBus,
+  ) {}
+
+  @Get()
+  getPosts(@Query() query: GetPostsQueryParamsDto) {
+    return this.queryBus.execute<GetPostsQuery>(
+      new GetPostsQuery(query.cursor, query.limit),
+    );
+  }
 
   @Post()
   @UseInterceptors(

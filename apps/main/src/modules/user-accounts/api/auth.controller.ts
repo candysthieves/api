@@ -60,7 +60,7 @@ import { ApiGoogleAuth } from '../../../core/swagger/auth-dto/google-oauth.swagg
 import { ApiGithubAuth } from '../../../core/swagger/auth-dto/github-oauth.swagger.js';
 import { ApiGithubCallback } from '../../../core/swagger/auth-dto/github-oauth-callback.swagger.js';
 import { ProfileViewType } from './view-types/auth/profile-view.type.js';
-import { ProfileQuery } from '../application/query-handler/auth/profile.usecase.js';
+import { ProfileQuery } from '../application/query-handler/auth/profile-query-handler.js';
 import { AccessTokenGuard } from './guards/access-token.guard.js';
 import { ApiGetProfile } from '../../../core/swagger/auth-dto/get-profile.swagger.js';
 

@@ -4,7 +4,7 @@ import { Post } from '../../../../../generated/prisma/client.js';
 import { PostUncheckedCreateInput } from '../../../../../generated/prisma/models/Post.js';
 
 @Injectable()
-export class PostRepository {
+export class PostsRepository {
   constructor(private readonly prisma: PrismaService) {}
 
   async createPost(data: PostUncheckedCreateInput): Promise<Post> {

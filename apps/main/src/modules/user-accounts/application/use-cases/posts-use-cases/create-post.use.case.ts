@@ -1,5 +1,5 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { PostRepository } from '../../../infrastructure/repositories/post-repositories/post.repository.js';
+import { PostsRepository } from '../../../infrastructure/repositories/post-repositories/posts.repository.js';
 import { CreatePostLocationDto } from '../../../api/dto/create-post.dto.js';
 import { MediaStatus, Prisma } from '../../../../../generated/prisma/client.js';
 import {
@@ -21,7 +21,7 @@ export class CreatePostCommand {
 @CommandHandler(CreatePostCommand)
 export class CreatePostUseCase implements ICommandHandler<CreatePostCommand> {
   constructor(
-    private readonly postRepository: PostRepository,
+    private readonly postRepository: PostsRepository,
     private readonly filesClient: FilesTcpClient,
   ) {}
 

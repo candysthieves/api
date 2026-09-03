@@ -1,7 +1,7 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { DomainExceptions } from '../../../../../core/exceptions/domain-exceptions.js';
 import { ErrorStatus } from '../../../../../core/exceptions/domain-exception-code.js';
-import { PostRepository } from '../../../infrastructure/repositories/post-repositories/post.repository.js';
+import { PostsRepository } from '../../../infrastructure/repositories/post-repositories/posts.repository.js';
 
 export class HardDeletePostCommand {
   constructor(
@@ -12,7 +12,7 @@ export class HardDeletePostCommand {
 
 @CommandHandler(HardDeletePostCommand)
 export class HardDeletePostUseCase implements ICommandHandler<HardDeletePostCommand> {
-  constructor(private readonly postsRepository: PostRepository) {}
+  constructor(private readonly postsRepository: PostsRepository) {}
 
   async execute(command: HardDeletePostCommand): Promise<void> {
     const post = await this.postsRepository.findById(command.postId);
