@@ -3,18 +3,18 @@ import { DomainExceptions } from '../../../../../core/exceptions/domain-exceptio
 import { ErrorStatus } from '../../../../../core/exceptions/domain-exception-code.js';
 import { PostRepository } from '../../../infrastructure/repositories/post-repositories/post.repository.js';
 
-export class DeletePostCommand {
+export class SoftDeletePostCommand {
   constructor(
     public readonly postId: string,
     public readonly userId: string,
   ) {}
 }
 
-@CommandHandler(DeletePostCommand)
-export class DeletePostUseCase implements ICommandHandler<DeletePostCommand> {
+@CommandHandler(SoftDeletePostCommand)
+export class SoftDeletePostUseCase implements ICommandHandler<SoftDeletePostCommand> {
   constructor(private readonly postsRepository: PostRepository) {}
 
-  async execute(command: DeletePostCommand): Promise<void> {
+  async execute(command: SoftDeletePostCommand): Promise<void> {
     const post = await this.postsRepository.findById(command.postId);
 
     if (!post) {
@@ -33,6 +33,9 @@ export class DeletePostUseCase implements ICommandHandler<DeletePostCommand> {
       );
     }
 
-    await this.postsRepository.markForDeletion(post.id, new Date());
+    await this.postsRepository.markForDeletion(
+      post.id,
+      new Date(Date.now() + 60 * 60 * 1000),
+    );
   }
 }
