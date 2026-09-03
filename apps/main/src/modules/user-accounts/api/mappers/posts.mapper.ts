@@ -7,6 +7,8 @@ export class PostsMapper {
     return {
       id: post.id,
       description: post.description,
+      // images: post.images,
+      // preview: post.preview,
       createdAt: post.createdAt.toISOString(),
       willBeDeleted: post.willBeDeleted?.toISOString() || null,
     };
