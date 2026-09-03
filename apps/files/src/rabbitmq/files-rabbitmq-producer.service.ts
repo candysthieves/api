@@ -15,7 +15,12 @@ export class FilesRabbitMqProducerService {
     await lastValueFrom(this.mainClient.emit('rabbit.test.response', response));
   }
 
-  async publishMediaEvent(event: { eventId: string; consumer: string; type: string; data: Record<string, unknown> }): Promise<void> {
+  async publishMediaEvent(event: {
+    eventId: string;
+    consumer: string;
+    type: string;
+    data: Record<string, unknown>;
+  }): Promise<void> {
     await lastValueFrom(this.mainClient.emit('post.media.event', event));
   }
 }

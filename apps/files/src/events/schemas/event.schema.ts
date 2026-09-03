@@ -16,7 +16,13 @@ export class StoredEvent {
   @Prop({ required: true }) consumer: string;
   @Prop({ required: true }) type: string;
   @Prop({ required: true, type: Object }) data: Record<string, unknown>;
-  @Prop({ required: true, enum: EventStatus, default: EventStatus.UNPROCESSED, index: true }) status: EventStatus;
+  @Prop({
+    required: true,
+    enum: EventStatus,
+    default: EventStatus.UNPROCESSED,
+    index: true,
+  })
+  status: EventStatus;
   @Prop({ required: true, default: 0 }) attempts: number;
   @Prop() errorCode?: string;
   @Prop() lastError?: string;

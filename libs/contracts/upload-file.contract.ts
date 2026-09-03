@@ -16,8 +16,10 @@ export class UploadFileContract {
   size: number;
   @IsNotEmpty()
   @Transform(({ value }) =>
-    Buffer.isBuffer(value) ? value : Buffer.from(value?.data ?? value),
+    Buffer.isBuffer(value)
+      ? value
+      : // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+        Buffer.from(value?.data ?? value),
   )
-  @Transform(({ value }) => Buffer.isBuffer(value) ? value : Buffer.from(value?.data ?? value))
   buffer: Buffer;
 }

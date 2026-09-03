@@ -7,10 +7,12 @@ import { FilesResultType } from './view-types/files-result.type.js';
 import { DeleteFilesCommand } from '../application/use-cases/delete-files.usecase.js';
 import { RestoreFilesCommand } from '../application/use-cases/restore-files.usecase.js';
 import { FileType } from '../schemas/files.schema.js';
-import { UploadFilesContract } from './contracts/upload-files.contract.js';
-import { UploadFileContract } from './contracts/upload-file.contract.js';
-import { DeleteFilesContract } from './contracts/delete-files.contract.js';
-import { RestoreFilesContract } from './contracts/restore-files.contract.js';
+import {
+  DeleteFilesContract,
+  RestoreFilesContract,
+  UploadFileContract,
+  UploadFilesContract,
+} from '../../../../../../libs/contracts/index.js';
 import { PostMediaProcessingService } from '../application/post-media-processing.service.js';
 import { UploadFileCommand } from '../application/use-cases/upload-file-use.case.js';
 import { RpcValidationPipe } from '../../../core/pipes/rpc-validation.pipe.js';
