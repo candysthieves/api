@@ -10,19 +10,17 @@ import {
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 
-export function ApiHardDeletePost() {
+export function ApiRestorePost() {
   return applyDecorators(
     ApiBearerAuth('accessToken'),
-    ApiOperation({ summary: 'Permanently delete a post by ID' }),
+    ApiOperation({ summary: 'Restore a post scheduled for deletion' }),
     ApiParam({
       name: 'postId',
       description: 'Post ID.',
       schema: { type: 'string', format: 'uuid' },
       example: '550e8400-e29b-41d4-a716-446655440000',
     }),
-    ApiNoContentResponse({
-      description: 'Post was permanently deleted.',
-    }),
+    ApiNoContentResponse({ description: 'Post deletion was cancelled.' }),
     ApiBadRequestResponse({ description: 'Post ID must be a UUID.' }),
     ApiUnauthorizedResponse({
       description: 'Missing, invalid, or expired access token.',

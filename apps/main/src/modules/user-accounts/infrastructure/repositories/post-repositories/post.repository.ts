@@ -21,10 +21,21 @@ export class PostRepository {
 
   async updateDescription(id: string, description: string): Promise<void> {
     await this.prisma.post.update({ where: { id }, data: { description } });
+  async deletePost(id: string): Promise<void> {
+    await this.prisma.post.delete({ where: { id } });
   }
 
   async markForDeletion(id: string, willBeDeleted: Date): Promise<void> {
     await this.prisma.post.update({ where: { id }, data: { willBeDeleted } });
+  }
+
+  async markForDeletion(id: string, willBeDeleted: Date): Promise<void> {
+    await this.prisma.post.update({ where: { id }, data: { willBeDeleted } });
+  async restore(id: string): Promise<void> {
+    await this.prisma.post.update({
+      where: { id },
+      data: { willBeDeleted: null },
+    });
   }
 
   async findPostsDueForDeletion(now: Date): Promise<Post[]> {

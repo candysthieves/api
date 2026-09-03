@@ -22,6 +22,9 @@ import { ValidatePasswordRecoveryCodeUseCase } from './application/use-cases/aut
 import { CreatePostUseCase } from './application/use-cases/posts-use-cases/create-post.use.case.js';
 import { DeletePostUseCase } from './application/use-cases/posts-use-cases/delete-post.usecase.js';
 import { UpdatePostUseCase } from './application/use-cases/posts-use-cases/update-post.usecase.js';
+import { HardDeletePostUseCase } from './application/use-cases/posts-use-cases/hard-delete-post.usecase.js';
+import { RestorePostUseCase } from './application/use-cases/posts-use-cases/restore-post.usecase.js';
+import { SoftDeletePostUseCase } from './application/use-cases/posts-use-cases/soft-delete-post.usecase.js';
 import { DeactivateSessionUseCase } from './application/use-cases/sessions-use-cases/deactivate-session.usecase.js';
 import { DeleteOtherSessionsUseCase } from './application/use-cases/sessions-use-cases/delete-other-sessions-use.case.js';
 import { AuthController } from './api/auth.controller.js';
@@ -62,6 +65,9 @@ import { GoogleStrategy } from './infrastructure/strategies/google.strategy.js';
     GoogleOAuthLoginUseCase,
     GithubOAuthLoginUseCase,
     CreatePostUseCase,
+    HardDeletePostUseCase,
+    RestorePostUseCase,
+    SoftDeletePostUseCase,
     DeletePostUseCase,
     UpdatePostUseCase,
     FindAllSessionsQueryHandler,
