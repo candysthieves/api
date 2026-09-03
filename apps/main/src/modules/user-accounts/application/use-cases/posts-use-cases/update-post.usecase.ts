@@ -1,7 +1,7 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { DomainExceptions } from '../../../../../core/exceptions/domain-exceptions.js';
 import { ErrorStatus } from '../../../../../core/exceptions/domain-exception-code.js';
-import { PostRepository } from '../../../infrastructure/repositories/post-repositories/post.repository.js';
+import { PostsRepository } from '../../../infrastructure/repositories/post-repositories/posts.repository.js';
 
 export class UpdatePostCommand {
   constructor(
@@ -13,7 +13,7 @@ export class UpdatePostCommand {
 
 @CommandHandler(UpdatePostCommand)
 export class UpdatePostUseCase implements ICommandHandler<UpdatePostCommand> {
-  constructor(private readonly postsRepository: PostRepository) {}
+  constructor(private readonly postsRepository: PostsRepository) {}
 
   async execute(command: UpdatePostCommand): Promise<void> {
     const post = await this.postsRepository.findById(command.postId);

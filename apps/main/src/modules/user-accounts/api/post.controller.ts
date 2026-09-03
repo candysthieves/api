@@ -23,8 +23,6 @@ import { User } from './decorators/user.decorator.js';
 import { type JwtAccessPayload } from '../../../core/types/jwt-payload.type.js';
 import { CreatePostDto } from './dto/create-post.dto.js';
 import { ApiCreatePost } from '../../../core/swagger/postsDTO/create-post-swagger.js';
-import { ApiDeletePost } from '../../../core/swagger/postsDTO/delete-post-swagger.js';
-import { DeletePostCommand } from '../application/use-cases/posts-use-cases/delete-post.usecase.js';
 import { GetPostsQuery } from '../application/query-handler/posts/get-posts.query-handler.js';
 import { GetPostsQueryParamsDto } from './dto/get-posts-query-params.dto.js';
 import { ApiHardDeletePost } from '../../../core/swagger/postsDTO/delete-post-swagger.js';

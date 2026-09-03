@@ -10,12 +10,9 @@ export class HardDeletePostCommand {
   ) {}
 }
 
-@CommandHandler(DeletePostCommand)
-export class DeletePostUseCase implements ICommandHandler<DeletePostCommand> {
-  constructor(private readonly postsRepository: PostsRepository) {}
 @CommandHandler(HardDeletePostCommand)
 export class HardDeletePostUseCase implements ICommandHandler<HardDeletePostCommand> {
-  constructor(private readonly postsRepository: PostRepository) {}
+  constructor(private readonly postsRepository: PostsRepository) {}
 
   async execute(command: HardDeletePostCommand): Promise<void> {
     const post = await this.postsRepository.findById(command.postId);
