@@ -8,6 +8,7 @@ import {
 } from '../../../../../core/events/files-tcp.client.js';
 import { DomainExceptions } from '../../../../../core/exceptions/domain-exceptions.js';
 import { ErrorStatus } from '../../../../../core/exceptions/domain-exception-code.js';
+import { Logger } from '@nestjs/common';
 
 export class CreatePostCommand {
   constructor(
@@ -20,6 +21,8 @@ export class CreatePostCommand {
 
 @CommandHandler(CreatePostCommand)
 export class CreatePostUseCase implements ICommandHandler<CreatePostCommand> {
+  private readonly logger = new Logger(CreatePostUseCase.name);
+
   constructor(
     private readonly postRepository: PostsRepository,
     private readonly filesClient: FilesTcpClient,
@@ -52,10 +55,18 @@ export class CreatePostUseCase implements ICommandHandler<CreatePostCommand> {
     }
 
     if (result.error || !result.data?.accepted) {
+      this.logger.warn(
+        JSON.stringify({
+          event: 'files_upload_rejected',
+          postId: post.id,
+          error: result.error,
+          data: result.data,
+        }),
+      );
       await this.postRepository.deletePost(post.id);
       DomainExceptions.validation(
         result.error?.errors ?? [
-          { field: 'files', message: 'Files service rejected media' },
+          { field: 'files', message: 'Error from files service' },
         ],
       );
     }
