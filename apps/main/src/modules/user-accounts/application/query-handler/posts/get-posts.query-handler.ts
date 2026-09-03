@@ -1,5 +1,6 @@
 import { IQueryHandler, QueryHandler } from '@nestjs/cqrs';
 import { PostsQueryRepository } from '../../../infrastructure/repositories/post-repositories/posts.query.repository.js';
+import { PostsMapper } from '../../../api/mappers/posts.mapper.js';
 
 export class GetPostsQuery {
   constructor(
@@ -18,6 +19,15 @@ export class GetPostsQueryHandler implements IQueryHandler<GetPostsQuery> {
       limit,
     );
 
-    const hasNextPage: boolean = posts.length > limit;
+    const hasNextPage = posts.length > limit;
+
+    const items = hasNextPage ? posts.slice(0, limit) : posts;
+
+    const lastPost = items.at(-1);
+
+    const nextCursor =
+      hasNextPage && lastPost ? lastPost.createdAt.toISOString() : null;
+
+    return PostsMapper.toGetPostsView(posts, nextCursor, hasNextPage);
   }
 }
