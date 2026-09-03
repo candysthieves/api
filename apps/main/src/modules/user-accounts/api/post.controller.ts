@@ -22,18 +22,19 @@ import { AccessTokenGuard } from './guards/access-token.guard.js';
 import { User } from './decorators/user.decorator.js';
 import { type JwtAccessPayload } from '../../../core/types/jwt-payload.type.js';
 import { CreatePostDto } from './dto/create-post.dto.js';
-import { ApiCreatePost } from '../../../core/swagger/postsDTO/create-post-swagger.js';
+import { ApiCreatePost } from '../../../core/swagger/posts-dto/create-post.swagger.js';
 import { GetPostsQuery } from '../application/query-handler/posts/get-posts.query-handler.js';
 import { GetPostsQueryParamsDto } from './dto/get-posts-query-params.dto.js';
-import { ApiHardDeletePost } from '../../../core/swagger/postsDTO/delete-post-swagger.js';
-import { ApiRestorePost } from '../../../core/swagger/postsDTO/restore-post-swagger.js';
+import { ApiHardDeletePost } from '../../../core/swagger/posts-dto/delete-post.swagger.js';
+import { ApiRestorePost } from '../../../core/swagger/posts-dto/restore-post.swagger.js';
 import { HardDeletePostCommand } from '../application/use-cases/posts-use-cases/hard-delete-post.usecase.js';
 import { RestorePostCommand } from '../application/use-cases/posts-use-cases/restore-post.usecase.js';
 import { SoftDeletePostCommand } from '../application/use-cases/posts-use-cases/soft-delete-post.usecase.js';
-import { ApiSoftDeletePost } from '../../../core/swagger/postsDTO/soft-delete-post-swagger.js';
+import { ApiSoftDeletePost } from '../../../core/swagger/posts-dto/soft-delete-post.swagger.js';
 import { UpdatePostDto } from './dto/update-post.dto.js';
 import { UpdatePostCommand } from '../application/use-cases/posts-use-cases/update-post.usecase.js';
-import { ApiUpdatePost } from '../../../core/swagger/postsDTO/update-post-swagger.js';
+import { ApiUpdatePost } from '../../../core/swagger/posts-dto/update-post.swagger.js';
+import { ApiGetPosts } from '../../../core/swagger/posts-dto/get-posts.swagger.js';
 
 @ApiTags('Posts')
 @Controller('posts')
@@ -44,6 +45,7 @@ export class PostController {
   ) {}
 
   @Get()
+  @ApiGetPosts()
   getPosts(@Query() query: GetPostsQueryParamsDto) {
     return this.queryBus.execute<GetPostsQuery>(
       new GetPostsQuery(query.cursor, query.limit),
