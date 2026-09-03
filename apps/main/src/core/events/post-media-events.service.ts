@@ -6,6 +6,8 @@ import {
 } from '../../generated/prisma/client.js';
 import { PrismaService } from '../../infrastructure/prisma/prisma.service.js';
 import { FilesTcpClient } from './files-tcp.client.js';
+import { SseService } from '../sse/sse.service.js';
+import { SseEventEnum } from '../sse/types/sse-event.type.js';
 
 export type MediaEvent = {
   eventId: string;
@@ -22,6 +24,7 @@ export class PostMediaEventsService implements OnModuleInit, OnModuleDestroy {
   constructor(
     private readonly prisma: PrismaService,
     private readonly files: FilesTcpClient,
+    private readonly sse: SseService,
   ) {}
 
   onModuleInit(): void {
@@ -104,6 +107,8 @@ export class PostMediaEventsService implements OnModuleInit, OnModuleDestroy {
       if (!updatedPost.count) {
         throw new Error(`POST_NOT_FOUND:${data.postId}`);
       }
+
+      this.sse.emit(SseEventEnum.POST_CREATED, { postId: data.postId });
     } else if (event.type === 'post.media.failed') {
       await this.prisma.post.updateMany({
         where: { id: data.postId },
