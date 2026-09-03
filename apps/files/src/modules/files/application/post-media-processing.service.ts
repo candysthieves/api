@@ -9,7 +9,7 @@ import {
   EventStatus,
   StoredEventDocument,
 } from '../../../events/schemas/event.schema.js';
-import { UploadFileContract } from '../api/contracts/upload-file.contract.js';
+import { UploadFileContract } from '../../../../../../libs/contracts/index.js';
 import { FileMapper } from '../api/mappers/file.mapper.js';
 import { FileViewType } from '../api/view-types/file-view.type.js';
 import { FileType } from '../schemas/files.schema.js';

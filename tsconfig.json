@@ -22,7 +22,9 @@
     "strictBindCallApply": false,
     "noFallthroughCasesInSwitch": false,
     "paths": {
-      "@libs/*": ["libs/*"]
+      "@libs/*": ["libs/*"],
+      "@libs/contracts": ["libs/contracts/index.ts"],
+      "@libs/contracts/*": ["libs/contracts/*"]
     }
   }
 }

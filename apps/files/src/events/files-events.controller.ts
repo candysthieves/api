@@ -5,5 +5,7 @@ import { FilesEventsService } from './files-events.service.js';
 export class FilesEventsController {
   constructor(private readonly events: FilesEventsService) {}
   @MessagePattern({ cmd: 'post-media-event-ack' })
-  acknowledge(@Payload() body: { eventId: string }) { return this.events.acknowledge(body.eventId); }
+  acknowledge(@Payload() body: { eventId: string }) {
+    return this.events.acknowledge(body.eventId);
+  }
 }

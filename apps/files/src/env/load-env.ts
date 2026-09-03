@@ -6,10 +6,26 @@ import { fileURLToPath } from 'node:url';
 type SupportedEnvironment =
   'production' | 'development' | 'development.local' | 'testing';
 
-const environmentDirectory = resolve(
-  dirname(fileURLToPath(import.meta.url)),
-  '../env',
-);
+function getCandidateDirectories(): string[] {
+  const currentDir = dirname(fileURLToPath(import.meta.url));
+  return [
+    currentDir,
+    resolve(currentDir, '../env'),
+    resolve(currentDir, '../../../../env'),
+    resolve(process.cwd(), 'apps/files/src/env'),
+    resolve(process.cwd(), 'dist/apps/files/env'),
+  ];
+}
+
+function findEnvFilePath(fileName: string): string | null {
+  for (const dir of getCandidateDirectories()) {
+    const filePath = resolve(dir, fileName);
+    if (existsSync(filePath)) {
+      return filePath;
+    }
+  }
+  return null;
+}
 
 // Files are ordered from the least to the most specific.
 const environmentFiles: Record<SupportedEnvironment, string[]> = {
@@ -42,9 +58,9 @@ export function loadEnvironment(): void {
   const loadedEnvironment: Record<string, string> = {};
 
   for (const fileName of environmentFiles[environment]) {
-    const filePath = resolve(environmentDirectory, fileName);
+    const filePath = findEnvFilePath(fileName);
 
-    if (!existsSync(filePath)) {
+    if (!filePath) {
       continue;
     }
 

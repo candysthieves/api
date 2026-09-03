@@ -5,7 +5,7 @@ import { ObjectResult } from '../../../../core/object-result.js';
 import { FileMapper } from '../../api/mappers/file.mapper.js';
 import { S3Adapter } from '../../../../core/adapters/s3.adapter.js';
 import { FilesResultType } from '../../api/view-types/files-result.type.js';
-import { UploadFileContract } from '../../api/contracts/upload-file.contract.js';
+import { UploadFileContract } from '../../../../../../../libs/contracts/index.js';
 
 export class UploadFileCommand {
   constructor(

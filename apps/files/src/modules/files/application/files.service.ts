@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { S3Adapter } from '../../../core/adapters/s3.adapter.js';
-import { UploadFileContract } from '../api/contracts/upload-file.contract.js';
+import { UploadFileContract } from '../../../../../../libs/contracts/index.js';
 import { File, FileDocument, FileType } from '../schemas/files.schema.js';
 import { ImageProcessingService } from './image-processing.service.js';
 
