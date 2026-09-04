@@ -5,7 +5,7 @@ import { PostsMapper } from '../../../api/mappers/posts.mapper.js';
 
 export class FindPostsByUserIdAndCursorQuery {
   constructor(
-    public readonly username: string,
+    public readonly userId: string,
     public readonly currentUserId: string,
     public readonly cursor: string | undefined,
     public readonly limit: number,
@@ -20,13 +20,13 @@ export class FindPostsByUserIdAndCursorQueryHandler implements IQueryHandler<Fin
   ) {}
 
   async execute({
-    username,
+    userId,
     currentUserId,
     cursor,
     limit,
   }: FindPostsByUserIdAndCursorQuery) {
     const user =
-      await this.usersQueryRepository.findByUsernameOrNotFound(username);
+      await this.usersQueryRepository.findByIdOrNotFound(userId);
 
     const posts = await this.postsQueryRepository.findPostsByUserIdAndCursor(
       user.id,
