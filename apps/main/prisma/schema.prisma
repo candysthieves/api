@@ -1,6 +1,11 @@
 generator client {
-  provider = "prisma-client"
-  output   = "../src/generated/prisma"
+  provider            = "prisma-client"
+  output              = "../src/generated/prisma"
+  importFileExtension = "js"
+}
+
+generator json {
+  provider = "prisma-json-types-generator"
 }
 
 datasource db {
@@ -64,8 +69,11 @@ model OAuthAccount {
 model Post {
   id            String      @id @default(uuid()) @db.Uuid
   description   String
+  /// [PostLocations]
   locations     Json        @default("[]") @db.JsonB
+  /// [PostImages]
   images        Json        @default("[]") @db.JsonB
+  /// [PostPreview]
   preview       Json?       @db.JsonB
   mediaStatus   MediaStatus @default(PROCESSING) @map("media_status")
   mediaError    String?     @map("media_error")
@@ -84,6 +92,7 @@ model OutputEvent {
   eventId       String      @unique @map("event_id") @db.Uuid
   consumer      String
   type          String
+  /// [Prisma.JsonValue]
   data          Json        @db.JsonB
   status        EventStatus @default(UNPROCESSED)
   attempts      Int         @default(0)
@@ -100,6 +109,7 @@ model InputEvent {
   eventId       String      @unique @map("event_id") @db.Uuid
   consumer      String
   type          String
+  /// [Prisma.JsonValue]
   data          Json        @db.JsonB
   status        EventStatus @default(UNPROCESSED)
   attempts      Int         @default(0)
@@ -114,13 +124,13 @@ model InputEvent {
 model Session {
   id String @id @default(uuid())
 
-  userId     String @map("user_id")
-  user       User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  deviceName String @map("device_name")
+  userId     String    @map("user_id")
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  deviceName String    @map("device_name")
   ip         String
-  issuedAt   DateTime @map("issued_at")
-  expiresAt  DateTime @map("expires_at")
-  createdAt  DateTime @default(now()) @map("created_at")
-  updatedAt  DateTime @updatedAt @map("updated_at")
+  issuedAt   DateTime  @map("issued_at")
+  expiresAt  DateTime  @map("expires_at")
+  createdAt  DateTime  @default(now()) @map("created_at")
+  updatedAt  DateTime  @updatedAt @map("updated_at")
   deletedAt  DateTime? @map("deleted_at")
 }

@@ -1,4 +1,4 @@
-import { FileType } from '../files/file.type.js';
+import { FileType } from '../../../../../core/types/prisma/json-types.js';
 
 export type PostViewType = {
   id: string;
