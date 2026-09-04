@@ -25,17 +25,17 @@ export class UsersController {
     );
   }
 
-  @Get(':userId/posts')
+  @Get(':username/posts')
   @UseGuards(AccessTokenGuard)
   @ApiUserPosts()
   getPostsForUser(
     @Query() query: GetPostsQueryParamsDto,
-    @Param('userId') userId: string,
+    @Param('username') username: string,
     @User() user: JwtAccessPayload,
   ) {
     return this.queryBus.execute(
       new FindPostsByUserIdAndCursorQuery(
-        userId,
+        username,
         user.userId,
         query.cursor,
         query.limit,
@@ -43,17 +43,17 @@ export class UsersController {
     );
   }
 
-  @Get(':userId/profile')
+  @Get(':username/profile')
   @UseGuards(AccessTokenGuard)
   @ApiGetUserProfile()
   async getUserProfile(
-    @Param('userId') userId: string,
+    @Param('username') username: string,
     @User() user: JwtAccessPayload,
   ): Promise<GetUserProfileType> {
     const currentUserId: string = user.userId;
 
     return this.queryBus.execute<GetUserProfileQuery, GetUserProfileType>(
-      new GetUserProfileQuery(userId, currentUserId),
+      new GetUserProfileQuery(username, currentUserId),
     );
   }
 }

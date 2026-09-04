@@ -23,6 +23,20 @@ export class UsersQueryRepository {
     return user;
   }
 
+  async findByUsernameOrNotFound(username: string) {
+    const user = await this.prismaUser.findUnique({ where: { username } });
+
+    if (!user) {
+      DomainExceptions.notFound(
+        ErrorStatus.USER_NOT_FOUND,
+        'user',
+        'User not found',
+      );
+    }
+
+    return user;
+  }
+
   async getUsersCount(): Promise<number> {
     return this.prismaUser.count({
       where: { isEmailConfirmed: true },
