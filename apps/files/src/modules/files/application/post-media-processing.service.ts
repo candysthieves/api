@@ -1,4 +1,3 @@
-import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
 import { mongo, Model } from 'mongoose';
 import type { Connection } from 'mongoose';
@@ -9,11 +8,17 @@ import {
   EventStatus,
   StoredEventDocument,
 } from '../../../events/schemas/event.schema.js';
-import { UploadFileContract } from '../../../../../../libs/contracts/index.js';
 import { FileMapper } from '../api/mappers/file.mapper.js';
 import { FileViewType } from '../api/view-types/file-view.type.js';
 import { FileType } from '../schemas/files.schema.js';
 import { FilesService } from './files.service.js';
+import { UploadFileContract } from '@libs/contracts';
+import {
+  Injectable,
+  Logger,
+  OnModuleDestroy,
+  OnModuleInit,
+} from '@nestjs/common';
 
 const REQUESTED_EVENT = 'post.media.process.requested';
 const SOURCE_BUFFER_MISSING = 'SOURCE_BUFFER_MISSING';
@@ -30,6 +35,7 @@ type PostMediaJobData = { postId: string; sources?: StoredSource[] };
 export class PostMediaProcessingService
   implements OnModuleInit, OnModuleDestroy
 {
+  private readonly logger = new Logger(PostMediaProcessingService.name);
   private readonly startedAt = new Date();
   private timer?: NodeJS.Timeout;
   private isProcessing = false;
@@ -65,6 +71,7 @@ export class PostMediaProcessingService
       files.map((file) => this.storeSource(file)),
     );
     let job: StoredEventDocument;
+    const jobCreateStartedAt = Date.now();
     try {
       job = await this.jobs.create({
         eventId,
@@ -74,7 +81,24 @@ export class PostMediaProcessingService
         status: EventStatus.UNPROCESSED,
         attempts: 0,
       });
+      this.logger.log(
+        JSON.stringify({
+          event: 'post_media_job_create_completed',
+          postId,
+          eventId,
+          durationMs: Date.now() - jobCreateStartedAt,
+        }),
+      );
     } catch (error) {
+      this.logger.error(
+        JSON.stringify({
+          event: 'post_media_job_create_failed',
+          postId,
+          eventId,
+          durationMs: Date.now() - jobCreateStartedAt,
+          error: error instanceof Error ? error.message : String(error),
+        }),
+      );
       await this.deleteSources(sources);
       throw error;
     }
@@ -281,6 +305,7 @@ export class PostMediaProcessingService
 
   private async storeSource(file: UploadFileContract): Promise<StoredSource> {
     const sourceId = new mongo.ObjectId();
+    const storeStartedAt = Date.now();
     const stream = this.bucket.openUploadStreamWithId(
       sourceId,
       file.originalName,
@@ -288,11 +313,34 @@ export class PostMediaProcessingService
         metadata: { contentType: file.mimeType },
       },
     );
-    await new Promise<void>((resolve, reject) => {
-      stream.once('error', reject);
-      stream.once('finish', resolve);
-      stream.end(file.buffer);
-    });
+    try {
+      await new Promise<void>((resolve, reject) => {
+        stream.once('error', reject);
+        stream.once('finish', resolve);
+        stream.end(file.buffer);
+      });
+      this.logger.log(
+        JSON.stringify({
+          event: 'post_media_source_store_completed',
+          postId: file.targetId,
+          sourceId: sourceId.toHexString(),
+          sizeBytes: file.size,
+          durationMs: Date.now() - storeStartedAt,
+        }),
+      );
+    } catch (error) {
+      this.logger.error(
+        JSON.stringify({
+          event: 'post_media_source_store_failed',
+          postId: file.targetId,
+          sourceId: sourceId.toHexString(),
+          sizeBytes: file.size,
+          durationMs: Date.now() - storeStartedAt,
+          error: error instanceof Error ? error.message : String(error),
+        }),
+      );
+      throw error;
+    }
     return {
       sourceId: sourceId.toHexString(),
       targetId: file.targetId,
