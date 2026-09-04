@@ -1,10 +1,11 @@
 import { IQueryHandler, QueryHandler } from '@nestjs/cqrs';
 import { PostsQueryRepository } from '../../../infrastructure/repositories/post-repositories/posts.query.repository.js';
+import { UsersQueryRepository } from '../../../infrastructure/repositories/user-repositories/users.query.repository.js';
 import { PostsMapper } from '../../../api/mappers/posts.mapper.js';
 
 export class FindPostsByUserIdAndCursorQuery {
   constructor(
-    public readonly userId: string,
+    public readonly username: string,
     public readonly currentUserId: string,
     public readonly cursor: string | undefined,
     public readonly limit: number,
@@ -13,16 +14,22 @@ export class FindPostsByUserIdAndCursorQuery {
 
 @QueryHandler(FindPostsByUserIdAndCursorQuery)
 export class FindPostsByUserIdAndCursorQueryHandler implements IQueryHandler<FindPostsByUserIdAndCursorQuery> {
-  constructor(private readonly postsQueryRepository: PostsQueryRepository) {}
+  constructor(
+    private readonly postsQueryRepository: PostsQueryRepository,
+    private readonly usersQueryRepository: UsersQueryRepository,
+  ) {}
 
   async execute({
-    userId,
+    username,
     currentUserId,
     cursor,
     limit,
   }: FindPostsByUserIdAndCursorQuery) {
+    const user =
+      await this.usersQueryRepository.findByUsernameOrNotFound(username);
+
     const posts = await this.postsQueryRepository.findPostsByUserIdAndCursor(
-      userId,
+      user.id,
       cursor,
       limit,
     );
@@ -36,7 +43,7 @@ export class FindPostsByUserIdAndCursorQueryHandler implements IQueryHandler<Fin
     const nextCursor =
       hasNextPage && lastPost ? lastPost.createdAt.toISOString() : null;
 
-    const isOwner = userId === currentUserId;
+    const isOwner = user.id === currentUserId;
 
     return PostsMapper.toGetUserPostsView(
       items,

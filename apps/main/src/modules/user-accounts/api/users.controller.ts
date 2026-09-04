@@ -11,6 +11,7 @@ import { AccessTokenGuard } from './guards/access-token.guard.js';
 import { ApiGetUserProfile } from '../../../core/swagger/user-dto/get-user-profile.swagger.js';
 import { GetPostsQueryParamsDto } from './dto/get-posts-query-params.dto.js';
 import { FindPostsByUserIdAndCursorQuery } from '../application/query-handler/posts/find-posts-by-user-id-and-cursor.query-handler.js';
+import { ApiUserPosts } from '../../../core/swagger/posts-dto/get-user-posts.swagger.js';
 
 @Controller('users')
 export class UsersController {
@@ -24,16 +25,17 @@ export class UsersController {
     );
   }
 
-  @Get(':userId/posts')
+  @Get(':username/posts')
   @UseGuards(AccessTokenGuard)
+  @ApiUserPosts()
   getPostsForUser(
     @Query() query: GetPostsQueryParamsDto,
-    @Param('userId') userId: string,
+    @Param('username') username: string,
     @User() user: JwtAccessPayload,
   ) {
     return this.queryBus.execute(
       new FindPostsByUserIdAndCursorQuery(
-        userId,
+        username,
         user.userId,
         query.cursor,
         query.limit,
@@ -41,17 +43,17 @@ export class UsersController {
     );
   }
 
-  @Get(':userId/profile')
+  @Get(':username/profile')
   @UseGuards(AccessTokenGuard)
   @ApiGetUserProfile()
   async getUserProfile(
-    @Param('userId') userId: string,
+    @Param('username') username: string,
     @User() user: JwtAccessPayload,
   ): Promise<GetUserProfileType> {
     const currentUserId: string = user.userId;
 
     return this.queryBus.execute<GetUserProfileQuery, GetUserProfileType>(
-      new GetUserProfileQuery(userId, currentUserId),
+      new GetUserProfileQuery(username, currentUserId),
     );
   }
 }

@@ -1,11 +1,28 @@
+import {
+  ApiOperation,
+  ApiOkResponse,
+  ApiParam,
+  ApiQuery,
+  ApiBearerAuth,
+  ApiUnauthorizedResponse,
+} from '@nestjs/swagger';
 import { applyDecorators } from '@nestjs/common';
-import { ApiOkResponse, ApiOperation, ApiQuery } from '@nestjs/swagger';
 
-export function ApiGetAllPosts() {
+export function ApiUserPosts() {
   return applyDecorators(
+    ApiBearerAuth('accessToken'),
+
     ApiOperation({
-      summary: 'Get posts',
-      description: 'Returns posts with cursor-based pagination.',
+      summary: 'Get user posts',
+      description:
+        'Returns posts of a specific user with cursor-based pagination.',
+    }),
+
+    ApiParam({
+      name: 'username',
+      type: String,
+      description: 'Username of the user whose posts are requested.',
+      example: 'john_doe',
     }),
 
     ApiQuery({
@@ -28,39 +45,40 @@ export function ApiGetAllPosts() {
     }),
 
     ApiOkResponse({
-      description: 'Posts successfully retrieved.',
+      description: 'User posts successfully retrieved.',
       schema: {
         example: {
           items: [
             {
-              id: '550e8400-e29b-41d4-a716-446655440000',
+              id: '550e8400-e29b-41d4-a716-446655440001',
               description: 'My first post',
               images: [
                 {
-                  fileId: '550e8400-e29b-41d4-a716-446655440001',
+                  fileId: '550e8400-e29b-41d4-a716-446655440002',
                   url: 'https://example.com/image.webp',
                   width: 1920,
                   height: 1080,
                 },
               ],
               preview: {
-                fileId: '550e8400-e29b-41d4-a716-446655440001',
+                fileId: '550e8400-e29b-41d4-a716-446655440002',
                 url: 'https://example.com/preview.webp',
                 width: 400,
                 height: 225,
               },
               createdAt: '2026-09-03T10:30:00.000Z',
               willBeDeleted: null,
-              author: {
-                id: '550e8400-e29b-41d4-a716-446655440002',
-                username: 'john_doe',
-              },
             },
           ],
           nextCursor: '2026-09-03T10:20:00.000Z',
           hasNextPage: true,
+          isOwner: false,
         },
       },
+    }),
+
+    ApiUnauthorizedResponse({
+      description: 'Access token is missing, invalid, or expired.',
     }),
   );
 }
