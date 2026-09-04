@@ -1,7 +1,6 @@
 import { Post } from '../../../../generated/prisma/client.js';
 import { PostViewType } from '../view-types/posts/post-view.type.js';
 import { GetAllPostsViewType } from '../view-types/posts/get-posts-view.type.js';
-import { FileType } from '../view-types/files/file.type.js';
 import { GetUserPostsViewType } from '../view-types/posts/get-user-posts-view.type.js';
 import { PostWithAuthor } from '../../infrastructure/types/post-with-author.type.js';
 import { PostWithAuthorViewType } from '../view-types/posts/post-with-author-view.type.js';
@@ -11,8 +10,8 @@ export class PostsMapper {
     return {
       id: post.id,
       description: post.description,
-      images: post.images as FileType[],
-      preview: post.preview as FileType,
+      images: post.images,
+      preview: post.preview,
       createdAt: post.createdAt.toISOString(),
       willBeDeleted: post.willBeDeleted?.toISOString() || null,
     };
@@ -22,8 +21,8 @@ export class PostsMapper {
     return {
       id: post.id,
       description: post.description,
-      images: post.images as FileType[],
-      preview: post.preview as FileType,
+      images: post.images,
+      preview: post.preview,
       createdAt: post.createdAt.toISOString(),
       willBeDeleted: post.willBeDeleted?.toISOString() || null,
 

@@ -1,10 +1,13 @@
-import { FileType } from '../files/file.type.js';
+import {
+  PostImages,
+  PostPreview,
+} from '../../../../../core/types/prisma/json-types.js';
 
 export type PostViewType = {
   id: string;
   description: string;
-  images: FileType[];
-  preview: FileType;
+  images: PostImages;
+  preview: PostPreview;
   createdAt: string;
   willBeDeleted: string | null;
 };
