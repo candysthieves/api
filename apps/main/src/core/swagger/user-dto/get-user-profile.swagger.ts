@@ -10,7 +10,7 @@ import {
 
 export function ApiGetUserProfile() {
   return applyDecorators(
-    ApiBearerAuth(),
+    ApiBearerAuth('accessToken'),
 
     ApiOperation({
       summary: 'Get user profile',
@@ -34,10 +34,18 @@ export function ApiGetUserProfile() {
           username: 'john_doe',
           description:
             'Превращаю макеты дизайнеров в живой код, воюю с центрированием div и делаю так, чтобы пользователям было красиво и удобно.',
-          avatarUrl:
-            'https://lumusapp-528592447405-eu-north-1-an.s3.eu-north-1.amazonaws.com/files/POST/f5a18989-10d9-4b0b-aac1-2df4430fa43c.webp',
-          avatarPreviewUrl:
-            'https://lumusapp-528592447405-eu-north-1-an.s3.eu-north-1.amazonaws.com/files/POST_PREVIEW/c381f4c9-a077-4e47-93b5-c434156087df.webp',
+          avatarUrl: {
+            fileId: '550e8400-e29b-41d4-a716-446655440001',
+            url: 'https://lumusapp-528592447405-eu-north-1-an.s3.eu-north-1.amazonaws.com/files/fallback/profile.webp',
+            width: 8000,
+            height: 8000,
+          },
+          avatarPreviewUrl: {
+            fileId: '550e8400-e29b-41d4-a716-446655440002',
+            url: 'https://lumusapp-528592447405-eu-north-1-an.s3.eu-north-1.amazonaws.com/files/fallback/profile.webp',
+            width: 8000,
+            height: 8000,
+          },
           followersCount: 0,
           followingCount: 0,
           publicationsCount: 12,
@@ -47,7 +55,7 @@ export function ApiGetUserProfile() {
     }),
 
     ApiUnauthorizedResponse({
-      description: 'Access token is missing or invalid',
+      description: 'Access token is missing, invalid, or expired.',
     }),
 
     ApiNotFoundResponse({

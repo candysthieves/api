@@ -7,20 +7,33 @@ export function ApiSseEvents() {
     ApiOperation({
       summary: 'Subscribe to server-sent events',
       description:
-        'Opens a persistent SSE connection and receives real-time events.',
+        'Opens a persistent SSE connection and receives real-time events when posts are created and their media is processed.',
     }),
     ApiResponse({
       status: 200,
-      description: 'SSE connection established',
+      description: 'SSE connection established. Emits events when a post is ready.',
       schema: {
         type: 'object',
         properties: {
           type: {
             type: 'string',
-            enum: Object.values(SseEventEnum),
+            enum: [SseEventEnum.POST_CREATED],
             example: SseEventEnum.POST_CREATED,
+            description: 'Event type (currently only post-created is emitted).',
+          },
+          data: {
+            type: 'object',
+            properties: {
+              postId: {
+                type: 'string',
+                format: 'uuid',
+                example: '550e8400-e29b-41d4-a716-446655440000',
+              },
+            },
+            required: ['postId'],
           },
         },
+        required: ['type', 'data'],
       },
     }),
   );

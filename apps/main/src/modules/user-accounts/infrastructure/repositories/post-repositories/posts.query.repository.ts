@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../../../infrastructure/prisma/prisma.service.js';
 import { Post } from '../../../../../generated/prisma/client.js';
+import { PostWithAuthor } from '../../types/post-with-author.type.js';
 
 @Injectable()
 export class PostsQueryRepository {
@@ -36,24 +37,30 @@ export class PostsQueryRepository {
     });
   }
 
-  async getPostsWithPagination(
+  async findPostsByCursor(
     cursor: string | undefined,
     limit: number,
-  ): Promise<Post[]> {
-    return this.prismaPost.findMany({
-      where: cursor
-        ? {
-            createdAt: {
-              lt: new Date(cursor),
-            },
-          }
-        : undefined,
-
+  ): Promise<PostWithAuthor[]> {
+    return this.prisma.post.findMany({
+      where: {
+        ...(cursor && {
+          createdAt: {
+            lt: new Date(cursor),
+          },
+        }),
+      },
       orderBy: {
         createdAt: 'desc',
       },
-
       take: limit + 1,
+      include: {
+        user: {
+          select: {
+            id: true,
+            username: true,
+          },
+        },
+      },
     });
   }
 }

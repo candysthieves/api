@@ -34,7 +34,7 @@ import { ApiSoftDeletePost } from '../../../core/swagger/posts-dto/soft-delete-p
 import { UpdatePostDto } from './dto/update-post.dto.js';
 import { UpdatePostCommand } from '../application/use-cases/posts-use-cases/update-post.usecase.js';
 import { ApiUpdatePost } from '../../../core/swagger/posts-dto/update-post.swagger.js';
-import { ApiGetPosts } from '../../../core/swagger/posts-dto/get-posts.swagger.js';
+import { ApiGetAllPosts } from '../../../core/swagger/posts-dto/get-posts.swagger.js';
 
 @ApiTags('Posts')
 @Controller('posts')
@@ -44,8 +44,8 @@ export class PostController {
     private readonly queryBus: QueryBus,
   ) {}
 
-  @Get()
-  @ApiGetPosts()
+  @Get('all-posts')
+  @ApiGetAllPosts()
   getAllPosts(@Query() query: GetPostsQueryParamsDto) {
     return this.queryBus.execute<GetAllPostsQuery>(
       new GetAllPostsQuery(query.cursor, query.limit),

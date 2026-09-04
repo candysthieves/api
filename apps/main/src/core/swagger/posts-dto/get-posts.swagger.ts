@@ -1,7 +1,7 @@
 import { applyDecorators } from '@nestjs/common';
 import { ApiOkResponse, ApiOperation, ApiQuery } from '@nestjs/swagger';
 
-export function ApiGetPosts() {
+export function ApiGetAllPosts() {
   return applyDecorators(
     ApiOperation({
       summary: 'Get posts',
@@ -39,17 +39,22 @@ export function ApiGetPosts() {
                 {
                   fileId: '550e8400-e29b-41d4-a716-446655440001',
                   url: 'https://example.com/image.webp',
-                  width: '1920',
-                  height: '1080',
+                  width: 1920,
+                  height: 1080,
                 },
               ],
               preview: {
                 fileId: '550e8400-e29b-41d4-a716-446655440001',
                 url: 'https://example.com/preview.webp',
-                width: '400',
-                height: '225',
+                width: 400,
+                height: 225,
               },
               createdAt: '2026-09-03T10:30:00.000Z',
+              willBeDeleted: null,
+              author: {
+                id: '550e8400-e29b-41d4-a716-446655440002',
+                username: 'john_doe',
+              },
             },
           ],
           nextCursor: '2026-09-03T10:20:00.000Z',

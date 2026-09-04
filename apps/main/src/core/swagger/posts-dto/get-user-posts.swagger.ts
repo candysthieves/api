@@ -1,13 +1,17 @@
-import { applyDecorators } from '@nestjs/common';
 import {
   ApiOperation,
   ApiOkResponse,
   ApiParam,
   ApiQuery,
+  ApiBearerAuth,
+  ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
+import { applyDecorators } from '@nestjs/common';
 
 export function ApiUserPosts() {
   return applyDecorators(
+    ApiBearerAuth('accessToken'),
+
     ApiOperation({
       summary: 'Get user posts',
       description:
@@ -52,17 +56,18 @@ export function ApiUserPosts() {
                 {
                   fileId: '550e8400-e29b-41d4-a716-446655440002',
                   url: 'https://example.com/image.webp',
-                  width: '1920',
-                  height: '1080',
+                  width: 1920,
+                  height: 1080,
                 },
               ],
               preview: {
                 fileId: '550e8400-e29b-41d4-a716-446655440002',
                 url: 'https://example.com/preview.webp',
-                width: '400',
-                height: '225',
+                width: 400,
+                height: 225,
               },
               createdAt: '2026-09-03T10:30:00.000Z',
+              willBeDeleted: null,
             },
           ],
           nextCursor: '2026-09-03T10:20:00.000Z',
@@ -70,6 +75,10 @@ export function ApiUserPosts() {
           isOwner: false,
         },
       },
+    }),
+
+    ApiUnauthorizedResponse({
+      description: 'Access token is missing, invalid, or expired.',
     }),
   );
 }
