@@ -19,10 +19,10 @@ export function ApiGetUserProfile() {
     }),
 
     ApiParam({
-      name: 'username',
-      description: 'Username of the user whose profile should be retrieved',
+      name: 'userId',
+      description: 'ID of the user whose profile should be retrieved',
       type: String,
-      example: 'john_doe',
+      example: 'f5a18989-10d9-4b0b-aac1-2df4430fa43c',
     }),
 
     ApiOkResponse({

@@ -19,10 +19,10 @@ export function ApiUserPosts() {
     }),
 
     ApiParam({
-      name: 'username',
+      name: 'userId',
       type: String,
-      description: 'Username of the user whose posts are requested.',
-      example: 'john_doe',
+      description: 'Id of the user whose posts are requested.',
+      example: '550e8400-e29b-41d4-a716-446655440000',
     }),
 
     ApiQuery({
