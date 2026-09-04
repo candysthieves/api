@@ -7,10 +7,13 @@ import { fileURLToPath } from 'node:url';
 import { DomainExceptionFilter } from '../core/exceptions/domain-exception.filter.js';
 import { DomainError } from '../core/exceptions/domain-error.js';
 import { DomainExceptions } from '../core/exceptions/domain-exceptions.js';
+import { HttpRequestLoggingMiddleware } from '../core/logging/http-request-logging.middleware.js';
 
 const currentDirectory = dirname(fileURLToPath(import.meta.url));
 
 export function setupApp(app: NestExpressApplication): void {
+  const requestLogger = new HttpRequestLoggingMiddleware();
+  app.use(requestLogger.use.bind(requestLogger));
   app.useStaticAssets(join(currentDirectory, '..', 'assets'), {
     prefix: '/api/v1/swagger-assets',
   });

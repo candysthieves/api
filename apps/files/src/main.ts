@@ -2,8 +2,12 @@ import { NestFactory } from '@nestjs/core';
 import { FilesConfig } from './files.config.js';
 import { AppModule } from './app.module.js';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
+import { Logger } from '@nestjs/common';
+import { HttpRequestLoggingMiddleware } from './core/logging/http-request-logging.middleware.js';
+import { RpcLoggingInterceptor } from './core/logging/rpc-logging.interceptor.js';
 
 async function bootstrap() {
+  const logger = new Logger('Bootstrap');
   const app = await NestFactory.create(AppModule);
 
   const config = app.get(FilesConfig);
@@ -15,7 +19,7 @@ async function bootstrap() {
       queue: config.rabbitMqMainToFilesQueue,
       noAck: false,
     },
-  });
+  }, { inheritAppConfig: true });
 
   app.connectMicroservice<MicroserviceOptions>({
     transport: Transport.TCP,
@@ -23,13 +27,17 @@ async function bootstrap() {
       host: config.tcpHost,
       port: config.tcpPort,
     },
-  });
+  }, { inheritAppConfig: true });
 
+  const requestLogger = new HttpRequestLoggingMiddleware();
+  app.use(requestLogger.use.bind(requestLogger));
+  app.useGlobalInterceptors(new RpcLoggingInterceptor());
   await app.init();
   await app.startAllMicroservices();
 
-  console.log(
-    `Files service started on TCP ${config.tcpHost}:${config.tcpPort}`,
-  );
+  logger.log(JSON.stringify({ event: 'service_started', service: 'files', tcpHost: config.tcpHost, tcpPort: config.tcpPort }));
 }
-bootstrap();
+bootstrap().catch((error: unknown) => {
+  new Logger('Bootstrap').fatal('Files service failed to start', error instanceof Error ? error.stack : undefined);
+  process.exitCode = 1;
+});

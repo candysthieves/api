@@ -4,8 +4,11 @@ import { AppModule } from './app.module.js';
 import { AppConfig } from './app.config.js';
 import { setupApp } from './setup/app-setup.js';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
+import { Logger } from '@nestjs/common';
+import { RpcLoggingInterceptor } from './core/logging/rpc-logging.interceptor.js';
 
 async function bootstrap() {
+  const logger = new Logger('Bootstrap');
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
   const appConfig = app.get<AppConfig>(AppConfig);
 
@@ -16,12 +19,16 @@ async function bootstrap() {
       queue: appConfig.rabbitMqFilesToMainQueue,
       noAck: false,
     },
-  });
+  }, { inheritAppConfig: true });
 
   setupApp(app);
+  app.useGlobalInterceptors(new RpcLoggingInterceptor());
 
   await app.startAllMicroservices();
   await app.listen(appConfig.port);
-  console.log('Server started on port: ' + appConfig.port);
+  logger.log(JSON.stringify({ event: 'service_started', service: 'main', port: appConfig.port }));
 }
-bootstrap();
+bootstrap().catch((error: unknown) => {
+  new Logger('Bootstrap').fatal('Main service failed to start', error instanceof Error ? error.stack : undefined);
+  process.exitCode = 1;
+});
