@@ -67,11 +67,46 @@ export class PostMediaProcessingService
 
     const postId = files[0].targetId;
     const eventId = crypto.randomUUID();
-    const sources = await Promise.all(
-      files.map((file) => this.storeSource(file)),
+    const acceptStartedAt = Date.now();
+    const totalSizeBytes = files.reduce((total, file) => total + file.size, 0);
+    this.logger.log(
+      JSON.stringify({
+        event: 'post_media_accept_started',
+        postId,
+        eventId,
+        fileCount: files.length,
+        totalSizeBytes,
+      }),
     );
+
+    let sources: StoredSource[];
+    try {
+      sources = await Promise.all(
+        files.map((file) => this.storeSource(file, eventId)),
+      );
+    } catch (error) {
+      this.logger.error(
+        JSON.stringify({
+          event: 'post_media_accept_failed',
+          durationMs: Date.now() - acceptStartedAt,
+          postId,
+          eventId,
+          phase: 'store_sources',
+          error: error instanceof Error ? error.message : String(error),
+        }),
+      );
+      throw error;
+    }
+
     let job: StoredEventDocument;
     const jobCreateStartedAt = Date.now();
+    this.logger.log(
+      JSON.stringify({
+        event: 'post_media_job_create_started',
+        postId,
+        eventId,
+      }),
+    );
     try {
       job = await this.jobs.create({
         eventId,
@@ -84,18 +119,18 @@ export class PostMediaProcessingService
       this.logger.log(
         JSON.stringify({
           event: 'post_media_job_create_completed',
+          durationMs: Date.now() - jobCreateStartedAt,
           postId,
           eventId,
-          durationMs: Date.now() - jobCreateStartedAt,
         }),
       );
     } catch (error) {
       this.logger.error(
         JSON.stringify({
           event: 'post_media_job_create_failed',
+          durationMs: Date.now() - jobCreateStartedAt,
           postId,
           eventId,
-          durationMs: Date.now() - jobCreateStartedAt,
           error: error instanceof Error ? error.message : String(error),
         }),
       );
@@ -104,6 +139,16 @@ export class PostMediaProcessingService
     }
 
     setImmediate(() => void this.processPending());
+    this.logger.log(
+      JSON.stringify({
+        event: 'post_media_accept_completed',
+        durationMs: Date.now() - acceptStartedAt,
+        postId,
+        eventId,
+        fileCount: files.length,
+        totalSizeBytes,
+      }),
+    );
 
     return ObjectResult.success({ accepted: true, eventId: job.eventId });
   }
@@ -303,9 +348,21 @@ export class PostMediaProcessingService
     return job.data as unknown as PostMediaJobData;
   }
 
-  private async storeSource(file: UploadFileContract): Promise<StoredSource> {
+  private async storeSource(
+    file: UploadFileContract,
+    eventId: string,
+  ): Promise<StoredSource> {
     const sourceId = new mongo.ObjectId();
     const storeStartedAt = Date.now();
+    this.logger.log(
+      JSON.stringify({
+        event: 'post_media_source_store_started',
+        postId: file.targetId,
+        eventId,
+        sourceId: sourceId.toHexString(),
+        sizeBytes: file.size,
+      }),
+    );
     const stream = this.bucket.openUploadStreamWithId(
       sourceId,
       file.originalName,
@@ -322,20 +379,22 @@ export class PostMediaProcessingService
       this.logger.log(
         JSON.stringify({
           event: 'post_media_source_store_completed',
-          postId: file.targetId,
-          sourceId: sourceId.toHexString(),
-          sizeBytes: file.size,
           durationMs: Date.now() - storeStartedAt,
+          sizeBytes: file.size,
+          postId: file.targetId,
+          eventId,
+          sourceId: sourceId.toHexString(),
         }),
       );
     } catch (error) {
       this.logger.error(
         JSON.stringify({
           event: 'post_media_source_store_failed',
-          postId: file.targetId,
-          sourceId: sourceId.toHexString(),
-          sizeBytes: file.size,
           durationMs: Date.now() - storeStartedAt,
+          sizeBytes: file.size,
+          postId: file.targetId,
+          eventId,
+          sourceId: sourceId.toHexString(),
           error: error instanceof Error ? error.message : String(error),
         }),
       );
