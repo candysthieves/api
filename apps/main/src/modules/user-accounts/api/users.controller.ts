@@ -1,4 +1,4 @@
-import { Controller, Get, Param, UseGuards } from '@nestjs/common';
+import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common';
 import { QueryBus } from '@nestjs/cqrs';
 import { GetUsersCountQuery } from '../application/query-handler/users/get-users-count-query-handler.js';
 import { GetUsersCountType } from './view-types/users/get-users-count.type.js';
@@ -9,6 +9,8 @@ import { User } from './decorators/user.decorator.js';
 import type { JwtAccessPayload } from '../../../core/types/jwt-payload.type.js';
 import { AccessTokenGuard } from './guards/access-token.guard.js';
 import { ApiGetUserProfile } from '../../../core/swagger/user-dto/get-user-profile.swagger.js';
+import { GetPostsQueryParamsDto } from './dto/get-posts-query-params.dto.js';
+import { FindPostsByUserIdAndCursorQuery } from '../application/query-handler/posts/find-posts-by-user-id-and-cursor.query-handler.js';
 
 @Controller('users')
 export class UsersController {
@@ -19,6 +21,23 @@ export class UsersController {
   async getUsersCount(): Promise<GetUsersCountType> {
     return this.queryBus.execute<GetUsersCountQuery, GetUsersCountType>(
       new GetUsersCountQuery(),
+    );
+  }
+
+  @Get(':userId/posts')
+  @UseGuards(AccessTokenGuard)
+  getPostsForUser(
+    @Query() query: GetPostsQueryParamsDto,
+    @Param('userId') userId: string,
+    @User() user: JwtAccessPayload,
+  ) {
+    return this.queryBus.execute(
+      new FindPostsByUserIdAndCursorQuery(
+        userId,
+        user.userId,
+        query.cursor,
+        query.limit,
+      ),
     );
   }
 

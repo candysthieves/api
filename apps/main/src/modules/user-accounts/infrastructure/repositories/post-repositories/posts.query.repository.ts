@@ -13,6 +13,29 @@ export class PostsQueryRepository {
     return this.prismaPost.count({ where: { userId: userId } });
   }
 
+  async findPostsByUserIdAndCursor(
+    userId: string,
+    cursor: string | undefined,
+    limit: number,
+  ) {
+    return this.prismaPost.findMany({
+      where: {
+        userId,
+        ...(cursor && {
+          createdAt: {
+            lt: new Date(cursor),
+          },
+        }),
+      },
+
+      orderBy: {
+        createdAt: 'desc',
+      },
+
+      take: limit + 1,
+    });
+  }
+
   async getPostsWithPagination(
     cursor: string | undefined,
     limit: number,
