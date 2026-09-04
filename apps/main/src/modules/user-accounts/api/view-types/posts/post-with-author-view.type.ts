@@ -1,4 +1,8 @@
-import { FileType } from '../../../../../core/types/prisma/json-types.js';
+import {
+  PostImages,
+  PostPreview,
+} from '../../../../../core/types/prisma/json-types.js';
+
 
 type PostAuthorView = {
   id: string;
@@ -8,8 +12,8 @@ type PostAuthorView = {
 export type PostWithAuthorViewType = {
   id: string;
   description: string;
-  images: FileType[];
-  preview: FileType;
+  images: PostImages;
+  preview: PostPreview;
   createdAt: string;
   willBeDeleted: string | null;
   author: PostAuthorView;
