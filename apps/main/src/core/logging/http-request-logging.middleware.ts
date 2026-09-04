@@ -9,10 +9,16 @@ export class HttpRequestLoggingMiddleware implements NestMiddleware {
   private readonly logger = new Logger(HttpRequestLoggingMiddleware.name);
 
   use(request: Request, response: Response, next: NextFunction): void {
+    if (!isLoginRequest(request)) {
+      next();
+      return;
+    }
+
     const requestId = getRequestId(request);
     const startedAt = Date.now();
     let completed = false;
     response.setHeader(REQUEST_ID_HEADER, requestId);
+    (request as Request & { requestId?: string }).requestId = requestId;
     this.logger.log(JSON.stringify({ event: 'http_request_started', requestId, method: request.method, path: request.path, remoteAddress: request.ip }));
 
     const complete = (event: 'http_request_completed' | 'http_request_aborted') => {
@@ -29,4 +35,8 @@ export class HttpRequestLoggingMiddleware implements NestMiddleware {
 function getRequestId(request: Request): string {
   const suppliedId = request.header(REQUEST_ID_HEADER);
   return suppliedId && /^[a-zA-Z0-9_-]{1,128}$/.test(suppliedId) ? suppliedId : randomUUID();
+}
+
+function isLoginRequest(request: Request): boolean {
+  return request.method === 'POST' && request.path === '/api/v1/auth/login';
 }

@@ -102,6 +102,7 @@ export class AuthController {
         typeof req.headers['user-agent'] === 'string'
           ? req.headers['user-agent']
           : '',
+        (req as Request & { requestId?: string }).requestId ?? '',
       ),
     );
     this.cookieAdapter.setRefreshCookie(res, refreshToken);

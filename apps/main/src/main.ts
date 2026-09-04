@@ -5,7 +5,7 @@ import { AppConfig } from './app.config.js';
 import { setupApp } from './setup/app-setup.js';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 import { Logger } from '@nestjs/common';
-import { RpcLoggingInterceptor } from './core/logging/rpc-logging.interceptor.js';
+import { HttpHandlerLoggingInterceptor } from './core/logging/http-handler-logging.interceptor.js';
 
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
@@ -22,7 +22,7 @@ async function bootstrap() {
   }, { inheritAppConfig: true });
 
   setupApp(app);
-  app.useGlobalInterceptors(new RpcLoggingInterceptor());
+  app.useGlobalInterceptors(new HttpHandlerLoggingInterceptor());
 
   await app.startAllMicroservices();
   await app.listen(appConfig.port);

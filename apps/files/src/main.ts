@@ -3,8 +3,6 @@ import { FilesConfig } from './files.config.js';
 import { AppModule } from './app.module.js';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 import { Logger } from '@nestjs/common';
-import { HttpRequestLoggingMiddleware } from './core/logging/http-request-logging.middleware.js';
-import { RpcLoggingInterceptor } from './core/logging/rpc-logging.interceptor.js';
 
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
@@ -29,9 +27,6 @@ async function bootstrap() {
     },
   }, { inheritAppConfig: true });
 
-  const requestLogger = new HttpRequestLoggingMiddleware();
-  app.use(requestLogger.use.bind(requestLogger));
-  app.useGlobalInterceptors(new RpcLoggingInterceptor());
   await app.init();
   await app.startAllMicroservices();
 
