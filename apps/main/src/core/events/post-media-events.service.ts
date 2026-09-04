@@ -138,6 +138,7 @@ export class PostMediaEventsService implements OnModuleInit, OnModuleDestroy {
   }
 
   private async applyMediaEvent(event: {
+    eventId: string;
     type: string;
     data: Prisma.JsonValue;
   }): Promise<void> {
@@ -154,7 +155,14 @@ export class PostMediaEventsService implements OnModuleInit, OnModuleDestroy {
         },
       });
       if (!updatedPost.count) {
-        throw new Error(`POST_NOT_FOUND:${data.postId}`);
+        this.logger.warn(
+          JSON.stringify({
+            event: 'post_media_event_discarded_post_not_found',
+            eventId: event.eventId,
+            postId: data.postId,
+          }),
+        );
+        return;
       }
 
       this.sse.emit(SseEventEnum.POST_CREATED, { postId: data.postId });
