@@ -43,6 +43,7 @@ import { GetUserProfileQueryHandler } from './application/query-handler/users/ge
 import { PostsQueryRepository } from './infrastructure/repositories/post-repositories/posts.query.repository.js';
 import { GetAllPostsQueryHandler } from './application/query-handler/posts/get-all-posts.query-handler.js';
 import { FindPostsByUserIdAndCursorQueryHandler } from './application/query-handler/posts/find-posts-by-user-id-and-cursor.query-handler.js';
+import { FindDeletedPostsByUserIdAndCursorQueryHandler } from './application/query-handler/posts/find-deleted-posts-by-user-id-and-cursor.query-handler.js';
 
 @Module({
   imports: [CqrsModule, EventsModule],
@@ -77,6 +78,7 @@ import { FindPostsByUserIdAndCursorQueryHandler } from './application/query-hand
     GetUsersCountQueryHandler,
     GetUserProfileQueryHandler,
     FindPostsByUserIdAndCursorQueryHandler,
+    FindDeletedPostsByUserIdAndCursorQueryHandler,
     UsersRepository,
     SessionsRepository,
     OAuthRepository,

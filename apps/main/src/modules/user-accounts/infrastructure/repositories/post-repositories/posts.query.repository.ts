@@ -37,6 +37,32 @@ export class PostsQueryRepository {
     });
   }
 
+  async findDeletedPostsByUserIdAndCursor(
+    userId: string,
+    cursor: string | undefined,
+    limit: number,
+  ) {
+    return this.prismaPost.findMany({
+      where: {
+        userId,
+        willBeDeleted: {
+          not: null,
+        },
+        ...(cursor && {
+          createdAt: {
+            lt: new Date(cursor),
+          },
+        }),
+      },
+
+      orderBy: {
+        createdAt: 'desc',
+      },
+
+      take: limit + 1,
+    });
+  }
+
   async findPostsByCursor(
     cursor: string | undefined,
     limit: number,
