@@ -42,6 +42,7 @@ import { GoogleStrategy } from './infrastructure/strategies/google.strategy.js';
 import { GetUserProfileQueryHandler } from './application/query-handler/users/get-user-profile-query-handler.js';
 import { PostsQueryRepository } from './infrastructure/repositories/post-repositories/posts.query.repository.js';
 import { GetAllPostsQueryHandler } from './application/query-handler/posts/get-all-posts.query-handler.js';
+import { FindPostsByUserIdAndCursorQueryHandler } from './application/query-handler/posts/find-posts-by-user-id-and-cursor.query-handler.js';
 
 @Module({
   imports: [CqrsModule, EventsModule],
@@ -75,6 +76,7 @@ import { GetAllPostsQueryHandler } from './application/query-handler/posts/get-a
     ProfileQueryHandler,
     GetUsersCountQueryHandler,
     GetUserProfileQueryHandler,
+    FindPostsByUserIdAndCursorQueryHandler,
     UsersRepository,
     SessionsRepository,
     OAuthRepository,

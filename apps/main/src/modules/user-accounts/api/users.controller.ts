@@ -11,6 +11,7 @@ import { AccessTokenGuard } from './guards/access-token.guard.js';
 import { ApiGetUserProfile } from '../../../core/swagger/user-dto/get-user-profile.swagger.js';
 import { GetPostsQueryParamsDto } from './dto/get-posts-query-params.dto.js';
 import { FindPostsByUserIdAndCursorQuery } from '../application/query-handler/posts/find-posts-by-user-id-and-cursor.query-handler.js';
+import { ApiUserPosts } from '../../../core/swagger/posts-dto/get-user-posts.swagger.js';
 
 @Controller('users')
 export class UsersController {
@@ -26,6 +27,7 @@ export class UsersController {
 
   @Get(':userId/posts')
   @UseGuards(AccessTokenGuard)
+  @ApiUserPosts()
   getPostsForUser(
     @Query() query: GetPostsQueryParamsDto,
     @Param('userId') userId: string,
