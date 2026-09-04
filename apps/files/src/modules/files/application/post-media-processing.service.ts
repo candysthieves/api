@@ -213,8 +213,17 @@ export class PostMediaProcessingService
   }
 
   private async process(job: StoredEventDocument): Promise<void> {
+    const startedAt = Date.now();
     let releaseSources = false;
     const data = this.getJobData(job);
+    this.logger.log(
+      JSON.stringify({
+        event: 'post_media_job_processing_started',
+        jobId: job._id.toString(),
+        postId: data.postId,
+        attempt: job.attempts,
+      }),
+    );
     try {
       if (!data.sources?.length) {
         await this.fail(job, SOURCE_BUFFER_MISSING, 'Source files are missing');
@@ -224,15 +233,43 @@ export class PostMediaProcessingService
       const sourceFiles = await Promise.all(
         data.sources.map((source) => this.loadSource(source)),
       );
+      this.logger.log(
+        JSON.stringify({
+          event: 'post_media_sources_loaded',
+          durationMs: Date.now() - startedAt,
+          jobId: job._id.toString(),
+          postId: data.postId,
+          sourceCount: sourceFiles.length,
+        }),
+      );
 
       const images: FileViewType[] = [];
-      for (const file of sourceFiles) {
+      for (const [index, file] of sourceFiles.entries()) {
         const saved = await this.files.saveFile(file, FileType.POST);
         images.push(FileMapper.toFileView(saved, this.s3.getUrl(saved.key)));
+        this.logger.log(
+          JSON.stringify({
+            event: 'post_media_image_saved',
+            durationMs: Date.now() - startedAt,
+            jobId: job._id.toString(),
+            postId: data.postId,
+            index,
+            fileId: saved.fileId,
+          }),
+        );
       }
       const preview = await this.files.saveFile(
         sourceFiles[0],
         FileType.POST_PREVIEW,
+      );
+      this.logger.log(
+        JSON.stringify({
+          event: 'post_media_preview_saved',
+          durationMs: Date.now() - startedAt,
+          jobId: job._id.toString(),
+          postId: data.postId,
+          fileId: preview.fileId,
+        }),
       );
       const media = FileMapper.toFilesResult(
         sourceFiles[0].targetId,
@@ -240,11 +277,20 @@ export class PostMediaProcessingService
         FileMapper.toFileView(preview, this.s3.getUrl(preview.key)),
       );
 
-      await this.events.create('post.media.processed', {
+      const outputEvent = await this.events.create('post.media.processed', {
         postId: media.targetId,
         images: media.files,
         preview: media.preview,
       });
+      this.logger.log(
+        JSON.stringify({
+          event: 'post_media_processed_event_created',
+          durationMs: Date.now() - startedAt,
+          jobId: job._id.toString(),
+          postId: data.postId,
+          outputEventId: outputEvent.eventId,
+        }),
+      );
       await this.jobs
         .updateOne(
           { _id: job._id },
@@ -253,9 +299,28 @@ export class PostMediaProcessingService
           },
         )
         .exec();
+      this.logger.log(
+        JSON.stringify({
+          event: 'post_media_job_processing_completed',
+          durationMs: Date.now() - startedAt,
+          jobId: job._id.toString(),
+          postId: data.postId,
+          outputEventId: outputEvent.eventId,
+        }),
+      );
       releaseSources = true;
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
+      this.logger.error(
+        JSON.stringify({
+          event: 'post_media_job_processing_failed',
+          durationMs: Date.now() - startedAt,
+          jobId: job._id.toString(),
+          postId: data.postId,
+          attempt: job.attempts,
+          error: message,
+        }),
+      );
       if (job.attempts < MAX_PROCESSING_ATTEMPTS) {
         await this.jobs
           .updateOne(
