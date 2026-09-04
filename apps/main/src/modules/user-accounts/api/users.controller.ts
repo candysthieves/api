@@ -11,7 +11,9 @@ import { AccessTokenGuard } from './guards/access-token.guard.js';
 import { ApiGetUserProfile } from '../../../core/swagger/user-dto/get-user-profile.swagger.js';
 import { GetPostsQueryParamsDto } from './dto/get-posts-query-params.dto.js';
 import { FindPostsByUserIdAndCursorQuery } from '../application/query-handler/posts/find-posts-by-user-id-and-cursor.query-handler.js';
+import { FindDeletedPostsByUserIdAndCursorQuery } from '../application/query-handler/posts/find-deleted-posts-by-user-id-and-cursor.query-handler.js';
 import { ApiUserPosts } from '../../../core/swagger/posts-dto/get-user-posts.swagger.js';
+import { ApiUserDeletedPosts } from '../../../core/swagger/posts-dto/get-user-deleted-posts.swagger.js';
 
 @Controller('users')
 export class UsersController {
@@ -35,6 +37,24 @@ export class UsersController {
   ) {
     return this.queryBus.execute(
       new FindPostsByUserIdAndCursorQuery(
+        userId,
+        user.userId,
+        query.cursor,
+        query.limit,
+      ),
+    );
+  }
+
+  @Get(':userId/deleted-posts')
+  @UseGuards(AccessTokenGuard)
+  @ApiUserDeletedPosts()
+  getDeletedPostsForUser(
+    @Query() query: GetPostsQueryParamsDto,
+    @Param('userId') userId: string,
+    @User() user: JwtAccessPayload,
+  ) {
+    return this.queryBus.execute(
+      new FindDeletedPostsByUserIdAndCursorQuery(
         userId,
         user.userId,
         query.cursor,
