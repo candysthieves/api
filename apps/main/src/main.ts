@@ -6,10 +6,20 @@ import { setupApp } from './setup/app-setup.js';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 import { Logger } from '@nestjs/common';
 import { HttpHandlerLoggingInterceptor } from './core/logging/http-handler-logging.interceptor.js';
+import { getRuntimeResources } from './core/logging/runtime-resources.js';
+import { ApplicationLogger } from './core/logging/application-logger.js';
 
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
-  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  logger.log(
+    JSON.stringify({
+      event: 'runtime_resources_detected',
+      ...(await getRuntimeResources()),
+    }),
+  );
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
+    logger: new ApplicationLogger(),
+  });
   const appConfig = app.get<AppConfig>(AppConfig);
 
   app.connectMicroservice<MicroserviceOptions>({

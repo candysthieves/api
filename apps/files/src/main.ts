@@ -3,10 +3,13 @@ import { FilesConfig } from './files.config.js';
 import { AppModule } from './app.module.js';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 import { Logger } from '@nestjs/common';
+import { ApplicationLogger } from './core/logging/application-logger.js';
 
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, {
+    logger: new ApplicationLogger(),
+  });
 
   const config = app.get(FilesConfig);
 
