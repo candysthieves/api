@@ -10,29 +10,34 @@ import { UploadFileContract } from '@libs/contracts';
 export class FilesService {
   private readonly logger = new Logger(FilesService.name);
 
+  private log(traceId: string, event: Record<string, unknown>): void {
+    if (traceId) this.logger.log(JSON.stringify({ ...event, traceId }));
+  }
+
+  private error(traceId: string, event: Record<string, unknown>): void {
+    if (traceId) this.logger.error(JSON.stringify({ ...event, traceId }));
+  }
+
   constructor(
     @InjectModel(File.name) private readonly fileModel: Model<FileDocument>,
     private readonly s3: S3Adapter,
     private readonly imageProcessing: ImageProcessingService,
   ) {}
 
-  async saveFile(file: UploadFileContract, type: FileType) {
+  async saveFile(file: UploadFileContract, type: FileType, traceId = '') {
     const startedAt = Date.now();
     let phase = 'image_processing';
-    this.logger.log(
-      JSON.stringify({
+    this.log(traceId, {
         event: 'file_save_started',
         postId: file.targetId,
         type,
         sourceSizeBytes: file.size,
-      }),
-    );
+    });
 
     try {
       const imageProcessingStartedAt = Date.now();
       const processed = await this.imageProcessing.process(file, type);
-      this.logger.log(
-        JSON.stringify({
+      this.log(traceId, {
           event: 'file_image_processed',
           durationMs: Date.now() - imageProcessingStartedAt,
           postId: file.targetId,
@@ -42,8 +47,7 @@ export class FilesService {
           width: processed.width,
           height: processed.height,
           format: processed.format,
-        }),
-      );
+      });
 
       const fileId = crypto.randomUUID();
       const fileData = {
@@ -64,42 +68,36 @@ export class FilesService {
         processed.buffer,
         processed.format,
       );
-      this.logger.log(
-        JSON.stringify({
+      this.log(traceId, {
           event: 'file_s3_upload_completed',
           durationMs: Date.now() - s3UploadStartedAt,
           postId: file.targetId,
           type,
           fileId,
           sizeBytes: processed.size,
-        }),
-      );
+      });
 
       phase = 'mongo_file_create';
       const mongoCreateStartedAt = Date.now();
       const savedFile = await this.fileModel.create(fileData);
-      this.logger.log(
-        JSON.stringify({
+      this.log(traceId, {
           event: 'file_save_completed',
           durationMs: Date.now() - startedAt,
           mongoDurationMs: Date.now() - mongoCreateStartedAt,
           postId: file.targetId,
           type,
           fileId,
-        }),
-      );
+      });
       return savedFile;
     } catch (error) {
-      this.logger.error(
-        JSON.stringify({
+      this.error(traceId, {
           event: 'file_save_failed',
           error: error instanceof Error ? error.message : String(error),
           durationMs: Date.now() - startedAt,
           phase,
           postId: file.targetId,
           type,
-        }),
-      );
+      });
       throw error;
     }
   }

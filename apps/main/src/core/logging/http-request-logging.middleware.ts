@@ -9,7 +9,7 @@ export class HttpRequestLoggingMiddleware implements NestMiddleware {
   private readonly logger = new Logger(HttpRequestLoggingMiddleware.name);
 
   use(request: Request, response: Response, next: NextFunction): void {
-    if (!isLoginRequest(request)) {
+    if (!isTracedRequest(request)) {
       next();
       return;
     }
@@ -37,6 +37,9 @@ function getRequestId(request: Request): string {
   return suppliedId && /^[a-zA-Z0-9_-]{1,128}$/.test(suppliedId) ? suppliedId : randomUUID();
 }
 
-function isLoginRequest(request: Request): boolean {
-  return request.method === 'POST' && request.path === '/api/v1/auth/login';
+function isTracedRequest(request: Request): boolean {
+  return (
+    request.method === 'POST' &&
+    (request.path === '/api/v1/auth/login' || request.path === '/api/v1/posts')
+  );
 }

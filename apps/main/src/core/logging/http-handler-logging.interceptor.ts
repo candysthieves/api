@@ -16,7 +16,10 @@ export class HttpHandlerLoggingInterceptor implements NestInterceptor {
     if (context.getType() !== 'http') return next.handle();
 
     const request = context.switchToHttp().getRequest<Request>();
-    if (request.method !== 'POST' || request.path !== '/api/v1/auth/login') {
+    if (
+      request.method !== 'POST' ||
+      (request.path !== '/api/v1/auth/login' && request.path !== '/api/v1/posts')
+    ) {
       return next.handle();
     }
 

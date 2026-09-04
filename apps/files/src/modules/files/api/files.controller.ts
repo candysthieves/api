@@ -29,7 +29,7 @@ export class FilesController {
 
   @MessagePattern({ cmd: 'upload-post-files' })
   uploadPostFiles(@Payload() dto: UploadFilesContract) {
-    return this.postMediaProcessing.accept(dto.files);
+    return this.postMediaProcessing.accept(dto.files, dto.traceId ?? '');
   }
 
   @MessagePattern({ cmd: 'upload-avatar-file' })

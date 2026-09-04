@@ -6,6 +6,8 @@ const LOGIN_CONTEXTS = new Set([
   'DomainExceptionFilter',
   'LoginUseCase',
   'AuthSessionService',
+  'CreatePostUseCase',
+  'FilesTcpClient',
 ]);
 
 const SERVICE_CONTEXTS = new Set([

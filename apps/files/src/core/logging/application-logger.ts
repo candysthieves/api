@@ -12,6 +12,8 @@ const SERVICE_CONTEXTS = new Set([
   'ExceptionsHandler',
 ]);
 
+const POST_CREATION_CONTEXTS = new Set(['PostCreationMetrics', 'FilesService']);
+
 /** Suppresses files-domain logs while preserving framework and service lifecycle logs. */
 export class ApplicationLogger extends ConsoleLogger {
   override log(message: unknown, ...optionalParams: unknown[]): void {
@@ -32,6 +34,9 @@ export class ApplicationLogger extends ConsoleLogger {
 
   private shouldWrite(optionalParams: unknown[]): boolean {
     const context = optionalParams.at(-1);
-    return typeof context === 'string' && SERVICE_CONTEXTS.has(context);
+    return (
+      typeof context === 'string' &&
+      (SERVICE_CONTEXTS.has(context) || POST_CREATION_CONTEXTS.has(context))
+    );
   }
 }

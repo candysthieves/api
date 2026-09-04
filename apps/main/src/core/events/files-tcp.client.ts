@@ -21,12 +21,14 @@ export class FilesTcpClient {
   async uploadPostFiles(
     postId: string,
     files: Express.Multer.File[],
+    traceId: string,
   ): Promise<PostMediaJobAcceptance> {
     const startedAt = Date.now();
     const totalSizeBytes = files.reduce((total, file) => total + file.size, 0);
     this.logger.log(
       JSON.stringify({
         event: 'files_upload_transport_started',
+        traceId,
         postId,
         fileCount: files.length,
         totalSizeBytes,
@@ -40,6 +42,7 @@ export class FilesTcpClient {
           .send(
             { cmd: 'upload-post-files' },
             {
+              traceId,
               files: files.map((file) => ({
                 targetId: postId,
                 originalName: file.originalname,
@@ -54,6 +57,7 @@ export class FilesTcpClient {
       this.logger.log(
         JSON.stringify({
           event: 'files_upload_transport_completed',
+          traceId,
           durationMs: Date.now() - startedAt,
           postId,
           fileCount: files.length,
@@ -65,6 +69,7 @@ export class FilesTcpClient {
       this.logger.error(
         JSON.stringify({
           event: 'files_upload_transport_failed',
+          traceId,
           durationMs: Date.now() - startedAt,
           postId,
           fileCount: files.length,

@@ -50,7 +50,10 @@ export class DomainExceptionFilter implements ExceptionFilter<DomainException> {
         break;
     }
 
-    if (request.method === 'POST' && request.path === '/api/v1/auth/login') {
+    if (
+      request.method === 'POST' &&
+      (request.path === '/api/v1/auth/login' || request.path === '/api/v1/posts')
+    ) {
       this.logger.warn(
         JSON.stringify({
           event: 'http_domain_exception',

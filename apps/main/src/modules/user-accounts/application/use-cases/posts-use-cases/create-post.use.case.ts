@@ -16,6 +16,7 @@ export class CreatePostCommand {
     public readonly userId: string,
     public readonly files: Express.Multer.File[] = [],
     public readonly locations: CreatePostLocationDto[] = [],
+    public readonly traceId = '',
   ) {}
 }
 
@@ -29,11 +30,15 @@ export class CreatePostUseCase implements ICommandHandler<CreatePostCommand> {
   ) {}
 
   async execute(command: CreatePostCommand): Promise<{ postId: string }> {
+    const startedAt = performance.now();
+    const totalSizeBytes = command.files.reduce((total, file) => total + file.size, 0);
+    this.logger.log(JSON.stringify({ event: 'post_create_started', traceId: command.traceId, fileCount: command.files.length, totalSizeBytes }));
     if (!command.files.length) {
       DomainExceptions.validation([
         { field: 'files', message: 'At least one image is required' },
       ]);
     }
+    const databaseCreateStartedAt = performance.now();
     const post = await this.postRepository.createPost({
       description: command.description,
       images: [] as Prisma.InputJsonValue,
@@ -42,14 +47,16 @@ export class CreatePostUseCase implements ICommandHandler<CreatePostCommand> {
       locations: command.locations as unknown as Prisma.InputJsonValue,
       userId: command.userId,
     });
+    this.logger.log(JSON.stringify({ event: 'post_create_database_completed', traceId: command.traceId, postId: post.id, durationMs: elapsedMs(databaseCreateStartedAt) }));
     let result: PostMediaJobAcceptance;
     try {
-      result = await this.filesClient.uploadPostFiles(post.id, command.files);
+      result = await this.filesClient.uploadPostFiles(post.id, command.files, command.traceId);
     } catch (error) {
       const transportError = getErrorDetails(error);
       this.logger.error(
         JSON.stringify({
           event: 'files_upload_transport_failed',
+          traceId: command.traceId,
           postId: post.id,
           error: transportError,
         }),
@@ -67,6 +74,7 @@ export class CreatePostUseCase implements ICommandHandler<CreatePostCommand> {
       this.logger.warn(
         JSON.stringify({
           event: 'files_upload_rejected',
+          traceId: command.traceId,
           postId: post.id,
           error: result.error,
           data: result.data,
@@ -80,8 +88,13 @@ export class CreatePostUseCase implements ICommandHandler<CreatePostCommand> {
       );
     }
 
+    this.logger.log(JSON.stringify({ event: 'post_create_completed', traceId: command.traceId, postId: post.id, durationMs: elapsedMs(startedAt) }));
     return { postId: post.id };
   }
+}
+
+function elapsedMs(startedAt: number): number {
+  return Number((performance.now() - startedAt).toFixed(3));
 }
 
 function getErrorDetails(error: unknown): {
