@@ -25,8 +25,7 @@ export class GetUserProfileQueryHandler implements IQueryHandler<
     currentUserId,
     userId,
   }: GetUserProfileQuery): Promise<GetUserProfileType> {
-    const user =
-      await this.usersQueryRepository.findByIdOrNotFound(userId);
+    const user = await this.usersQueryRepository.findByIdOrNotFound(userId);
 
     const isOwner: boolean = user.id === currentUserId;
 
