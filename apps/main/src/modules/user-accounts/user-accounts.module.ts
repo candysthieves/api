@@ -41,7 +41,7 @@ import { GithubStrategy } from './infrastructure/strategies/github.strategy.js';
 import { GoogleStrategy } from './infrastructure/strategies/google.strategy.js';
 import { GetUserProfileQueryHandler } from './application/query-handler/users/get-user-profile-query-handler.js';
 import { PostsQueryRepository } from './infrastructure/repositories/post-repositories/posts.query.repository.js';
-import { GetPostsQueryHandler } from './application/query-handler/posts/get-posts.query-handler.js';
+import { GetAllPostsQueryHandler } from './application/query-handler/posts/get-all-posts.query-handler.js';
 
 @Module({
   imports: [CqrsModule, EventsModule],
@@ -85,7 +85,7 @@ import { GetPostsQueryHandler } from './application/query-handler/posts/get-post
     AuthSessionService,
     PasswordRecoveryService,
     PostDeletionSchedulerService,
-    GetPostsQueryHandler,
+    GetAllPostsQueryHandler,
     GoogleStrategy,
     GithubStrategy,
     AccessTokenGuard,

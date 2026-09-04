@@ -23,7 +23,7 @@ import { User } from './decorators/user.decorator.js';
 import { type JwtAccessPayload } from '../../../core/types/jwt-payload.type.js';
 import { CreatePostDto } from './dto/create-post.dto.js';
 import { ApiCreatePost } from '../../../core/swagger/posts-dto/create-post.swagger.js';
-import { GetPostsQuery } from '../application/query-handler/posts/get-posts.query-handler.js';
+import { GetAllPostsQuery } from '../application/query-handler/posts/get-all-posts.query-handler.js';
 import { GetPostsQueryParamsDto } from './dto/get-posts-query-params.dto.js';
 import { ApiHardDeletePost } from '../../../core/swagger/posts-dto/delete-post.swagger.js';
 import { ApiRestorePost } from '../../../core/swagger/posts-dto/restore-post.swagger.js';
@@ -46,9 +46,9 @@ export class PostController {
 
   @Get()
   @ApiGetPosts()
-  getPosts(@Query() query: GetPostsQueryParamsDto) {
-    return this.queryBus.execute<GetPostsQuery>(
-      new GetPostsQuery(query.cursor, query.limit),
+  getAllPosts(@Query() query: GetPostsQueryParamsDto) {
+    return this.queryBus.execute<GetAllPostsQuery>(
+      new GetAllPostsQuery(query.cursor, query.limit),
     );
   }
 

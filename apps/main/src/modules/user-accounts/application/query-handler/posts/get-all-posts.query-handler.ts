@@ -2,18 +2,18 @@ import { IQueryHandler, QueryHandler } from '@nestjs/cqrs';
 import { PostsQueryRepository } from '../../../infrastructure/repositories/post-repositories/posts.query.repository.js';
 import { PostsMapper } from '../../../api/mappers/posts.mapper.js';
 
-export class GetPostsQuery {
+export class GetAllPostsQuery {
   constructor(
     public readonly cursor: string | undefined,
     public readonly limit: number,
   ) {}
 }
 
-@QueryHandler(GetPostsQuery)
-export class GetPostsQueryHandler implements IQueryHandler<GetPostsQuery> {
+@QueryHandler(GetAllPostsQuery)
+export class GetAllPostsQueryHandler implements IQueryHandler<GetAllPostsQuery> {
   constructor(private readonly postsQueryRepository: PostsQueryRepository) {}
 
-  async execute({ cursor, limit }: GetPostsQuery) {
+  async execute({ cursor, limit }: GetAllPostsQuery) {
     const posts = await this.postsQueryRepository.getPostsWithPagination(
       cursor,
       limit,
