@@ -1,5 +1,6 @@
 import { Post } from '../../../../generated/prisma/client.js';
 import { PostViewType } from '../view-types/posts/post-view.type.js';
+import { PostByIdViewType } from '../view-types/posts/post-by-id-view.type.js';
 import { GetAllPostsViewType } from '../view-types/posts/get-posts-view.type.js';
 import { GetUserPostsViewType } from '../view-types/posts/get-user-posts-view.type.js';
 import { PostWithAuthor } from '../../infrastructure/types/post-with-author.type.js';
@@ -16,6 +17,26 @@ export class PostsMapper {
       willBeDeleted: post.willBeDeleted?.toISOString() || null,
     };
   }
+
+  static toPostByIdView(
+    post: PostWithAuthor,
+    isOwner: boolean,
+  ): PostByIdViewType {
+    return {
+      id: post.id,
+      description: post.description,
+      images: post.images,
+      preview: post.preview,
+      createdAt: post.createdAt.toISOString(),
+      author: {
+        id: post.user.id,
+        username: post.user.username,
+      },
+      isOwner,
+    };
+  }
+
+
 
   static toViewWithAuthor(post: PostWithAuthor): PostWithAuthorViewType {
     return {
@@ -59,3 +80,4 @@ export class PostsMapper {
     };
   }
 }
+

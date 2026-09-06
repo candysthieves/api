@@ -44,6 +44,9 @@ import { PostsQueryRepository } from './infrastructure/repositories/post-reposit
 import { GetAllPostsQueryHandler } from './application/query-handler/posts/get-all-posts.query-handler.js';
 import { FindPostsByUserIdAndCursorQueryHandler } from './application/query-handler/posts/find-posts-by-user-id-and-cursor.query-handler.js';
 import { FindDeletedPostsByUserIdAndCursorQueryHandler } from './application/query-handler/posts/find-deleted-posts-by-user-id-and-cursor.query-handler.js';
+import { GetPostByIdQueryHandler } from './application/query-handler/posts/get-post-by-id.query-handler.js';
+import { GetDeletedPostByIdQueryHandler } from './application/query-handler/posts/get-deleted-post-by-id.query-handler.js';
+import { GetMyDeletedPostsQueryHandler } from './application/query-handler/posts/get-my-deleted-posts.query-handler.js';
 
 @Module({
   imports: [CqrsModule, EventsModule],
@@ -79,6 +82,11 @@ import { FindDeletedPostsByUserIdAndCursorQueryHandler } from './application/que
     GetUserProfileQueryHandler,
     FindPostsByUserIdAndCursorQueryHandler,
     FindDeletedPostsByUserIdAndCursorQueryHandler,
+    GetPostByIdQueryHandler,
+    GetDeletedPostByIdQueryHandler,
+    GetMyDeletedPostsQueryHandler,
+
+
     UsersRepository,
     SessionsRepository,
     OAuthRepository,
@@ -96,3 +104,4 @@ import { FindDeletedPostsByUserIdAndCursorQueryHandler } from './application/que
   ],
 })
 export class UserAccountsModule {}
+
