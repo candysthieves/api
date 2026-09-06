@@ -27,6 +27,6 @@ export class GetAllPostsQueryHandler implements IQueryHandler<GetAllPostsQuery> 
     const nextCursor =
       hasNextPage && lastPost ? lastPost.createdAt.toISOString() : null;
 
-    return PostsMapper.toGetAllPostsView(posts, nextCursor, hasNextPage);
+    return PostsMapper.toGetAllPostsView(items, nextCursor, hasNextPage);
   }
 }
