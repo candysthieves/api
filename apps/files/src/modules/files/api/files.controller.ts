@@ -8,11 +8,16 @@ import { DeleteFilesCommand } from '../application/use-cases/delete-files.usecas
 import { RestoreFilesCommand } from '../application/use-cases/restore-files.usecase.js';
 import { FileType } from '../schemas/files.schema.js';
 import {
+  CleanupUnusedPostFilesContract,
   DeleteFilesContract,
   RestoreFilesContract,
   UploadFileContract,
   UploadFilesContract,
 } from '../../../../../../libs/contracts/index.js';
+import {
+  CleanupResult,
+  CleanupUnusedPostFilesCommand,
+} from '../application/use-cases/cleanup-unused-post-files.usecase.js';
 import { PostMediaProcessingService } from '../application/post-media-processing.service.js';
 import { UploadFileCommand } from '../application/use-cases/upload-file-use.case.js';
 import { RpcValidationPipe } from '../../../core/pipes/rpc-validation.pipe.js';
@@ -62,5 +67,13 @@ export class FilesController {
     return this.commandBus.execute<RestoreFilesCommand, ObjectResult<null>>(
       new RestoreFilesCommand(dto.fileIds),
     );
+  }
+
+  @MessagePattern({ cmd: 'cleanup-unused-post-files' })
+  async cleanupUnusedPostFiles(@Payload() dto: CleanupUnusedPostFilesContract) {
+    return this.commandBus.execute<
+      CleanupUnusedPostFilesCommand,
+      ObjectResult<CleanupResult>
+    >(new CleanupUnusedPostFilesCommand(dto.activeFileIds, dto.olderThanHours));
   }
 }

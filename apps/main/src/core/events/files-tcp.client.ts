@@ -105,9 +105,26 @@ export class FilesTcpClient {
 
     return { data: null, error: null };
   }
+
+  async cleanupUnusedPostFiles(
+    activeFileIds: string[],
+    olderThanHours = 24,
+  ): Promise<{
+    data: { deletedDbCount: number; deletedS3OrphanCount: number } | null;
+    error: { code: string; errors: { field: string; message: string }[] } | null;
+  }> {
+    return lastValueFrom(
+      this.client
+        .send(
+          { cmd: 'cleanup-unused-post-files' },
+          { activeFileIds, olderThanHours },
+        )
+        .pipe(timeout(LONG_FILES_RPC_TIMEOUT_MS)),
+    );
+  }
 }
 
-function getFileIds(value: unknown): string[] {
+export function getFileIds(value: unknown): string[] {
   const media: unknown[] = Array.isArray(value) ? value : [value];
 
   return media.flatMap((file): string[] => {

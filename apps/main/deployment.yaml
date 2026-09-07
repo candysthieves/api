@@ -135,6 +135,11 @@ spec:
                  secretKeyRef:
                    name: lumosapp-backend-main-production-config-secret
                    key: FILES_TCP_PORT
+             - name: UNUSED_FILES_CLEANUP_ENABLED
+               valueFrom:
+                 secretKeyRef:
+                   name: lumosapp-backend-main-production-config-secret
+                   key: UNUSED_FILES_CLEANUP_ENABLED
              - name: JWT_SECRET_KEY
                valueFrom:
                  secretKeyRef:
