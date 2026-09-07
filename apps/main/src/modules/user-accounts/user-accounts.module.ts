@@ -4,6 +4,7 @@ import { EventsModule } from '../../core/events/events.module.js';
 import { AuthSessionService } from './application/auth-session.service.js';
 import { PasswordRecoveryService } from './application/password-recovery.service.js';
 import { PostDeletionSchedulerService } from './application/post-deletion-scheduler.service.js';
+import { UnusedImagesCleanupSchedulerService } from './application/unused-images-cleanup-scheduler.service.js';
 import { ProfileQueryHandler } from './application/query-handler/auth/profile-query-handler.js';
 import { FindAllSessionsQueryHandler } from './application/query-handler/sessions/find-sessions-query-handler.js';
 import { GetUsersCountQueryHandler } from './application/query-handler/users/get-users-count-query-handler.js';
@@ -97,6 +98,7 @@ import { GetMyDeletedPostsQueryHandler } from './application/query-handler/posts
     AuthSessionService,
     PasswordRecoveryService,
     PostDeletionSchedulerService,
+    UnusedImagesCleanupSchedulerService,
     GetAllPostsQueryHandler,
     GoogleStrategy,
     GithubStrategy,

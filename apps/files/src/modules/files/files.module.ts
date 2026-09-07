@@ -13,6 +13,7 @@ import { FilesEventsModule } from '../../events/files-events.module.js';
 import { PostMediaProcessingService } from './application/post-media-processing.service.js';
 import { UploadFileUseCase } from './application/use-cases/upload-file-use.case.js';
 import { UploadFilesUseCase } from './application/use-cases/upload-files-use.case.js';
+import { CleanupUnusedPostFilesUseCase } from './application/use-cases/cleanup-unused-post-files.usecase.js';
 
 const useCases = [
   UploadFileUseCase,
@@ -20,6 +21,7 @@ const useCases = [
   SoftDeleteFilesUseCase,
   DeleteFilesUseCase,
   RestoreFilesUseCase,
+  CleanupUnusedPostFilesUseCase,
 ];
 
 @Module({
