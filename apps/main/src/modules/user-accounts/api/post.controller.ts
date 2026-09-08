@@ -88,7 +88,6 @@ export class PostController {
     >(new GetDeletedPostByIdQuery(postId, user.userId));
   }
 
-
   @Get(':postId')
   @UseGuards(AccessTokenGuard)
   @ApiGetPostById()
@@ -100,7 +99,6 @@ export class PostController {
       new GetPostByIdQuery(postId, user.userId),
     );
   }
-
 
   @Post()
   @UseInterceptors(

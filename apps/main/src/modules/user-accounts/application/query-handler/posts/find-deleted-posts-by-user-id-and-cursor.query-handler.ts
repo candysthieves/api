@@ -4,6 +4,7 @@ import { UsersQueryRepository } from '../../../infrastructure/repositories/user-
 import { PostsMapper } from '../../../api/mappers/posts.mapper.js';
 import { DomainExceptions } from '../../../../../core/exceptions/domain-exceptions.js';
 import { ErrorStatus } from '../../../../../core/exceptions/domain-exception-code.js';
+import { paginateByCursor } from '../../../../../core/helpers/cursor-pagination.helper.js';
 
 export class FindDeletedPostsByUserIdAndCursorQuery {
   constructor(
@@ -15,9 +16,7 @@ export class FindDeletedPostsByUserIdAndCursorQuery {
 }
 
 @QueryHandler(FindDeletedPostsByUserIdAndCursorQuery)
-export class FindDeletedPostsByUserIdAndCursorQueryHandler
-  implements IQueryHandler<FindDeletedPostsByUserIdAndCursorQuery>
-{
+export class FindDeletedPostsByUserIdAndCursorQueryHandler implements IQueryHandler<FindDeletedPostsByUserIdAndCursorQuery> {
   constructor(
     private readonly postsQueryRepository: PostsQueryRepository,
     private readonly usersQueryRepository: UsersQueryRepository,
@@ -46,14 +45,7 @@ export class FindDeletedPostsByUserIdAndCursorQueryHandler
         limit,
       );
 
-    const hasNextPage = posts.length > limit;
-
-    const items = hasNextPage ? posts.slice(0, limit) : posts;
-
-    const lastPost = items.at(-1);
-
-    const nextCursor =
-      hasNextPage && lastPost ? lastPost.createdAt.toISOString() : null;
+    const { items, nextCursor, hasNextPage } = paginateByCursor(posts, limit);
 
     const isOwner = user.id === currentUserId;
 

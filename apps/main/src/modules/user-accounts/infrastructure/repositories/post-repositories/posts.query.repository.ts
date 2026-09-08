@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../../../infrastructure/prisma/prisma.service.js';
-import { MediaStatus, Post } from '../../../../../generated/prisma/client.js';
+import { MediaStatus } from '../../../../../generated/prisma/client.js';
 import { PostWithAuthor } from '../../types/post-with-author.type.js';
 import { DomainExceptions } from '../../../../../core/exceptions/domain-exceptions.js';
 import { ErrorStatus } from '../../../../../core/exceptions/domain-exception-code.js';
@@ -72,12 +72,9 @@ export class PostsQueryRepository {
     return post;
   }
 
-
-
   async countPostsByUserId(userId: string): Promise<number> {
     return this.prismaPost.count({ where: { userId: userId } });
   }
-
 
   async findPostsByUserIdAndCursor(
     userId: string,
@@ -137,7 +134,6 @@ export class PostsQueryRepository {
       take: limit + 1,
     });
   }
-
 
   async findPostsByCursor(
     cursor: string | undefined,

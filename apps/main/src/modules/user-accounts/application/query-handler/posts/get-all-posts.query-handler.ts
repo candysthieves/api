@@ -2,6 +2,7 @@ import { IQueryHandler, QueryHandler } from '@nestjs/cqrs';
 import { PostsQueryRepository } from '../../../infrastructure/repositories/post-repositories/posts.query.repository.js';
 import { PostsMapper } from '../../../api/mappers/posts.mapper.js';
 import { PostWithAuthor } from '../../../infrastructure/types/post-with-author.type.js';
+import { paginateByCursor } from '../../../../../core/helpers/cursor-pagination.helper.js';
 
 export class GetAllPostsQuery {
   constructor(
@@ -18,14 +19,7 @@ export class GetAllPostsQueryHandler implements IQueryHandler<GetAllPostsQuery> 
     const posts: PostWithAuthor[] =
       await this.postsQueryRepository.findPostsByCursor(cursor, limit);
 
-    const hasNextPage = posts.length > limit;
-
-    const items = hasNextPage ? posts.slice(0, limit) : posts;
-
-    const lastPost = items.at(-1);
-
-    const nextCursor =
-      hasNextPage && lastPost ? lastPost.createdAt.toISOString() : null;
+    const { items, nextCursor, hasNextPage } = paginateByCursor(posts, limit);
 
     return PostsMapper.toGetAllPostsView(items, nextCursor, hasNextPage);
   }
