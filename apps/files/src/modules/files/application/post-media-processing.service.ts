@@ -56,8 +56,40 @@ export class PostMediaProcessingService
   ) {}
 
   onModuleInit(): void {
-    void this.failInterruptedJobs();
-    this.timer = setInterval(() => void this.processPending(), 1_000);
+    this.connection.on('error', (err) => {
+      this.logger.error(
+        JSON.stringify({
+          event: 'mongodb_connection_error',
+          error: err instanceof Error ? err.message : String(err),
+          stack: err instanceof Error ? err.stack : undefined,
+        }),
+      );
+    });
+    this.connection.on('disconnected', () => {
+      this.logger.warn(JSON.stringify({ event: 'mongodb_disconnected' }));
+    });
+
+    void this.failInterruptedJobs().catch((err) => {
+      this.logger.error(
+        JSON.stringify({
+          event: 'fail_interrupted_jobs_failed',
+          error: err instanceof Error ? err.message : String(err),
+          stack: err instanceof Error ? err.stack : undefined,
+        }),
+      );
+    });
+
+    this.timer = setInterval(() => {
+      this.processPending().catch((err) => {
+        this.logger.error(
+          JSON.stringify({
+            event: 'process_pending_unhandled_error',
+            error: err instanceof Error ? err.message : String(err),
+            stack: err instanceof Error ? err.stack : undefined,
+          }),
+        );
+      });
+    }, 1_000);
   }
 
   onModuleDestroy(): void {

@@ -28,7 +28,17 @@ export class FilesEventsService implements OnModuleInit, OnModuleDestroy {
   ) {}
 
   onModuleInit(): void {
-    this.timer = setInterval(() => void this.publishPending(), 1000);
+    this.timer = setInterval(() => {
+      this.publishPending().catch((err) => {
+        this.logger.error(
+          JSON.stringify({
+            event: 'publish_pending_unhandled_error',
+            error: err instanceof Error ? err.message : String(err),
+            stack: err instanceof Error ? err.stack : undefined,
+          }),
+        );
+      });
+    }, 1000);
   }
 
   onModuleDestroy(): void {
