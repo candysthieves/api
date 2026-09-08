@@ -83,6 +83,10 @@ export class PostsQueryRepository {
     return this.prismaPost.findMany({
       where: {
         userId,
+        willBeDeleted: null,
+        images: {
+          not: [],
+        },
         ...(cursor && {
           createdAt: {
             lt: new Date(cursor),
@@ -137,6 +141,10 @@ export class PostsQueryRepository {
   ): Promise<PostWithAuthor[]> {
     return this.prisma.post.findMany({
       where: {
+        willBeDeleted: null,
+        images: {
+          not: [],
+        },
         ...(cursor && {
           createdAt: {
             lt: new Date(cursor),
