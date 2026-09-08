@@ -20,6 +20,55 @@ async function bootstrap() {
 
   const config = app.get(FilesConfig);
 
+  app.enableShutdownHooks();
+
+  process.on('uncaughtException', (err: Error) => {
+    logger.fatal(
+      JSON.stringify({
+        event: 'uncaught_exception',
+        error: err.message,
+        stack: err.stack,
+        memoryUsage: process.memoryUsage(),
+      }),
+    );
+  });
+
+  process.on('unhandledRejection', (reason: unknown) => {
+    logger.fatal(
+      JSON.stringify({
+        event: 'unhandled_rejection',
+        reason: reason instanceof Error ? reason.message : String(reason),
+        stack: reason instanceof Error ? reason.stack : undefined,
+        memoryUsage: process.memoryUsage(),
+      }),
+    );
+  });
+
+  for (const signal of ['SIGTERM', 'SIGINT']) {
+    process.on(signal, () => {
+      logger.warn(
+        JSON.stringify({
+          event: 'process_signal_received',
+          signal,
+          memoryUsage: process.memoryUsage(),
+        }),
+      );
+    });
+  }
+
+  setInterval(() => {
+    const mem = process.memoryUsage();
+    logger.log(
+      JSON.stringify({
+        event: 'files_heartbeat_memory',
+        rssMiB: Math.round(mem.rss / 1024 / 1024),
+        heapUsedMiB: Math.round(mem.heapUsed / 1024 / 1024),
+        heapTotalMiB: Math.round(mem.heapTotal / 1024 / 1024),
+        externalMiB: Math.round(mem.external / 1024 / 1024),
+      }),
+    );
+  }, 30_000).unref();
+
   app.connectMicroservice<MicroserviceOptions>({
     transport: Transport.RMQ,
     options: {
