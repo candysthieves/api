@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../../../infrastructure/prisma/prisma.service.js';
-import { Post } from '../../../../../generated/prisma/client.js';
+import { MediaStatus, Post } from '../../../../../generated/prisma/client.js';
 import { PostWithAuthor } from '../../types/post-with-author.type.js';
 import { DomainExceptions } from '../../../../../core/exceptions/domain-exceptions.js';
 import { ErrorStatus } from '../../../../../core/exceptions/domain-exception-code.js';
@@ -17,6 +17,10 @@ export class PostsQueryRepository {
       where: {
         id: postId,
         willBeDeleted: null,
+        mediaStatus: MediaStatus.READY,
+        images: {
+          not: [],
+        },
       },
       include: {
         user: {
