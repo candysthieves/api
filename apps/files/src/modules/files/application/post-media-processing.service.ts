@@ -242,13 +242,13 @@ export class PostMediaProcessingService
         file.targetId !== postId ||
         !Buffer.isBuffer(file.buffer) ||
         !file.buffer.length ||
-        !file.mimeType.startsWith('image/') ||
+        !this.files.validateFormat(file.mimeType, file.originalName) ||
         file.size !== file.buffer.length ||
         !this.files.validateFileSize(file.buffer.length)
       ) {
         return {
           code: 'INVALID_FILE',
-          errors: [{ field: `files[${index}]`, message: 'Invalid image file' }],
+          errors: [{ field: `files[${index}]`, message: 'Invalid image file. Only JPEG, JPG and PNG are allowed' }],
         };
       }
     }

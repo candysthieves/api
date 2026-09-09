@@ -105,4 +105,15 @@ export class FilesService {
   validateFileSize(size: number): boolean {
     return size <= 5 * 1024 * 1024;
   }
+
+  validateFormat(mimeType: string, originalName?: string): boolean {
+    const allowedMimeTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+    const hasValidMime = allowedMimeTypes.includes(mimeType?.toLowerCase());
+    if (originalName) {
+      const ext = originalName.toLowerCase().split('.').pop();
+      const allowedExts = ['jpg', 'jpeg', 'png'];
+      return hasValidMime && !!ext && allowedExts.includes(ext);
+    }
+    return hasValidMime;
+  }
 }
