@@ -59,6 +59,22 @@ export class UploadFileUseCase implements ICommandHandler<
       });
     }
 
+    const isBufferValid = await this.fileService.validateImageBuffer(
+      file.buffer,
+    );
+
+    if (!isBufferValid) {
+      return ObjectResult.failure({
+        code: 'INVALID_FILE',
+        errors: [
+          {
+            field: 'file',
+            message: 'Corrupted or unreadable image file',
+          },
+        ],
+      });
+    }
+
     const avatar = await this.fileService.saveFile(file, type);
 
     const avatarPreview = await this.fileService.saveFile(

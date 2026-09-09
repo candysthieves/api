@@ -100,7 +100,7 @@ export class PostMediaProcessingService
     files: UploadFileContract[],
     traceId: string,
   ): Promise<ObjectResult<AcceptedPostMediaJob | null>> {
-    const validationError = this.validate(files);
+    const validationError = await this.validate(files);
     if (validationError) return ObjectResult.failure(validationError);
 
     const postId = files[0].targetId;
@@ -228,7 +228,7 @@ export class PostMediaProcessingService
     return ObjectResult.success({ accepted: true, eventId: job.eventId });
   }
 
-  private validate(files: UploadFileContract[]) {
+  private async validate(files: UploadFileContract[]) {
     if (!files.length) {
       return {
         code: 'FILES_REQUIRED',
@@ -249,6 +249,14 @@ export class PostMediaProcessingService
         return {
           code: 'INVALID_FILE',
           errors: [{ field: `files[${index}]`, message: 'Invalid image file. Only JPEG, JPG and PNG are allowed' }],
+        };
+      }
+
+      const isBufferValid = await this.files.validateImageBuffer(file.buffer);
+      if (!isBufferValid) {
+        return {
+          code: 'INVALID_FILE',
+          errors: [{ field: `files[${index}]`, message: 'Corrupted or unreadable image file' }],
         };
       }
     }

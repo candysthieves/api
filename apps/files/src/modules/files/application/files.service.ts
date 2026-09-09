@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
+import sharp from 'sharp';
 import { S3Adapter } from '../../../core/adapters/s3.adapter.js';
 import { File, FileDocument, FileType } from '../schemas/files.schema.js';
 import { ImageProcessingService } from './image-processing.service.js';
@@ -115,5 +116,25 @@ export class FilesService {
       return hasValidMime && !!ext && allowedExts.includes(ext);
     }
     return hasValidMime;
+  }
+
+  async validateImageBuffer(buffer?: Buffer): Promise<boolean> {
+    if (!buffer || !Buffer.isBuffer(buffer) || buffer.length === 0) {
+      return false;
+    }
+
+    try {
+      const metadata = await sharp(buffer).metadata();
+
+      const allowedFormats = ['jpeg', 'jpg', 'png'];
+      const isAllowedFormat =
+        !!metadata.format && allowedFormats.includes(metadata.format);
+      const hasValidDimensions =
+        (metadata.width ?? 0) > 0 && (metadata.height ?? 0) > 0;
+
+      return isAllowedFormat && hasValidDimensions;
+    } catch {
+      return false;
+    }
   }
 }
