@@ -33,6 +33,6 @@ export class GetMyDeletedPostsQueryHandler implements IQueryHandler<
 
     const { items, nextCursor, hasNextPage } = paginateByCursor(posts, limit);
 
-    return PostsMapper.toGetAllPostsView(items, nextCursor, hasNextPage);
+    return PostsMapper.toAllPostsView(items, nextCursor, hasNextPage);
   }
 }

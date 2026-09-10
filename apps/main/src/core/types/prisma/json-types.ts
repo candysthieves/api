@@ -16,4 +16,12 @@ export type PostImage = FileType;
 
 export type PostImages = PostImage[];
 
-export type PostPreview = FileType;
+export type PostPreview = FileType | null;
+
+declare global {
+  namespace PrismaJson {
+    type PostLocations = import('./json-types.js').PostLocations;
+    type PostImages = import('./json-types.js').PostImages;
+    type PostPreview = import('./json-types.js').PostPreview;
+  }
+}
