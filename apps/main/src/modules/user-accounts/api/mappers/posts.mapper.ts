@@ -8,7 +8,7 @@ import { PostWithAuthorViewType } from '../view-types/posts/post-with-author-vie
 import { UsersMapper } from './users.mapper.js';
 
 export class PostsMapper {
-  static toView(post: Post): PostViewType {
+  static toPostView(post: Post): PostViewType {
     return {
       id: post.id,
       description: post.description,
@@ -32,12 +32,14 @@ export class PostsMapper {
       author: {
         id: post.user.id,
         username: post.user.username,
+        avatarUrl: UsersMapper.getDefaultAvatar(),
+        avatarPreviewUrl: UsersMapper.getDefaultAvatarPreview(),
       },
       isOwner,
     };
   }
 
-  static toViewWithAuthor(post: PostWithAuthor): PostWithAuthorViewType {
+  static toPostWithAuthorView(post: PostWithAuthor): PostWithAuthorViewType {
     return {
       id: post.id,
       description: post.description,
@@ -56,26 +58,26 @@ export class PostsMapper {
     };
   }
 
-  static toGetAllPostsView(
+  static toAllPostsView(
     posts: PostWithAuthor[],
     nextCursor: string | null,
     hasNextPage: boolean,
   ): GetAllPostsViewType {
     return {
-      items: posts.map((post) => this.toViewWithAuthor(post)),
+      items: posts.map((post) => this.toPostWithAuthorView(post)),
       nextCursor,
       hasNextPage,
     };
   }
 
-  static toGetUserPostsView(
+  static toUserPostsView(
     posts: Post[],
     nextCursor: string | null,
     hasNextPage: boolean,
     isOwner: boolean,
   ): GetUserPostsViewType {
     return {
-      items: posts.map((post) => this.toView(post)),
+      items: posts.map((post) => this.toPostView(post)),
       nextCursor,
       hasNextPage,
       isOwner,

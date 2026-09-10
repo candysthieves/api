@@ -49,7 +49,7 @@ export class FindDeletedPostsByUserIdAndCursorQueryHandler implements IQueryHand
 
     const isOwner = user.id === currentUserId;
 
-    return PostsMapper.toGetUserPostsView(
+    return PostsMapper.toUserPostsView(
       items,
       nextCursor,
       hasNextPage,
