@@ -23,12 +23,14 @@ export class PostsMapper {
     post: PostWithAuthor,
     isOwner: boolean,
   ): PostByIdViewType {
+    const postView = this.toPostView(post);
+
     return {
-      id: post.id,
-      description: post.description,
-      images: post.images,
-      preview: post.preview,
-      createdAt: post.createdAt.toISOString(),
+      id: postView.id,
+      description: postView.description,
+      images: postView.images,
+      preview: postView.preview,
+      createdAt: postView.createdAt,
       author: {
         id: post.user.id,
         username: post.user.username,
@@ -40,15 +42,10 @@ export class PostsMapper {
   }
 
   static toPostWithAuthorView(post: PostWithAuthor): PostWithAuthorViewType {
+    const postView = this.toPostView(post);
+
     return {
-      id: post.id,
-      description: post.description,
-      images: post.images,
-      preview: post.preview,
-
-      createdAt: post.createdAt.toISOString(),
-      willBeDeleted: post.willBeDeleted?.toISOString() || null,
-
+      ...postView,
       author: {
         id: post.user.id,
         username: post.user.username,
