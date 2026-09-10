@@ -153,8 +153,8 @@ export class PostMediaEventsService implements OnModuleInit, OnModuleDestroy {
       const updatedPost = await this.prisma.post.updateMany({
         where: { id: data.postId },
         data: {
-          images: data.images as Prisma.InputJsonValue,
-          preview: data.preview as Prisma.InputJsonValue,
+          images: data.images as PrismaJson.PostImages,
+          preview: data.preview as PrismaJson.PostPreview,
           mediaStatus: MediaStatus.READY,
           mediaError: null,
         },

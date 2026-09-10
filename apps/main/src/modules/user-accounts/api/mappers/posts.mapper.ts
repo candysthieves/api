@@ -5,6 +5,7 @@ import { GetAllPostsViewType } from '../view-types/posts/get-posts-view.type.js'
 import { GetUserPostsViewType } from '../view-types/posts/get-user-posts-view.type.js';
 import { PostWithAuthor } from '../../infrastructure/types/post-with-author.type.js';
 import { PostWithAuthorViewType } from '../view-types/posts/post-with-author-view.type.js';
+import { UsersMapper } from './users.mapper.js';
 
 export class PostsMapper {
   static toView(post: Post): PostViewType {
@@ -36,20 +37,21 @@ export class PostsMapper {
     };
   }
 
-
-
   static toViewWithAuthor(post: PostWithAuthor): PostWithAuthorViewType {
     return {
       id: post.id,
       description: post.description,
       images: post.images,
       preview: post.preview,
+
       createdAt: post.createdAt.toISOString(),
       willBeDeleted: post.willBeDeleted?.toISOString() || null,
 
       author: {
         id: post.user.id,
         username: post.user.username,
+        avatarUrl: UsersMapper.getDefaultAvatar(),
+        avatarPreviewUrl: UsersMapper.getDefaultAvatarPreview(),
       },
     };
   }
@@ -80,4 +82,3 @@ export class PostsMapper {
     };
   }
 }
-

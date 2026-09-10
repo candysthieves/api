@@ -41,10 +41,10 @@ export class CreatePostUseCase implements ICommandHandler<CreatePostCommand> {
     const databaseCreateStartedAt = performance.now();
     const post = await this.postRepository.createPost({
       description: command.description,
-      images: [] as Prisma.InputJsonValue,
+      images: [],
       preview: Prisma.JsonNull,
       mediaStatus: MediaStatus.PROCESSING,
-      locations: command.locations as unknown as Prisma.InputJsonValue,
+      locations: command.locations,
       userId: command.userId,
     });
     this.logger.log(JSON.stringify({ event: 'post_create_database_completed', traceId: command.traceId, postId: post.id, durationMs: elapsedMs(databaseCreateStartedAt) }));
