@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { JwtAdapter } from '../../../core/adapters/jwt.adapter.js';
 import { AppConfig } from '../../../app.config.js';
 import { SessionsRepository } from '../infrastructure/repositories/session-repositories/sessions.repository.js';
@@ -9,6 +9,11 @@ import { SessionCreateInput } from '../../../generated/prisma/models/Session.js'
 
 @Injectable()
 export class AuthSessionService {
+  private readonly logger = new Logger(AuthSessionService.name);
+
+  private log(requestId: string, event: Record<string, unknown>): void {
+    if (requestId) this.logger.log(JSON.stringify(event));
+  }
   constructor(
     private readonly sessionsRepository: SessionsRepository,
     private readonly jwtAdapter: JwtAdapter,
@@ -19,7 +24,9 @@ export class AuthSessionService {
     userId: string,
     ip: string,
     userAgent: string,
+    requestId = '',
   ): Promise<AccessAndRefreshTokensType> {
+    const startedAt = Date.now();
     const sessionData: SessionCreateInput =
       SessionDataFactory.prepareCreateData(
         userId,
@@ -28,19 +35,50 @@ export class AuthSessionService {
         this.config.refreshTokenMaxAge,
       );
 
+    const createSessionStartedAt = Date.now();
     const session: Session = await this.sessionsRepository.create(sessionData);
+    this.log(requestId, {
+      event: 'auth_session_created',
+      requestId,
+      userId,
+      sessionId: session.id,
+      durationMs: Date.now() - createSessionStartedAt,
+    });
 
+    const createTokensStartedAt = Date.now();
     const accessToken: string = await this.jwtAdapter.createAccessToken(userId);
     const refreshToken: string = await this.jwtAdapter.createRefreshToken(
       userId,
       session.id,
     );
+    this.log(requestId, {
+      event: 'auth_tokens_created',
+      requestId,
+      userId,
+      sessionId: session.id,
+      durationMs: Date.now() - createTokensStartedAt,
+    });
     const refreshPayload = this.jwtAdapter.decodeRefreshToken(refreshToken);
+    const updateSessionStartedAt = Date.now();
     await this.sessionsRepository.updateTokenDates(
       session.id,
       new Date(refreshPayload.iat * 1000),
       new Date(refreshPayload.exp * 1000),
     );
+    this.log(requestId, {
+      event: 'auth_session_token_dates_updated',
+      requestId,
+      userId,
+      sessionId: session.id,
+      durationMs: Date.now() - updateSessionStartedAt,
+    });
+    this.log(requestId, {
+      event: 'auth_session_and_tokens_completed',
+      requestId,
+      userId,
+      sessionId: session.id,
+      durationMs: Date.now() - startedAt,
+    });
 
     return {
       accessToken,
