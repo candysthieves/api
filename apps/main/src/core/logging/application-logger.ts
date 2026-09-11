@@ -1,11 +1,9 @@
 import { ConsoleLogger } from '@nestjs/common';
 
-const LOGIN_CONTEXTS = new Set([
+const ALLOWED_CONTEXTS = new Set([
   'HttpRequestLoggingMiddleware',
   'HttpHandlerLoggingInterceptor',
   'DomainExceptionFilter',
-  'LoginUseCase',
-  'AuthSessionService',
   'CreatePostUseCase',
   'FilesTcpClient',
 ]);
@@ -23,7 +21,7 @@ const SERVICE_CONTEXTS = new Set([
   'ExceptionsHandler',
 ]);
 
-/** Suppresses application logs outside service lifecycle and the login flow. */
+/** Suppresses application logs outside service lifecycle and allowed flow. */
 export class ApplicationLogger extends ConsoleLogger {
   override log(message: unknown, ...optionalParams: unknown[]): void {
     if (this.shouldWrite(optionalParams)) super.log(message, ...optionalParams);
@@ -45,7 +43,7 @@ export class ApplicationLogger extends ConsoleLogger {
     const context = optionalParams.at(-1);
     return (
       typeof context === 'string' &&
-      (LOGIN_CONTEXTS.has(context) || SERVICE_CONTEXTS.has(context))
+      (ALLOWED_CONTEXTS.has(context) || SERVICE_CONTEXTS.has(context))
     );
   }
 }
