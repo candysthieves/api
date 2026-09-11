@@ -1,4 +1,5 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
+import { Inject } from '@nestjs/common';
 import { OAuthProfileDto } from '../../../api/dto/oauth-profile.dto.js';
 import { OAuthRepository } from '../../../infrastructure/repositories/oauth-repositories/oauth.repository.js';
 import { UsersRepository } from '../../../infrastructure/repositories/user-repositories/users.repository.js';
@@ -8,6 +9,11 @@ import { OAuthAccount, User } from '../../../../../generated/prisma/client.js';
 import { UserCreateInput } from '../../../../../generated/prisma/models/User.js';
 import { UserDataFactory } from '../../factories/user-data.factory.js';
 import { OAuthAccountDataFactory } from '../../factories/oauth-account-data.factory.js';
+import {
+  TRANSACTION_MANAGER,
+  TransactionClient,
+  type TransactionManager,
+} from '../../../../../core/database/transaction-manager.js';
 
 export class OAuthLoginCommand {
   constructor(
@@ -23,6 +29,8 @@ export class OAuthLoginUseCase implements ICommandHandler<OAuthLoginCommand> {
     private readonly usersRepository: UsersRepository,
     private readonly oauthRepository: OAuthRepository,
     private readonly authSessionService: AuthSessionService,
+    @Inject(TRANSACTION_MANAGER)
+    private readonly transactionManager: TransactionManager,
   ) {}
 
   async execute(dto: OAuthLoginCommand): Promise<AccessAndRefreshTokensType> {
@@ -39,32 +47,42 @@ export class OAuthLoginUseCase implements ICommandHandler<OAuthLoginCommand> {
     if (oauthAccount) {
       user = await this.usersRepository.findByIdOrNotFound(oauthAccount.userId);
     } else {
-      user = await this.usersRepository.findByEmail(profile.email);
+      user = await this.transactionManager.run(
+        async (tx: TransactionClient) => {
+          let existingUser: User | null =
+            await this.usersRepository.findByEmail(profile.email);
 
-      const username: string = await this.generateUniqueUsername(profile.email);
+          if (!existingUser) {
+            const username: string = await this.generateUniqueUsername(
+              profile.email,
+              tx,
+            );
 
-      if (!user) {
-        const userData: UserCreateInput = UserDataFactory.prepareCreateData(
-          profile.email,
-          username,
-          '',
-          new Date(),
-          true,
-          profile.firstName,
-          profile.lastName,
-        );
+            const userData: UserCreateInput = UserDataFactory.prepareCreateData(
+              profile.email,
+              username,
+              '',
+              new Date(),
+              true,
+              profile.firstName,
+              profile.lastName,
+            );
 
-        user = await this.usersRepository.create(userData);
-      }
+            existingUser = await this.usersRepository.create(userData, tx);
+          }
 
-      const oAuthAccountData = OAuthAccountDataFactory.prepareCreateData(
-        user.id,
-        profile.provider,
-        profile.providerId,
-        user.email,
+          const oAuthAccountData = OAuthAccountDataFactory.prepareCreateData(
+            existingUser.id,
+            profile.provider,
+            profile.providerId,
+            existingUser.email,
+          );
+
+          await this.oauthRepository.create(oAuthAccountData, tx);
+
+          return existingUser;
+        },
       );
-
-      await this.oauthRepository.create(oAuthAccountData);
     }
 
     return this.authSessionService.createSessionAndTokens(
@@ -74,13 +92,16 @@ export class OAuthLoginUseCase implements ICommandHandler<OAuthLoginCommand> {
     );
   }
 
-  private async generateUniqueUsername(email: string): Promise<string> {
+  private async generateUniqueUsername(
+    email: string,
+    tx?: TransactionClient,
+  ): Promise<string> {
     const base: string = email.split('@')[0];
 
     let username: string = base;
     let counter: number = 1;
 
-    while (await this.usersRepository.findByUsername(username)) {
+    while (await this.usersRepository.findByUsername(username, tx)) {
       username = `${base}${counter}`;
       counter++;
     }
