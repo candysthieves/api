@@ -103,10 +103,7 @@ export class LoginUseCase implements ICommandHandler<LoginCommand> {
     );
 
     const verifyCallStartedAt = performance.now();
-    const verification = this.hashAdapter.compare(
-      dto.password,
-      user.password,
-    );
+    const verification = this.hashAdapter.compare(dto.password, user.password);
     const verifyAwaitStartedAt = performance.now();
     this.logger.log(
       JSON.stringify({

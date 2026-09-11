@@ -37,7 +37,13 @@ export class AuthSessionService {
 
     const createSessionStartedAt = Date.now();
     const session: Session = await this.sessionsRepository.create(sessionData);
-    this.log(requestId, { event: 'auth_session_created', requestId, userId, sessionId: session.id, durationMs: Date.now() - createSessionStartedAt });
+    this.log(requestId, {
+      event: 'auth_session_created',
+      requestId,
+      userId,
+      sessionId: session.id,
+      durationMs: Date.now() - createSessionStartedAt,
+    });
 
     const createTokensStartedAt = Date.now();
     const accessToken: string = await this.jwtAdapter.createAccessToken(userId);
@@ -45,7 +51,13 @@ export class AuthSessionService {
       userId,
       session.id,
     );
-    this.log(requestId, { event: 'auth_tokens_created', requestId, userId, sessionId: session.id, durationMs: Date.now() - createTokensStartedAt });
+    this.log(requestId, {
+      event: 'auth_tokens_created',
+      requestId,
+      userId,
+      sessionId: session.id,
+      durationMs: Date.now() - createTokensStartedAt,
+    });
     const refreshPayload = this.jwtAdapter.decodeRefreshToken(refreshToken);
     const updateSessionStartedAt = Date.now();
     await this.sessionsRepository.updateTokenDates(
@@ -53,8 +65,20 @@ export class AuthSessionService {
       new Date(refreshPayload.iat * 1000),
       new Date(refreshPayload.exp * 1000),
     );
-    this.log(requestId, { event: 'auth_session_token_dates_updated', requestId, userId, sessionId: session.id, durationMs: Date.now() - updateSessionStartedAt });
-    this.log(requestId, { event: 'auth_session_and_tokens_completed', requestId, userId, sessionId: session.id, durationMs: Date.now() - startedAt });
+    this.log(requestId, {
+      event: 'auth_session_token_dates_updated',
+      requestId,
+      userId,
+      sessionId: session.id,
+      durationMs: Date.now() - updateSessionStartedAt,
+    });
+    this.log(requestId, {
+      event: 'auth_session_and_tokens_completed',
+      requestId,
+      userId,
+      sessionId: session.id,
+      durationMs: Date.now() - startedAt,
+    });
 
     return {
       accessToken,
