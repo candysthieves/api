@@ -1,9 +1,4 @@
-type AvatarProfileType = {
-  fileId: string;
-  url: string;
-  width: number;
-  height: number;
-};
+import { AvatarProfileType } from './avatar-profile.type.js';
 
 export type GetUserProfileType = {
   id: string;

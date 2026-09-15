@@ -33,6 +33,6 @@ export class GetDeletedPostByIdQueryHandler
       );
     }
 
-    return PostsMapper.toViewWithAuthor(post);
+    return PostsMapper.toPostWithAuthorView(post);
   }
 }

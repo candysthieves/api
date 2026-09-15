@@ -35,9 +35,10 @@ export class CreatePostUseCase implements ICommandHandler<CreatePostCommand> {
     const post = await this.postRepository.createPost({
       description: command.description,
       images: Array(command.files.length).fill(null) as Prisma.InputJsonValue,
+      images: [],
       preview: Prisma.JsonNull,
       mediaStatus: MediaStatus.PROCESSING,
-      locations: command.locations as unknown as Prisma.InputJsonValue,
+      locations: command.locations,
       userId: command.userId,
     });
 

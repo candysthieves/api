@@ -21,6 +21,6 @@ export class GetAllPostsQueryHandler implements IQueryHandler<GetAllPostsQuery> 
 
     const { items, nextCursor, hasNextPage } = paginateByCursor(posts, limit);
 
-    return PostsMapper.toGetAllPostsView(items, nextCursor, hasNextPage);
+    return PostsMapper.toAllPostsView(items, nextCursor, hasNextPage);
   }
 }

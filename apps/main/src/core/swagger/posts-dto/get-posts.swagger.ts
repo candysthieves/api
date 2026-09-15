@@ -55,6 +55,18 @@ export function ApiGetAllPosts() {
               author: {
                 id: '550e8400-e29b-41d4-a716-446655440002',
                 username: 'john_doe',
+                avatarUrl: {
+                  fileId: '550e8400-e29b-41d4-a716-446655440001',
+                  url: 'https://lumusapp-528592447405-eu-north-1-an.s3.eu-north-1.amazonaws.com/files/fallback/profile.webp',
+                  width: 8000,
+                  height: 8000,
+                },
+                avatarPreviewUrl: {
+                  fileId: '550e8400-e29b-41d4-a716-446655440002',
+                  url: 'https://lumusapp-528592447405-eu-north-1-an.s3.eu-north-1.amazonaws.com/files/fallback/profile.webp',
+                  width: 8000,
+                  height: 8000,
+                },
               },
             },
           ],

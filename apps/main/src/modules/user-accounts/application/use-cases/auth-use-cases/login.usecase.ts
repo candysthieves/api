@@ -58,6 +58,54 @@ export class LoginUseCase implements ICommandHandler<LoginCommand> {
         'Email is not confirmed',
       );
     }
+    const parseHashParametersStartedAt = performance.now();
+    const passwordHashParameters = getArgon2Parameters(user.password);
+    this.logger.log(
+      JSON.stringify({
+        event: 'login_password_hash_parameters_parsed',
+        requestId,
+        userId: user.id,
+        durationMs: Number(
+          (performance.now() - parseHashParametersStartedAt).toFixed(3),
+        ),
+        algorithm: passwordHashParameters?.algorithm ?? 'unknown',
+        memoryKiB: passwordHashParameters?.memoryKiB ?? null,
+        iterations: passwordHashParameters?.iterations ?? null,
+        parallelism: passwordHashParameters?.parallelism ?? null,
+      }),
+    );
+
+    const verifyCallStartedAt = performance.now();
+    const verification = this.hashAdapter.compare(dto.password, user.password);
+    const verifyAwaitStartedAt = performance.now();
+    this.logger.log(
+      JSON.stringify({
+        event: 'login_password_verification_scheduled',
+        requestId,
+        userId: user.id,
+        nativeCallSetupDurationMs: Number(
+          (verifyAwaitStartedAt - verifyCallStartedAt).toFixed(3),
+        ),
+      }),
+    );
+
+    const isPasswordCorrect: boolean = await verification;
+    this.logger.log(
+      JSON.stringify({
+        event: 'login_password_verification_completed',
+        // The native library does not expose separate worker-queue and
+        // cryptographic timings; this is their total for argon2.verify.
+        argon2VerifyCallDurationMs: Number(
+          (performance.now() - verifyCallStartedAt).toFixed(3),
+        ),
+        argon2WorkerWaitAndVerifyDurationMs: Number(
+          (performance.now() - verifyAwaitStartedAt).toFixed(3),
+        ),
+        requestId,
+        userId: user.id,
+        passwordValid: isPasswordCorrect,
+      }),
+    );
     const isPasswordCorrect = await this.hashAdapter.compare(
       dto.password,
       user.password,
