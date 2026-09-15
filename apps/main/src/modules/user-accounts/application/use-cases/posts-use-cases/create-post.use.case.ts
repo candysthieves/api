@@ -3,11 +3,14 @@ import { PostsRepository } from '../../../infrastructure/repositories/post-repos
 import { CreatePostLocationDto } from '../../../api/dto/create-post.dto.js';
 import { MediaStatus, Prisma } from '../../../../../generated/prisma/client.js';
 import { DomainExceptions } from '../../../../../core/exceptions/domain-exceptions.js';
-import { MAX_POST_IMAGES, MAX_POST_IMAGE_SIZE } from '@libs/contracts';
 import { SseService } from '../../../../../core/sse/sse.service.js';
 import { SseEventEnum } from '../../../../../core/sse/types/sse-event.type.js';
 import { Logger } from '@nestjs/common';
 import { MainRabbitMqProducerService } from '../../../../../core/rabbitmq/main-rabbitmq-producer.service.js';
+import {
+  MAX_POST_IMAGE_SIZE,
+  MAX_POST_IMAGES,
+} from '../../../../../../../../libs/contracts/index.js';
 
 export class CreatePostCommand {
   constructor(
