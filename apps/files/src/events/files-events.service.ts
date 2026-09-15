@@ -1,4 +1,9 @@
-import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  OnModuleDestroy,
+  OnModuleInit,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { FilesRabbitMqProducerService } from '../rabbitmq/files-rabbitmq-producer.service.js';
@@ -12,6 +17,7 @@ const PUBLISH_CONFIRMATION_TIMEOUT_MS = 3_000;
 
 @Injectable()
 export class FilesEventsService implements OnModuleInit, OnModuleDestroy {
+  private readonly logger = new Logger(FilesEventsService.name);
   private timer?: NodeJS.Timeout;
   private isPublishing = false;
 
@@ -22,7 +28,17 @@ export class FilesEventsService implements OnModuleInit, OnModuleDestroy {
   ) {}
 
   onModuleInit(): void {
-    this.timer = setInterval(() => void this.publishPending(), 1000);
+    this.timer = setInterval(() => {
+      this.publishPending().catch((err) => {
+        this.logger.error(
+          JSON.stringify({
+            event: 'publish_pending_unhandled_error',
+            error: err instanceof Error ? err.message : String(err),
+            stack: err instanceof Error ? err.stack : undefined,
+          }),
+        );
+      });
+    }, 1000);
   }
 
   onModuleDestroy(): void {
@@ -72,13 +88,40 @@ export class FilesEventsService implements OnModuleInit, OnModuleDestroy {
         if (!event) return;
 
         try {
+          const publishStartedAt = Date.now();
+          this.logger.log(
+            JSON.stringify({
+              event: 'files_output_event_publish_started',
+              eventId: event.eventId,
+              type: event.type,
+              attempt: event.attempts,
+            }),
+          );
           await this.producer.publishMediaEvent({
             eventId: event.eventId,
             consumer: event.consumer,
             type: event.type,
             data: event.data,
           });
+          this.logger.log(
+            JSON.stringify({
+              event: 'files_output_event_publish_completed',
+              durationMs: Date.now() - publishStartedAt,
+              eventId: event.eventId,
+              type: event.type,
+              attempt: event.attempts,
+            }),
+          );
         } catch (error) {
+          this.logger.error(
+            JSON.stringify({
+              event: 'files_output_event_publish_failed',
+              error: error instanceof Error ? error.message : String(error),
+              eventId: event.eventId,
+              type: event.type,
+              attempt: event.attempts,
+            }),
+          );
           await this.output
             .updateOne(
               { _id: event._id, status: EventStatus.SENDED },

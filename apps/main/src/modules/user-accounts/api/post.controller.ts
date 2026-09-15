@@ -11,9 +11,11 @@ import {
   Query,
   Put,
   UploadedFiles,
+  Req,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
+import type { Request } from 'express';
 import { ApiTags } from '@nestjs/swagger';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
@@ -23,7 +25,16 @@ import { User } from './decorators/user.decorator.js';
 import { type JwtAccessPayload } from '../../../core/types/jwt-payload.type.js';
 import { CreatePostDto } from './dto/create-post.dto.js';
 import { ApiCreatePost } from '../../../core/swagger/posts-dto/create-post.swagger.js';
-import { GetPostsQuery } from '../application/query-handler/posts/get-posts.query-handler.js';
+import { GetAllPostsQuery } from '../application/query-handler/posts/get-all-posts.query-handler.js';
+import { GetPostByIdQuery } from '../application/query-handler/posts/get-post-by-id.query-handler.js';
+import { GetDeletedPostByIdQuery } from '../application/query-handler/posts/get-deleted-post-by-id.query-handler.js';
+import { GetMyDeletedPostsQuery } from '../application/query-handler/posts/get-my-deleted-posts.query-handler.js';
+import { PostByIdViewType } from './view-types/posts/post-by-id-view.type.js';
+import { PostWithAuthorViewType } from './view-types/posts/post-with-author-view.type.js';
+import { GetAllPostsViewType } from './view-types/posts/get-posts-view.type.js';
+import { ApiGetPostById } from '../../../core/swagger/posts-dto/get-post-by-id.swagger.js';
+import { ApiGetDeletedPostById } from '../../../core/swagger/posts-dto/get-deleted-post-by-id.swagger.js';
+import { ApiGetMyDeletedPosts } from '../../../core/swagger/posts-dto/get-my-deleted-posts.swagger.js';
 import { GetPostsQueryParamsDto } from './dto/get-posts-query-params.dto.js';
 import { ApiHardDeletePost } from '../../../core/swagger/posts-dto/delete-post.swagger.js';
 import { ApiRestorePost } from '../../../core/swagger/posts-dto/restore-post.swagger.js';
@@ -34,7 +45,7 @@ import { ApiSoftDeletePost } from '../../../core/swagger/posts-dto/soft-delete-p
 import { UpdatePostDto } from './dto/update-post.dto.js';
 import { UpdatePostCommand } from '../application/use-cases/posts-use-cases/update-post.usecase.js';
 import { ApiUpdatePost } from '../../../core/swagger/posts-dto/update-post.swagger.js';
-import { ApiGetPosts } from '../../../core/swagger/posts-dto/get-posts.swagger.js';
+import { ApiGetAllPosts } from '../../../core/swagger/posts-dto/get-posts.swagger.js';
 
 @ApiTags('Posts')
 @Controller('posts')
@@ -44,11 +55,48 @@ export class PostController {
     private readonly queryBus: QueryBus,
   ) {}
 
-  @Get()
-  @ApiGetPosts()
-  getPosts(@Query() query: GetPostsQueryParamsDto) {
-    return this.queryBus.execute<GetPostsQuery>(
-      new GetPostsQuery(query.cursor, query.limit),
+  @Get('all-posts')
+  @ApiGetAllPosts()
+  getAllPosts(@Query() query: GetPostsQueryParamsDto) {
+    return this.queryBus.execute<GetAllPostsQuery>(
+      new GetAllPostsQuery(query.cursor, query.limit),
+    );
+  }
+
+  @Get('deleted-posts')
+  @UseGuards(AccessTokenGuard)
+  @ApiGetMyDeletedPosts()
+  getMyDeletedPosts(
+    @Query() query: GetPostsQueryParamsDto,
+    @User() user: JwtAccessPayload,
+  ): Promise<GetAllPostsViewType> {
+    return this.queryBus.execute<GetMyDeletedPostsQuery, GetAllPostsViewType>(
+      new GetMyDeletedPostsQuery(user.userId, query.cursor, query.limit),
+    );
+  }
+
+  @Get('deleted-posts/:postId')
+  @UseGuards(AccessTokenGuard)
+  @ApiGetDeletedPostById()
+  getDeletedPostById(
+    @Param('postId', ParseUUIDPipe) postId: string,
+    @User() user: JwtAccessPayload,
+  ): Promise<PostWithAuthorViewType> {
+    return this.queryBus.execute<
+      GetDeletedPostByIdQuery,
+      PostWithAuthorViewType
+    >(new GetDeletedPostByIdQuery(postId, user.userId));
+  }
+
+  @Get(':postId')
+  @UseGuards(AccessTokenGuard)
+  @ApiGetPostById()
+  getPostById(
+    @Param('postId', ParseUUIDPipe) postId: string,
+    @User() user: JwtAccessPayload,
+  ): Promise<PostByIdViewType> {
+    return this.queryBus.execute<GetPostByIdQuery, PostByIdViewType>(
+      new GetPostByIdQuery(postId, user.userId),
     );
   }
 
@@ -63,6 +111,7 @@ export class PostController {
     @Body() createDto: CreatePostDto,
     @User() user: JwtAccessPayload,
     @UploadedFiles() files: Express.Multer.File[],
+    @Req() request: Request,
   ): Promise<{ postId: string }> {
     return this.commandBus.execute(
       new CreatePostCommand(
@@ -70,6 +119,7 @@ export class PostController {
         user.userId,
         files,
         createDto.location,
+        (request as Request & { requestId?: string }).requestId ?? '',
       ),
     );
   }

@@ -6,7 +6,7 @@ import { GetUserProfileType } from '../../../api/view-types/users/get-user-profi
 
 export class GetUserProfileQuery {
   constructor(
-    public readonly profileUserId: string,
+    public readonly userId: string,
     public readonly currentUserId: string,
   ) {}
 }
@@ -23,12 +23,11 @@ export class GetUserProfileQueryHandler implements IQueryHandler<
 
   async execute({
     currentUserId,
-    profileUserId,
+    userId,
   }: GetUserProfileQuery): Promise<GetUserProfileType> {
-    const user =
-      await this.usersQueryRepository.findByIdOrNotFound(profileUserId);
+    const user = await this.usersQueryRepository.findByIdOrNotFound(userId);
 
-    const isOwner: boolean = profileUserId === currentUserId;
+    const isOwner: boolean = user.id === currentUserId;
 
     const postsCount = await this.postsQueryRepository.countPostsByUserId(
       user.id,

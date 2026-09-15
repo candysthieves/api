@@ -27,6 +27,7 @@ export class AppConfig {
   readonly rabbitMqUrl: string;
   readonly rabbitMqMainToFilesQueue: string;
   readonly rabbitMqFilesToMainQueue: string;
+  readonly unusedFilesCleanupEnabled: boolean;
 
   constructor(@Inject(ConfigService) configService: ConfigService) {
     this.port = Number(configService.getOrThrow<string>('PORT'));
@@ -76,6 +77,8 @@ export class AppConfig {
     this.rabbitMqFilesToMainQueue = configService.getOrThrow<string>(
       'RABBITMQ_FILES_TO_MAIN_QUEUE',
     );
+    this.unusedFilesCleanupEnabled =
+      configService.get<string>('UNUSED_FILES_CLEANUP_ENABLED') === 'true';
   }
 
   get refreshTokenMaxAge(): number {

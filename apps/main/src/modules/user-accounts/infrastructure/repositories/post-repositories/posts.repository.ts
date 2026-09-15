@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../../../infrastructure/prisma/prisma.service.js';
 import { Post } from '../../../../../generated/prisma/client.js';
 import { PostUncheckedCreateInput } from '../../../../../generated/prisma/models/Post.js';
+import { getFileIds } from '../../../../../core/events/files-tcp.client.js';
 
 @Injectable()
 export class PostsRepository {
@@ -39,5 +40,26 @@ export class PostsRepository {
       where: { willBeDeleted: { lte: now } },
       orderBy: { willBeDeleted: 'asc' },
     });
+  }
+
+  async getAllActivePostMediaFileIds(): Promise<string[]> {
+    const posts = await this.prisma.post.findMany({
+      select: {
+        images: true,
+        preview: true,
+      },
+    });
+
+    const fileIds = new Set<string>();
+    for (const post of posts) {
+      for (const id of getFileIds(post.images)) {
+        fileIds.add(id);
+      }
+      for (const id of getFileIds(post.preview)) {
+        fileIds.add(id);
+      }
+    }
+
+    return Array.from(fileIds);
   }
 }

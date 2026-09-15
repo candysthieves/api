@@ -1,4 +1,3 @@
-import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
 import { mongo, Model } from 'mongoose';
 import type { Connection } from 'mongoose';
@@ -9,11 +8,17 @@ import {
   EventStatus,
   StoredEventDocument,
 } from '../../../events/schemas/event.schema.js';
-import { UploadFileContract } from '../../../../../../libs/contracts/index.js';
 import { FileMapper } from '../api/mappers/file.mapper.js';
 import { FileViewType } from '../api/view-types/file-view.type.js';
 import { FileType } from '../schemas/files.schema.js';
 import { FilesService } from './files.service.js';
+import { UploadFileContract } from '@libs/contracts';
+import {
+  Injectable,
+  Logger,
+  OnModuleDestroy,
+  OnModuleInit,
+} from '@nestjs/common';
 
 const REQUESTED_EVENT = 'post.media.process.requested';
 const SOURCE_BUFFER_MISSING = 'SOURCE_BUFFER_MISSING';
@@ -24,12 +29,18 @@ const PROCESSING_LEASE_MS = 10 * 60_000;
 
 type AcceptedPostMediaJob = { accepted: true; eventId: string };
 type StoredSource = Omit<UploadFileContract, 'buffer'> & { sourceId: string };
-type PostMediaJobData = { postId: string; sources?: StoredSource[] };
+type PostMediaJobData = {
+  postId: string;
+  traceId?: string;
+  sources?: StoredSource[];
+};
 
 @Injectable()
 export class PostMediaProcessingService
   implements OnModuleInit, OnModuleDestroy
 {
+  private readonly logger = new Logger(PostMediaProcessingService.name);
+  private readonly metricsLogger = new Logger('PostCreationMetrics');
   private readonly startedAt = new Date();
   private timer?: NodeJS.Timeout;
   private isProcessing = false;
@@ -45,8 +56,40 @@ export class PostMediaProcessingService
   ) {}
 
   onModuleInit(): void {
-    void this.failInterruptedJobs();
-    this.timer = setInterval(() => void this.processPending(), 1_000);
+    this.connection.on('error', (err) => {
+      this.logger.error(
+        JSON.stringify({
+          event: 'mongodb_connection_error',
+          error: err instanceof Error ? err.message : String(err),
+          stack: err instanceof Error ? err.stack : undefined,
+        }),
+      );
+    });
+    this.connection.on('disconnected', () => {
+      this.logger.warn(JSON.stringify({ event: 'mongodb_disconnected' }));
+    });
+
+    void this.failInterruptedJobs().catch((err) => {
+      this.logger.error(
+        JSON.stringify({
+          event: 'fail_interrupted_jobs_failed',
+          error: err instanceof Error ? err.message : String(err),
+          stack: err instanceof Error ? err.stack : undefined,
+        }),
+      );
+    });
+
+    this.timer = setInterval(() => {
+      this.processPending().catch((err) => {
+        this.logger.error(
+          JSON.stringify({
+            event: 'process_pending_unhandled_error',
+            error: err instanceof Error ? err.message : String(err),
+            stack: err instanceof Error ? err.stack : undefined,
+          }),
+        );
+      });
+    }, 1_000);
   }
 
   onModuleDestroy(): void {
@@ -55,36 +98,137 @@ export class PostMediaProcessingService
 
   async accept(
     files: UploadFileContract[],
+    traceId: string,
   ): Promise<ObjectResult<AcceptedPostMediaJob | null>> {
-    const validationError = this.validate(files);
+    const validationError = await this.validate(files);
     if (validationError) return ObjectResult.failure(validationError);
 
     const postId = files[0].targetId;
     const eventId = crypto.randomUUID();
-    const sources = await Promise.all(
-      files.map((file) => this.storeSource(file)),
+    const acceptStartedAt = Date.now();
+    const totalSizeBytes = files.reduce((total, file) => total + file.size, 0);
+    this.metricsLogger.log(
+      JSON.stringify({
+        event: 'post_media_accept_started',
+        traceId,
+        postId,
+        fileCount: files.length,
+        totalSizeBytes,
+      }),
     );
+    this.logger.log(
+      JSON.stringify({
+        event: 'post_media_accept_started',
+        postId,
+        eventId,
+        fileCount: files.length,
+        totalSizeBytes,
+      }),
+    );
+
+    let sources: StoredSource[];
+    try {
+      sources = await Promise.all(
+        files.map((file) => this.storeSource(file, eventId)),
+      );
+    } catch (error) {
+      this.metricsLogger.error(
+        JSON.stringify({
+          event: 'post_media_source_storage_failed',
+          traceId,
+          postId,
+          durationMs: Date.now() - acceptStartedAt,
+          error: error instanceof Error ? error.message : String(error),
+        }),
+      );
+      this.logger.error(
+        JSON.stringify({
+          event: 'post_media_accept_failed',
+          durationMs: Date.now() - acceptStartedAt,
+          postId,
+          eventId,
+          phase: 'store_sources',
+          error: error instanceof Error ? error.message : String(error),
+        }),
+      );
+      throw error;
+    }
+    this.metricsLogger.log(
+      JSON.stringify({
+        event: 'post_media_sources_stored',
+        traceId,
+        postId,
+        durationMs: Date.now() - acceptStartedAt,
+        fileCount: sources.length,
+        totalSizeBytes,
+      }),
+    );
+
     let job: StoredEventDocument;
+    const jobCreateStartedAt = Date.now();
+    this.logger.log(
+      JSON.stringify({
+        event: 'post_media_job_create_started',
+        postId,
+        eventId,
+      }),
+    );
     try {
       job = await this.jobs.create({
         eventId,
         consumer: 'FILES',
         type: REQUESTED_EVENT,
-        data: { postId, sources },
+        data: { postId, traceId, sources },
         status: EventStatus.UNPROCESSED,
         attempts: 0,
       });
+      this.logger.log(
+        JSON.stringify({
+          event: 'post_media_job_create_completed',
+          durationMs: Date.now() - jobCreateStartedAt,
+          postId,
+          eventId,
+        }),
+      );
     } catch (error) {
+      this.logger.error(
+        JSON.stringify({
+          event: 'post_media_job_create_failed',
+          durationMs: Date.now() - jobCreateStartedAt,
+          postId,
+          eventId,
+          error: error instanceof Error ? error.message : String(error),
+        }),
+      );
       await this.deleteSources(sources);
       throw error;
     }
 
     setImmediate(() => void this.processPending());
+    this.metricsLogger.log(
+      JSON.stringify({
+        event: 'post_media_job_accepted',
+        traceId,
+        postId,
+        eventId: job.eventId,
+        durationMs: Date.now() - acceptStartedAt,
+      }),
+    );
+    this.logger.log(
+      JSON.stringify({
+        event: 'post_media_accept_completed',
+        durationMs: Date.now() - acceptStartedAt,
+        postId,
+        eventId,
+        fileCount: files.length,
+        totalSizeBytes,
+      }),
+    );
 
     return ObjectResult.success({ accepted: true, eventId: job.eventId });
   }
 
-  private validate(files: UploadFileContract[]) {
+  private async validate(files: UploadFileContract[]) {
     if (!files.length) {
       return {
         code: 'FILES_REQUIRED',
@@ -98,13 +242,21 @@ export class PostMediaProcessingService
         file.targetId !== postId ||
         !Buffer.isBuffer(file.buffer) ||
         !file.buffer.length ||
-        !file.mimeType.startsWith('image/') ||
+        !this.files.validateFormat(file.mimeType, file.originalName) ||
         file.size !== file.buffer.length ||
         !this.files.validateFileSize(file.buffer.length)
       ) {
         return {
           code: 'INVALID_FILE',
-          errors: [{ field: `files[${index}]`, message: 'Invalid image file' }],
+          errors: [{ field: `files[${index}]`, message: 'Invalid image file. Only JPEG, JPG and PNG are allowed' }],
+        };
+      }
+
+      const isBufferValid = await this.files.validateImageBuffer(file.buffer);
+      if (!isBufferValid) {
+        return {
+          code: 'INVALID_FILE',
+          errors: [{ field: `files[${index}]`, message: 'Corrupted or unreadable image file' }],
         };
       }
     }
@@ -144,8 +296,28 @@ export class PostMediaProcessingService
   }
 
   private async process(job: StoredEventDocument): Promise<void> {
+    const startedAt = Date.now();
     let releaseSources = false;
     const data = this.getJobData(job);
+    const traceId = data.traceId ?? '';
+    this.metricsLogger.log(
+      JSON.stringify({
+        event: 'post_media_processing_started',
+        traceId,
+        postId: data.postId,
+        jobId: job._id.toString(),
+        queueWaitMs: Date.now() - job.createdAt.getTime(),
+        attempt: job.attempts,
+      }),
+    );
+    this.logger.log(
+      JSON.stringify({
+        event: 'post_media_job_processing_started',
+        jobId: job._id.toString(),
+        postId: data.postId,
+        attempt: job.attempts,
+      }),
+    );
     try {
       if (!data.sources?.length) {
         await this.fail(job, SOURCE_BUFFER_MISSING, 'Source files are missing');
@@ -155,15 +327,75 @@ export class PostMediaProcessingService
       const sourceFiles = await Promise.all(
         data.sources.map((source) => this.loadSource(source)),
       );
+      this.metricsLogger.log(
+        JSON.stringify({
+          event: 'post_media_sources_loaded',
+          traceId,
+          postId: data.postId,
+          jobId: job._id.toString(),
+          durationMs: Date.now() - startedAt,
+          sourceCount: sourceFiles.length,
+        }),
+      );
+      this.logger.log(
+        JSON.stringify({
+          event: 'post_media_sources_loaded',
+          durationMs: Date.now() - startedAt,
+          jobId: job._id.toString(),
+          postId: data.postId,
+          sourceCount: sourceFiles.length,
+        }),
+      );
 
       const images: FileViewType[] = [];
-      for (const file of sourceFiles) {
-        const saved = await this.files.saveFile(file, FileType.POST);
+      const imagesSaveStartedAt = Date.now();
+      for (const [index, file] of sourceFiles.entries()) {
+        const saved = await this.files.saveFile(file, FileType.POST, traceId);
         images.push(FileMapper.toFileView(saved, this.s3.getUrl(saved.key)));
+        this.logger.log(
+          JSON.stringify({
+            event: 'post_media_image_saved',
+            durationMs: Date.now() - startedAt,
+            jobId: job._id.toString(),
+            postId: data.postId,
+            index,
+            fileId: saved.fileId,
+          }),
+        );
       }
+      this.metricsLogger.log(
+        JSON.stringify({
+          event: 'post_media_images_saved',
+          traceId,
+          postId: data.postId,
+          jobId: job._id.toString(),
+          durationMs: Date.now() - imagesSaveStartedAt,
+          imageCount: images.length,
+        }),
+      );
+      const previewSaveStartedAt = Date.now();
       const preview = await this.files.saveFile(
         sourceFiles[0],
         FileType.POST_PREVIEW,
+        traceId,
+      );
+      this.metricsLogger.log(
+        JSON.stringify({
+          event: 'post_media_preview_saved',
+          traceId,
+          postId: data.postId,
+          jobId: job._id.toString(),
+          durationMs: Date.now() - previewSaveStartedAt,
+        }),
+      );
+      this.logger.log(
+        JSON.stringify({
+          event: 'post_media_preview_saved',
+          durationMs: Date.now() - startedAt,
+          jobId: job._id.toString(),
+          postId: data.postId,
+          fileId: preview.fileId,
+        }),
       );
       const media = FileMapper.toFilesResult(
         sourceFiles[0].targetId,
@@ -171,11 +403,20 @@ export class PostMediaProcessingService
         FileMapper.toFileView(preview, this.s3.getUrl(preview.key)),
       );
 
-      await this.events.create('post.media.processed', {
+      const outputEvent = await this.events.create('post.media.processed', {
         postId: media.targetId,
         images: media.files,
         preview: media.preview,
       });
+      this.logger.log(
+        JSON.stringify({
+          event: 'post_media_processed_event_created',
+          durationMs: Date.now() - startedAt,
+          jobId: job._id.toString(),
+          postId: data.postId,
+          outputEventId: outputEvent.eventId,
+        }),
+      );
       await this.jobs
         .updateOne(
           { _id: job._id },
@@ -184,9 +425,47 @@ export class PostMediaProcessingService
           },
         )
         .exec();
+      this.logger.log(
+        JSON.stringify({
+          event: 'post_media_job_processing_completed',
+          durationMs: Date.now() - startedAt,
+          jobId: job._id.toString(),
+          postId: data.postId,
+          outputEventId: outputEvent.eventId,
+        }),
+      );
       releaseSources = true;
+      this.metricsLogger.log(
+        JSON.stringify({
+          event: 'post_media_processing_completed',
+          traceId,
+          postId: data.postId,
+          jobId: job._id.toString(),
+          durationMs: Date.now() - startedAt,
+        }),
+      );
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
+      this.metricsLogger.error(
+        JSON.stringify({
+          event: 'post_media_processing_failed',
+          traceId,
+          postId: data.postId,
+          jobId: job._id.toString(),
+          durationMs: Date.now() - startedAt,
+          error: message,
+        }),
+      );
+      this.logger.error(
+        JSON.stringify({
+          event: 'post_media_job_processing_failed',
+          durationMs: Date.now() - startedAt,
+          jobId: job._id.toString(),
+          postId: data.postId,
+          attempt: job.attempts,
+          error: message,
+        }),
+      );
       if (job.attempts < MAX_PROCESSING_ATTEMPTS) {
         await this.jobs
           .updateOne(
@@ -279,8 +558,21 @@ export class PostMediaProcessingService
     return job.data as unknown as PostMediaJobData;
   }
 
-  private async storeSource(file: UploadFileContract): Promise<StoredSource> {
+  private async storeSource(
+    file: UploadFileContract,
+    eventId: string,
+  ): Promise<StoredSource> {
     const sourceId = new mongo.ObjectId();
+    const storeStartedAt = Date.now();
+    this.logger.log(
+      JSON.stringify({
+        event: 'post_media_source_store_started',
+        postId: file.targetId,
+        eventId,
+        sourceId: sourceId.toHexString(),
+        sizeBytes: file.size,
+      }),
+    );
     const stream = this.bucket.openUploadStreamWithId(
       sourceId,
       file.originalName,
@@ -288,11 +580,36 @@ export class PostMediaProcessingService
         metadata: { contentType: file.mimeType },
       },
     );
-    await new Promise<void>((resolve, reject) => {
-      stream.once('error', reject);
-      stream.once('finish', resolve);
-      stream.end(file.buffer);
-    });
+    try {
+      await new Promise<void>((resolve, reject) => {
+        stream.once('error', reject);
+        stream.once('finish', resolve);
+        stream.end(file.buffer);
+      });
+      this.logger.log(
+        JSON.stringify({
+          event: 'post_media_source_store_completed',
+          durationMs: Date.now() - storeStartedAt,
+          sizeBytes: file.size,
+          postId: file.targetId,
+          eventId,
+          sourceId: sourceId.toHexString(),
+        }),
+      );
+    } catch (error) {
+      this.logger.error(
+        JSON.stringify({
+          event: 'post_media_source_store_failed',
+          durationMs: Date.now() - storeStartedAt,
+          sizeBytes: file.size,
+          postId: file.targetId,
+          eventId,
+          sourceId: sourceId.toHexString(),
+          error: error instanceof Error ? error.message : String(error),
+        }),
+      );
+      throw error;
+    }
     return {
       sourceId: sourceId.toHexString(),
       targetId: file.targetId,

@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../../../infrastructure/prisma/prisma.service.js';
 import { DomainExceptions } from '../../../../../core/exceptions/domain-exceptions.js';
 import { ErrorStatus } from '../../../../../core/exceptions/domain-exception-code.js';
-import { User } from '../../../../../generated/prisma/client.js';
+import { Prisma, User } from '../../../../../generated/prisma/client.js';
 import {
   UserCreateInput,
   UserUpdateInput,
@@ -15,8 +15,11 @@ export class UsersRepository {
     this.prismaUser = prisma.user;
   }
 
-  async create(data: UserCreateInput): Promise<User> {
-    return this.prismaUser.create({ data });
+  async create(
+    data: UserCreateInput,
+    client: Prisma.TransactionClient = this.prisma,
+  ): Promise<User> {
+    return client.user.create({ data });
   }
 
   async update(userId: string, data: UserUpdateInput): Promise<User> {
@@ -28,8 +31,11 @@ export class UsersRepository {
     });
   }
 
-  async findByUsername(username: string): Promise<User | null> {
-    return this.prismaUser.findUnique({ where: { username } });
+  async findByUsername(
+    username: string,
+    client: Prisma.TransactionClient = this.prisma,
+  ): Promise<User | null> {
+    return client.user.findUnique({ where: { username } });
   }
 
   async findByEmail(email: string): Promise<User | null> {

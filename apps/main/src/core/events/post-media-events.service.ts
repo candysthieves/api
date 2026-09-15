@@ -1,4 +1,9 @@
-import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  OnModuleDestroy,
+  OnModuleInit,
+} from '@nestjs/common';
 import {
   EventStatus,
   MediaStatus,
@@ -18,6 +23,7 @@ export type MediaEvent = {
 
 @Injectable()
 export class PostMediaEventsService implements OnModuleInit, OnModuleDestroy {
+  private readonly logger = new Logger(PostMediaEventsService.name);
   private timer?: NodeJS.Timeout;
   private isProcessing = false;
 
@@ -36,6 +42,7 @@ export class PostMediaEventsService implements OnModuleInit, OnModuleDestroy {
   }
 
   async accept(event: MediaEvent): Promise<void> {
+    const startedAt = Date.now();
     await this.prisma.inputEvent.upsert({
       where: { eventId: event.eventId },
       create: {
@@ -46,6 +53,15 @@ export class PostMediaEventsService implements OnModuleInit, OnModuleDestroy {
       },
       update: {},
     });
+    this.logger.log(
+      JSON.stringify({
+        event: 'post_media_event_received',
+        durationMs: Date.now() - startedAt,
+        eventId: event.eventId,
+        type: event.type,
+        postId: event.data.postId,
+      }),
+    );
     setImmediate(() => void this.processPending());
   }
 
@@ -59,10 +75,48 @@ export class PostMediaEventsService implements OnModuleInit, OnModuleDestroy {
         const event = await this.claimNextEvent();
         if (!event) return;
         try {
+          const startedAt = Date.now();
+          const data = event.data as unknown as MediaEvent['data'];
+          this.logger.log(
+            JSON.stringify({
+              event: 'post_media_event_processing_started',
+              eventId: event.eventId,
+              type: event.type,
+              postId: data.postId,
+              attempt: event.attempts,
+            }),
+          );
           await this.applyMediaEvent(event);
+          this.logger.log(
+            JSON.stringify({
+              event: 'post_media_event_applied',
+              durationMs: Date.now() - startedAt,
+              eventId: event.eventId,
+              postId: data.postId,
+            }),
+          );
           await this.files.acknowledge(event.eventId);
           await this.markCompleted(event.id);
+          this.logger.log(
+            JSON.stringify({
+              event: 'post_media_event_processing_completed',
+              durationMs: Date.now() - startedAt,
+              eventId: event.eventId,
+              postId: data.postId,
+            }),
+          );
         } catch (error) {
+          const data = event.data as unknown as MediaEvent['data'];
+          this.logger.error(
+            JSON.stringify({
+              event: 'post_media_event_processing_failed',
+              eventId: event.eventId,
+              type: event.type,
+              postId: data.postId,
+              attempt: event.attempts,
+              error: error instanceof Error ? error.message : String(error),
+            }),
+          );
           await this.scheduleRetry(event.id, error);
         }
       }
@@ -89,6 +143,7 @@ export class PostMediaEventsService implements OnModuleInit, OnModuleDestroy {
   }
 
   private async applyMediaEvent(event: {
+    eventId: string;
     type: string;
     data: Prisma.JsonValue;
   }): Promise<void> {
@@ -98,14 +153,21 @@ export class PostMediaEventsService implements OnModuleInit, OnModuleDestroy {
       const updatedPost = await this.prisma.post.updateMany({
         where: { id: data.postId },
         data: {
-          images: data.images as Prisma.InputJsonValue,
-          preview: data.preview as Prisma.InputJsonValue,
+          images: data.images as PrismaJson.PostImages,
+          preview: data.preview as PrismaJson.PostPreview,
           mediaStatus: MediaStatus.READY,
           mediaError: null,
         },
       });
       if (!updatedPost.count) {
-        throw new Error(`POST_NOT_FOUND:${data.postId}`);
+        this.logger.warn(
+          JSON.stringify({
+            event: 'post_media_event_discarded_post_not_found',
+            eventId: event.eventId,
+            postId: data.postId,
+          }),
+        );
+        return;
       }
 
       this.sse.emit(SseEventEnum.POST_CREATED, { postId: data.postId });

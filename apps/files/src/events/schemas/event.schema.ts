@@ -27,5 +27,7 @@ export class StoredEvent {
   @Prop() errorCode?: string;
   @Prop() lastError?: string;
   @Prop({ index: true }) nextAttemptAt?: Date;
+  createdAt: Date;
+  updatedAt: Date;
 }
 export const StoredEventSchema = SchemaFactory.createForClass(StoredEvent);

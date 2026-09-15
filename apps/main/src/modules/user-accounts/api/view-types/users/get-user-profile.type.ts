@@ -1,9 +1,11 @@
+import { AvatarProfileType } from './avatar-profile.type.js';
+
 export type GetUserProfileType = {
   id: string;
   username: string;
   description: string;
-  avatarUrl: string;
-  avatarPreviewUrl: string;
+  avatarUrl: AvatarProfileType;
+  avatarPreviewUrl: AvatarProfileType;
 
   followersCount: number;
   followingCount: number;

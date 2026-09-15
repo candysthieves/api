@@ -4,6 +4,7 @@ import { EventsModule } from '../../core/events/events.module.js';
 import { AuthSessionService } from './application/auth-session.service.js';
 import { PasswordRecoveryService } from './application/password-recovery.service.js';
 import { PostDeletionSchedulerService } from './application/post-deletion-scheduler.service.js';
+import { UnusedImagesCleanupSchedulerService } from './application/unused-images-cleanup-scheduler.service.js';
 import { ProfileQueryHandler } from './application/query-handler/auth/profile-query-handler.js';
 import { FindAllSessionsQueryHandler } from './application/query-handler/sessions/find-sessions-query-handler.js';
 import { GetUsersCountQueryHandler } from './application/query-handler/users/get-users-count-query-handler.js';
@@ -41,7 +42,12 @@ import { GithubStrategy } from './infrastructure/strategies/github.strategy.js';
 import { GoogleStrategy } from './infrastructure/strategies/google.strategy.js';
 import { GetUserProfileQueryHandler } from './application/query-handler/users/get-user-profile-query-handler.js';
 import { PostsQueryRepository } from './infrastructure/repositories/post-repositories/posts.query.repository.js';
-import { GetPostsQueryHandler } from './application/query-handler/posts/get-posts.query-handler.js';
+import { GetAllPostsQueryHandler } from './application/query-handler/posts/get-all-posts.query-handler.js';
+import { FindPostsByUserIdAndCursorQueryHandler } from './application/query-handler/posts/find-posts-by-user-id-and-cursor.query-handler.js';
+import { FindDeletedPostsByUserIdAndCursorQueryHandler } from './application/query-handler/posts/find-deleted-posts-by-user-id-and-cursor.query-handler.js';
+import { GetPostByIdQueryHandler } from './application/query-handler/posts/get-post-by-id.query-handler.js';
+import { GetDeletedPostByIdQueryHandler } from './application/query-handler/posts/get-deleted-post-by-id.query-handler.js';
+import { GetMyDeletedPostsQueryHandler } from './application/query-handler/posts/get-my-deleted-posts.query-handler.js';
 
 @Module({
   imports: [CqrsModule, EventsModule],
@@ -75,6 +81,13 @@ import { GetPostsQueryHandler } from './application/query-handler/posts/get-post
     ProfileQueryHandler,
     GetUsersCountQueryHandler,
     GetUserProfileQueryHandler,
+    FindPostsByUserIdAndCursorQueryHandler,
+    FindDeletedPostsByUserIdAndCursorQueryHandler,
+    GetPostByIdQueryHandler,
+    GetDeletedPostByIdQueryHandler,
+    GetMyDeletedPostsQueryHandler,
+
+
     UsersRepository,
     SessionsRepository,
     OAuthRepository,
@@ -85,10 +98,12 @@ import { GetPostsQueryHandler } from './application/query-handler/posts/get-post
     AuthSessionService,
     PasswordRecoveryService,
     PostDeletionSchedulerService,
-    GetPostsQueryHandler,
+    UnusedImagesCleanupSchedulerService,
+    GetAllPostsQueryHandler,
     GoogleStrategy,
     GithubStrategy,
     AccessTokenGuard,
   ],
 })
 export class UserAccountsModule {}
+
