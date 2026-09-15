@@ -3,10 +3,7 @@ import { PostsRepository } from '../../../infrastructure/repositories/post-repos
 import { CreatePostLocationDto } from '../../../api/dto/create-post.dto.js';
 import { MediaStatus, Prisma } from '../../../../../generated/prisma/client.js';
 import { DomainExceptions } from '../../../../../core/exceptions/domain-exceptions.js';
-import {
-  MAX_POST_IMAGES,
-  MAX_POST_IMAGE_SIZE,
-} from '../../../../../../../../libs/contracts/index.js';
+import { MAX_POST_IMAGES, MAX_POST_IMAGE_SIZE } from '@libs/contracts';
 import { SseService } from '../../../../../core/sse/sse.service.js';
 import { SseEventEnum } from '../../../../../core/sse/types/sse-event.type.js';
 import { Logger } from '@nestjs/common';
@@ -34,8 +31,7 @@ export class CreatePostUseCase implements ICommandHandler<CreatePostCommand> {
     this.validateFiles(command.files);
     const post = await this.postRepository.createPost({
       description: command.description,
-      images: Array(command.files.length).fill(null) as Prisma.InputJsonValue,
-      images: [],
+      images: Array.from({ length: command.files.length }, () => null),
       preview: Prisma.JsonNull,
       mediaStatus: MediaStatus.PROCESSING,
       locations: command.locations,

@@ -19,7 +19,7 @@ describe('PostsMapper', () => {
       createdAt: new Date('2026-09-08T00:00:00Z'),
       willBeDeleted: null,
     } as Post;
-    const view = PostsMapper.toView(post);
+    const view = PostsMapper.toPostView(post);
     expect(view.images).toEqual([
       null,
       {

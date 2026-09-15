@@ -17,7 +17,6 @@ export type PostImage = FileType;
 export type PostImages = (PostImage | null)[];
 
 export type PostPreview = FileType | null;
-export type PostPreview = FileType | null;
 
 declare global {
   namespace PrismaJson {

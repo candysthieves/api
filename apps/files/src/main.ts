@@ -10,13 +10,6 @@ async function bootstrap() {
 
   const config = app.get(FilesConfig);
 
-  app.connectMicroservice<MicroserviceOptions>(
-    {
-      transport: Transport.TCP,
-      options: {
-        host: config.tcpHost,
-        port: config.tcpPort,
-      },
   app.enableShutdownHooks();
 
   process.on('uncaughtException', (err: Error) => {
@@ -66,20 +59,13 @@ async function bootstrap() {
     );
   }, 30_000).unref();
 
-  app.connectMicroservice<MicroserviceOptions>({
-    transport: Transport.RMQ,
-    options: {
-      urls: [config.rabbitMqUrl],
-      queue: config.rabbitMqMainToFilesQueue,
-      noAck: false,
-    },
-  }, { inheritAppConfig: true });
-
-  app.connectMicroservice<MicroserviceOptions>({
-    transport: Transport.TCP,
-    options: {
-      host: config.tcpHost,
-      port: config.tcpPort,
+  app.connectMicroservice<MicroserviceOptions>(
+    {
+      transport: Transport.TCP,
+      options: {
+        host: config.tcpHost,
+        port: config.tcpPort,
+      },
     },
     { inheritAppConfig: true },
   );
