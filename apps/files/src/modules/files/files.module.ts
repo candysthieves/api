@@ -1,3 +1,4 @@
+import { FilesEventsModule } from '../../events/files-events.module.js';
 import { Module } from '@nestjs/common';
 import { FilesController } from './api/files.controller.js';
 import { FilesService } from './application/files.service.js';
@@ -9,15 +10,18 @@ import { FilesConfig } from '../../files.config.js';
 import { SoftDeleteFilesUseCase } from './application/use-cases/soft-delete-files.usecase.js';
 import { DeleteFilesUseCase } from './application/use-cases/delete-files.usecase.js';
 import { RestoreFilesUseCase } from './application/use-cases/restore-files.usecase.js';
-import { FilesEventsModule } from '../../events/files-events.module.js';
-import { PostMediaProcessingService } from './application/post-media-processing.service.js';
 import { UploadFileUseCase } from './application/use-cases/upload-file-use.case.js';
-import { UploadFilesUseCase } from './application/use-cases/upload-files-use.case.js';
 import { CleanupUnusedPostFilesUseCase } from './application/use-cases/cleanup-unused-post-files.usecase.js';
+import { PostImageWorkerService } from './application/post-image-worker.service.js';
+import { PostImageQueueService } from './application/post-image-queue.service.js';
+import {
+  CancelledPost,
+  CancelledPostSchema,
+} from './schemas/cancelled-post.schema.js';
+import { CancelledPostRepository } from './application/cancelled-post.repository.js';
 
 const useCases = [
   UploadFileUseCase,
-  UploadFilesUseCase,
   SoftDeleteFilesUseCase,
   DeleteFilesUseCase,
   RestoreFilesUseCase,
@@ -26,8 +30,14 @@ const useCases = [
 
 @Module({
   imports: [
-    MongooseModule.forFeature([{ name: File.name, schema: FileSchema }]),
     FilesEventsModule,
+    MongooseModule.forFeature([
+      { name: File.name, schema: FileSchema },
+      {
+        name: CancelledPost.name,
+        schema: CancelledPostSchema,
+      },
+    ]),
   ],
   controllers: [FilesController],
   providers: [
@@ -36,7 +46,9 @@ const useCases = [
     ImageProcessingService,
     S3Adapter,
     FilesConfig,
-    PostMediaProcessingService,
+    PostImageWorkerService,
+    PostImageQueueService,
+    CancelledPostRepository,
   ],
 })
 export class FilesModule {}

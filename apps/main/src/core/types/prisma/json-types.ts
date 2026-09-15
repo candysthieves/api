@@ -14,6 +14,6 @@ export type PostLocations = PostLocation[];
 
 export type PostImage = FileType;
 
-export type PostImages = PostImage[];
+export type PostImages = (PostImage | null)[];
 
-export type PostPreview = FileType;
+export type PostPreview = FileType | null;

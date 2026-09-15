@@ -1,93 +1,23 @@
-import { Inject, Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { lastValueFrom, timeout } from 'rxjs';
 export const FILES_TCP_CLIENT = 'FILES_TCP_CLIENT';
-const LONG_FILES_RPC_TIMEOUT_MS = 60_000;
-export type PostMediaJobAcceptance = {
-  data: { accepted: true; eventId: string } | null;
-  error: { code: string; errors: { field: string; message: string }[] } | null;
-};
 
 export type FilesDeletionResult = {
   data: null;
   error: { code: string; errors: { field: string; message: string }[] } | null;
 };
 
+type FilesCleanupResult = {
+  data: { deletedDbCount: number; deletedS3OrphanCount: number } | null;
+  error: FilesDeletionResult['error'];
+};
+
 @Injectable()
 export class FilesTcpClient {
-  private readonly logger = new Logger(FilesTcpClient.name);
-
-  constructor(@Inject(FILES_TCP_CLIENT) private readonly client: ClientProxy) {}
-  async uploadPostFiles(
-    postId: string,
-    files: Express.Multer.File[],
-    traceId: string,
-  ): Promise<PostMediaJobAcceptance> {
-    const startedAt = Date.now();
-    const totalSizeBytes = files.reduce((total, file) => total + file.size, 0);
-    this.logger.log(
-      JSON.stringify({
-        event: 'files_upload_transport_started',
-        traceId,
-        postId,
-        fileCount: files.length,
-        totalSizeBytes,
-        timeoutMs: LONG_FILES_RPC_TIMEOUT_MS,
-      }),
-    );
-
-    try {
-      const result = await lastValueFrom(
-        this.client
-          .send(
-            { cmd: 'upload-post-files' },
-            {
-              traceId,
-              files: files.map((file) => ({
-                targetId: postId,
-                originalName: file.originalname,
-                mimeType: file.mimetype,
-                size: file.size,
-                buffer: file.buffer,
-              })),
-            },
-          )
-          .pipe(timeout(LONG_FILES_RPC_TIMEOUT_MS)),
-      );
-      this.logger.log(
-        JSON.stringify({
-          event: 'files_upload_transport_completed',
-          traceId,
-          durationMs: Date.now() - startedAt,
-          postId,
-          fileCount: files.length,
-          totalSizeBytes,
-        }),
-      );
-      return result;
-    } catch (error) {
-      this.logger.error(
-        JSON.stringify({
-          event: 'files_upload_transport_failed',
-          traceId,
-          durationMs: Date.now() - startedAt,
-          postId,
-          fileCount: files.length,
-          totalSizeBytes,
-          error: error instanceof Error ? error.message : String(error),
-        }),
-      );
-      throw error;
-    }
-  }
-  acknowledge(eventId: string): Promise<void> {
-    return lastValueFrom(
-      this.client
-        .send({ cmd: 'post-media-event-ack' }, { eventId })
-        .pipe(timeout(5_000)),
-    );
-  }
-
+  constructor(
+    @Inject(FILES_TCP_CLIENT) private readonly fileMKSClient: ClientProxy,
+  ) {}
   async deletePostMedia(
     images: unknown,
     preview: unknown,
@@ -96,9 +26,9 @@ export class FilesTcpClient {
       if (!fileIds.length) continue;
 
       const result = await lastValueFrom(
-        this.client
+        this.fileMKSClient
           .send<FilesDeletionResult>({ cmd: 'delete-files' }, { fileIds })
-          .pipe(timeout(LONG_FILES_RPC_TIMEOUT_MS)),
+          .pipe(timeout(15_000)),
       );
       if (result.error) return result;
     }
@@ -109,17 +39,14 @@ export class FilesTcpClient {
   async cleanupUnusedPostFiles(
     activeFileIds: string[],
     olderThanHours = 24,
-  ): Promise<{
-    data: { deletedDbCount: number; deletedS3OrphanCount: number } | null;
-    error: { code: string; errors: { field: string; message: string }[] } | null;
-  }> {
+  ): Promise<FilesCleanupResult> {
     return lastValueFrom(
-      this.client
-        .send(
+      this.fileMKSClient
+        .send<FilesCleanupResult>(
           { cmd: 'cleanup-unused-post-files' },
           { activeFileIds, olderThanHours },
         )
-        .pipe(timeout(LONG_FILES_RPC_TIMEOUT_MS)),
+        .pipe(timeout(60_000)),
     );
   }
 }

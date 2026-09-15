@@ -26,8 +26,6 @@ COPY --chown=node . .
 
 RUN pnpm run prisma:generate
 RUN pnpm run build:${SERVICE}
-RUN mkdir -p dist/apps/main/assets \
-  && cp -R apps/main/src/assets/. dist/apps/main/assets/
 
 # Bind to all network interfaces so that it can be mapped to the host OS
 

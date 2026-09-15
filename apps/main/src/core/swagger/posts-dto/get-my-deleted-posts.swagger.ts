@@ -39,7 +39,8 @@ export function ApiGetMyDeletedPosts() {
     }),
 
     ApiOkResponse({
-      description: 'Soft-deleted posts successfully retrieved.',
+      description:
+        'Soft-deleted posts successfully retrieved. Images preserve upload order and contain null for slots without a ready image. Preview is null until the first image is ready.',
       schema: {
         example: {
           items: [
@@ -83,7 +84,8 @@ export function ApiGetMyDeletedPosts() {
           code: {
             type: 'number',
             example: ErrorStatus.ACCESS_TOKEN_EXPIRED,
-            description: 'Error status code (74 for expired, 80 for session not found)',
+            description:
+              'Error status code (74 for expired, 80 for session not found)',
           },
           errorsMessages: {
             type: 'array',

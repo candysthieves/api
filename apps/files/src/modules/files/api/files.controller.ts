@@ -12,16 +12,16 @@ import {
   DeleteFilesContract,
   RestoreFilesContract,
   UploadFileContract,
-  UploadFilesContract,
+  CancelPostImagesContract,
 } from '../../../../../../libs/contracts/index.js';
 import {
   CleanupResult,
   CleanupUnusedPostFilesCommand,
 } from '../application/use-cases/cleanup-unused-post-files.usecase.js';
-import { PostMediaProcessingService } from '../application/post-media-processing.service.js';
 import { UploadFileCommand } from '../application/use-cases/upload-file-use.case.js';
 import { RpcValidationPipe } from '../../../core/pipes/rpc-validation.pipe.js';
 import { ValidationRpcExceptionFilter } from '../../../core/filters/validation-rpc-exception.filter.js';
+import { CancelledPostRepository } from '../application/cancelled-post.repository.js';
 
 @UsePipes(RpcValidationPipe())
 @UseFilters(ValidationRpcExceptionFilter)
@@ -29,12 +29,13 @@ import { ValidationRpcExceptionFilter } from '../../../core/filters/validation-r
 export class FilesController {
   constructor(
     private readonly commandBus: CommandBus,
-    private readonly postMediaProcessing: PostMediaProcessingService,
+    private readonly cancelledPosts: CancelledPostRepository,
   ) {}
 
-  @MessagePattern({ cmd: 'upload-post-files' })
-  uploadPostFiles(@Payload() dto: UploadFilesContract) {
-    return this.postMediaProcessing.accept(dto.files, dto.traceId ?? '');
+  @MessagePattern({ cmd: 'cancel-post-images' })
+  async cancelPostImages(@Payload() dto: CancelPostImagesContract) {
+    await this.cancelledPosts.cancel(dto.postId);
+    return ObjectResult.success(null);
   }
 
   @MessagePattern({ cmd: 'upload-avatar-file' })

@@ -30,7 +30,8 @@ export function ApiGetDeletedPostById() {
     }),
 
     ApiOkResponse({
-      description: 'Deleted post successfully retrieved.',
+      description:
+        'Deleted post successfully retrieved. Images preserve upload order and contain null for slots without a ready image. Preview is null until the first image is ready.',
       schema: {
         example: {
           id: '550e8400-e29b-41d4-a716-446655440001',
@@ -93,7 +94,8 @@ export function ApiGetDeletedPostById() {
           code: {
             type: 'number',
             example: ErrorStatus.ACCESS_TOKEN_EXPIRED,
-            description: 'Error status code (74 for expired, 80 for session not found)',
+            description:
+              'Error status code (74 for expired, 80 for session not found)',
           },
           errorsMessages: {
             type: 'array',
@@ -152,7 +154,8 @@ export function ApiGetDeletedPostById() {
                 field: { type: 'string', example: 'postId' },
                 message: {
                   type: 'string',
-                  example: 'You do not have permission to view this deleted post',
+                  example:
+                    'You do not have permission to view this deleted post',
                 },
               },
             },

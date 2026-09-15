@@ -1,28 +1,42 @@
+import { RabbitMQModule } from '@golevelup/nestjs-rabbitmq';
 import { Module } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { ClientsModule, Transport } from '@nestjs/microservices';
-import { FilesRabbitMqConsumerController } from './files-rabbitmq-consumer.controller.js';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { FilesRabbitMqProducerService } from './files-rabbitmq-producer.service.js';
-
-export const MAIN_RMQ_CLIENT = 'MAIN_RMQ_CLIENT';
 
 @Module({
   imports: [
-    ClientsModule.registerAsync([
-      {
-        name: MAIN_RMQ_CLIENT,
-        inject: [ConfigService],
-        useFactory: (config: ConfigService) => ({
-          transport: Transport.RMQ,
-          options: {
-            urls: [config.getOrThrow<string>('RABBITMQ_URL')],
-            queue: config.getOrThrow<string>('RABBITMQ_FILES_TO_MAIN_QUEUE'),
+    ConfigModule,
+    RabbitMQModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => {
+        const inputEvents = `${config.getOrThrow<string>('RABBITMQ_MAIN_TO_FILES_QUEUE')}.post-images.v1`;
+        const results = `${config.getOrThrow<string>('RABBITMQ_FILES_TO_MAIN_QUEUE')}.post-images.results.v1`;
+        const imageQueueOptions = {
+          durable: true,
+          arguments: { 'x-single-active-consumer': true },
+        };
+        return {
+          uri: config.getOrThrow<string>('RABBITMQ_URL'),
+          prefetchCount: 1,
+          enableDirectReplyTo: false,
+          queues: [
+            { name: inputEvents, options: imageQueueOptions },
+            { name: results, options: { durable: true } },
+          ],
+          handlers: {
+            postImageInputEvents: {
+              exchange: '',
+              routingKey: inputEvents,
+              queue: inputEvents,
+              queueOptions: imageQueueOptions,
+              deserializer: (body: Buffer) => body,
+            },
           },
-        }),
+        };
       },
-    ]),
+    }),
   ],
-  controllers: [FilesRabbitMqConsumerController],
   providers: [FilesRabbitMqProducerService],
   exports: [FilesRabbitMqProducerService],
 })

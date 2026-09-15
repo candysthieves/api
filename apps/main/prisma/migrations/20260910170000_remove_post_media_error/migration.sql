@@ -1,0 +1,1 @@
+ALTER TABLE "Post" DROP COLUMN IF EXISTS "media_error";

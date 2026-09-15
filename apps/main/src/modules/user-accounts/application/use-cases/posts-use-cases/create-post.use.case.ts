@@ -2,13 +2,15 @@ import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { PostsRepository } from '../../../infrastructure/repositories/post-repositories/posts.repository.js';
 import { CreatePostLocationDto } from '../../../api/dto/create-post.dto.js';
 import { MediaStatus, Prisma } from '../../../../../generated/prisma/client.js';
-import {
-  FilesTcpClient,
-  type PostMediaJobAcceptance,
-} from '../../../../../core/events/files-tcp.client.js';
 import { DomainExceptions } from '../../../../../core/exceptions/domain-exceptions.js';
-import { ErrorStatus } from '../../../../../core/exceptions/domain-exception-code.js';
+import {
+  MAX_POST_IMAGES,
+  MAX_POST_IMAGE_SIZE,
+} from '../../../../../../../../libs/contracts/index.js';
+import { SseService } from '../../../../../core/sse/sse.service.js';
+import { SseEventEnum } from '../../../../../core/sse/types/sse-event.type.js';
 import { Logger } from '@nestjs/common';
+import { MainRabbitMqProducerService } from '../../../../../core/rabbitmq/main-rabbitmq-producer.service.js';
 
 export class CreatePostCommand {
   constructor(
@@ -16,100 +18,89 @@ export class CreatePostCommand {
     public readonly userId: string,
     public readonly files: Express.Multer.File[] = [],
     public readonly locations: CreatePostLocationDto[] = [],
-    public readonly traceId = '',
   ) {}
 }
 
 @CommandHandler(CreatePostCommand)
 export class CreatePostUseCase implements ICommandHandler<CreatePostCommand> {
   private readonly logger = new Logger(CreatePostUseCase.name);
-
   constructor(
     private readonly postRepository: PostsRepository,
-    private readonly filesClient: FilesTcpClient,
+    private readonly rabbitMqProducer: MainRabbitMqProducerService,
+    private readonly sse: SseService,
   ) {}
 
   async execute(command: CreatePostCommand): Promise<{ postId: string }> {
-    const startedAt = performance.now();
-    const totalSizeBytes = command.files.reduce((total, file) => total + file.size, 0);
-    this.logger.log(JSON.stringify({ event: 'post_create_started', traceId: command.traceId, fileCount: command.files.length, totalSizeBytes }));
-    if (!command.files.length) {
-      DomainExceptions.validation([
-        { field: 'files', message: 'At least one image is required' },
-      ]);
-    }
-    const databaseCreateStartedAt = performance.now();
+    this.validateFiles(command.files);
     const post = await this.postRepository.createPost({
       description: command.description,
-      images: [] as Prisma.InputJsonValue,
+      images: Array(command.files.length).fill(null) as Prisma.InputJsonValue,
       preview: Prisma.JsonNull,
       mediaStatus: MediaStatus.PROCESSING,
       locations: command.locations as unknown as Prisma.InputJsonValue,
       userId: command.userId,
     });
-    this.logger.log(JSON.stringify({ event: 'post_create_database_completed', traceId: command.traceId, postId: post.id, durationMs: elapsedMs(databaseCreateStartedAt) }));
-    let result: PostMediaJobAcceptance;
-    try {
-      result = await this.filesClient.uploadPostFiles(post.id, command.files, command.traceId);
-    } catch (error) {
-      const transportError = getErrorDetails(error);
+
+    this.sse.emit(SseEventEnum.POST_CREATED, { postId: post.id });
+
+    // The HTTP request must not wait for RabbitMQ. If this process stops before
+    // publishing finishes, the affected image slots will remain unresolved.
+    void this.dispatchImages(post.id, command.files).catch((error: unknown) => {
       this.logger.error(
-        JSON.stringify({
-          event: 'files_upload_transport_failed',
-          traceId: command.traceId,
-          postId: post.id,
-          error: transportError,
-        }),
-        transportError.stack,
+        `Post image dispatch compensation failed: post ${post.id}`,
+        error instanceof Error ? error.stack : undefined,
       );
-      await this.postRepository.deletePost(post.id);
-      DomainExceptions.serviceUnavailable(
-        ErrorStatus.FILES_SERVICE_UNAVAILABLE,
-        'files',
-        'Files service is unavailable',
-      );
-    }
+    });
 
-    if (result.error || !result.data?.accepted) {
-      this.logger.warn(
-        JSON.stringify({
-          event: 'files_upload_rejected',
-          traceId: command.traceId,
-          postId: post.id,
-          error: result.error,
-          data: result.data,
-        }),
-      );
-      await this.postRepository.deletePost(post.id);
-      DomainExceptions.validation(
-        result.error?.errors ?? [
-          { field: 'files', message: 'Error from files service' },
-        ],
-      );
-    }
-
-    this.logger.log(JSON.stringify({ event: 'post_create_completed', traceId: command.traceId, postId: post.id, durationMs: elapsedMs(startedAt) }));
     return { postId: post.id };
   }
-}
 
-function elapsedMs(startedAt: number): number {
-  return Number((performance.now() - startedAt).toFixed(3));
-}
-
-function getErrorDetails(error: unknown): {
-  name: string;
-  code?: string;
-  message: string;
-  stack?: string;
-} {
-  if (error instanceof Error) {
-    const code =
-      'code' in error && typeof error.code === 'string'
-        ? error.code
-        : undefined;
-    return { name: error.name, code, message: error.message, stack: error.stack };
+  private async dispatchImages(
+    postId: string,
+    files: Express.Multer.File[],
+  ): Promise<void> {
+    try {
+      for (const [index, file] of files.entries()) {
+        await this.rabbitMqProducer.publishImage({
+          postId,
+          index,
+          originalName: file.originalname,
+          mimeType: file.mimetype,
+          size: file.size,
+          body: file.buffer,
+        });
+      }
+    } catch (error) {
+      this.logger.error(
+        `Post image dispatch failed: post ${postId}`,
+        error instanceof Error ? error.stack : undefined,
+      );
+      await this.postRepository.deletePost(postId);
+    }
   }
 
-  return { name: 'UnknownError', message: String(error) };
+  private validateFiles(files: Express.Multer.File[]): void {
+    if (!files.length) {
+      DomainExceptions.validation([
+        { field: 'files', message: 'At least one image is required' },
+      ]);
+    }
+    if (files.length > MAX_POST_IMAGES) {
+      DomainExceptions.validation([
+        { field: 'files', message: 'A post can contain at most 8 images' },
+      ]);
+    }
+    for (const file of files) {
+      if (
+        file.size < 1 ||
+        file.size !== file.buffer.length ||
+        file.size > MAX_POST_IMAGE_SIZE ||
+        !file.mimetype.startsWith('image/')
+      ) {
+        DomainExceptions.validation([
+          { field: 'files', message: 'Invalid image file' },
+        ]);
+      }
+    }
+  }
 }

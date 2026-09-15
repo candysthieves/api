@@ -11,15 +11,20 @@ export function ApiSseEvents() {
     }),
     ApiResponse({
       status: 200,
-      description: 'SSE connection established. Emits events when a post is ready.',
+      description:
+        'post-created is emitted after creation, before image processing completes. post-media-updated reports a saved image. post-deleted reports removal of the entire post after an image publication or processing failure. All contain postId.',
       schema: {
         type: 'object',
         properties: {
           type: {
             type: 'string',
-            enum: [SseEventEnum.POST_CREATED],
+            enum: [
+              SseEventEnum.POST_CREATED,
+              SseEventEnum.POST_MEDIA_UPDATED,
+              SseEventEnum.POST_DELETED,
+            ],
             example: SseEventEnum.POST_CREATED,
-            description: 'Event type (currently only post-created is emitted).',
+            description: 'Post creation or media processing update.',
           },
           data: {
             type: 'object',

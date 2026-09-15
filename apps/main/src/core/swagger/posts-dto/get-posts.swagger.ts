@@ -28,7 +28,8 @@ export function ApiGetAllPosts() {
     }),
 
     ApiOkResponse({
-      description: 'Posts successfully retrieved.',
+      description:
+        'Posts successfully retrieved. Images preserve upload order and contain null for slots without a ready image. Preview is null until the first image is ready.',
       schema: {
         example: {
           items: [

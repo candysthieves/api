@@ -1,11 +1,15 @@
 import { Module } from '@nestjs/common';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { ConfigService } from '@nestjs/config';
-import { PostMediaEventsService } from './post-media-events.service.js';
+import { ImageResultInboxService } from './image-result-inbox.service.js';
 import { FilesTcpClient, FILES_TCP_CLIENT } from './files-tcp.client.js';
+import { PostImagesRepository } from './post-images.repository.js';
+import { RabbitMqModule } from '../rabbitmq/rabbitmq.module.js';
+import { ImageResultInboxConsumer } from './image-result-inbox.consumer.js';
 
 @Module({
   imports: [
+    RabbitMqModule,
     ClientsModule.registerAsync([
       {
         name: FILES_TCP_CLIENT,
@@ -20,7 +24,17 @@ import { FilesTcpClient, FILES_TCP_CLIENT } from './files-tcp.client.js';
       },
     ]),
   ],
-  providers: [PostMediaEventsService, FilesTcpClient],
-  exports: [FilesTcpClient, PostMediaEventsService],
+  providers: [
+    ImageResultInboxService,
+    FilesTcpClient,
+    PostImagesRepository,
+    ImageResultInboxConsumer,
+  ],
+  exports: [
+    FilesTcpClient,
+    ImageResultInboxService,
+    PostImagesRepository,
+    RabbitMqModule,
+  ],
 })
 export class EventsModule {}

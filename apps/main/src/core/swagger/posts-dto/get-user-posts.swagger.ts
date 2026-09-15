@@ -45,7 +45,8 @@ export function ApiUserPosts() {
     }),
 
     ApiOkResponse({
-      description: 'User posts successfully retrieved.',
+      description:
+        'User posts successfully retrieved. Images preserve upload order and contain null for slots without a ready image. Preview is null until the first image is ready.',
       schema: {
         example: {
           items: [
