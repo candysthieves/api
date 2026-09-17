@@ -18,7 +18,10 @@ export class ImageResultInboxService {
   ) {}
 
   async accept(event: ImageEvent): Promise<void> {
-    await this.prisma.inboxEvent.upsert({
+    this.logger.log(
+      `Inbox upsert started: eventId=${event.eventId} postId=${event.data.postId} index=${event.data.index}`,
+    );
+    const saved = await this.prisma.inboxEvent.upsert({
       where: { eventId: event.eventId },
       create: {
         eventId: event.eventId,
@@ -28,6 +31,9 @@ export class ImageResultInboxService {
       },
       update: {},
     });
+    this.logger.log(
+      `Inbox upsert completed: eventId=${event.eventId} inboxId=${saved.id} status=${saved.status} attempts=${saved.attempts}`,
+    );
   }
 
   @Cron(CronExpression.EVERY_SECOND, { waitForCompletion: true })
@@ -49,10 +55,16 @@ export class ImageResultInboxService {
       });
 
       for (const event of events) {
+        const data = event.data as ImageEvent['data'];
+        const context = `eventId=${event.eventId} inboxId=${event.id} postId=${data.postId} index=${data.index}`;
+        this.logger.log(
+          `Inbox processing started: ${context} attempts=${event.attempts} imageStatus=${data.status}`,
+        );
         await this.prisma.inboxEvent.update({
           where: { id: event.id },
           data: { status: EventStatus.PROCESSING },
         });
+        this.logger.log(`Inbox status saved: ${context} status=PROCESSING`);
         try {
           await this.applyMediaEvent({
             eventId: event.eventId,
@@ -61,7 +73,11 @@ export class ImageResultInboxService {
             data: event.data as ImageEvent['data'],
           });
           await this.markCompleted(event.id);
+          this.logger.log(`Inbox processing completed: ${context} status=OK`);
         } catch (error) {
+          this.logger.error(
+            `Inbox processing failed: ${context} errorType=${error instanceof Error ? error.name : typeof error}`,
+          );
           await this.scheduleRetry(event.id, event.attempts, error);
         }
       }
@@ -75,27 +91,39 @@ export class ImageResultInboxService {
 
   private async applyMediaEvent(event: ImageEvent): Promise<void> {
     const { data } = event;
+    const context = `eventId=${event.eventId} postId=${data.postId} index=${data.index}`;
+    this.logger.log(
+      `Applying image result: ${context} status=${data.status} fileId=${data.image?.fileId ?? 'null'} previewFileId=${data.preview?.fileId ?? 'null'}`,
+    );
 
     if (data.status === 'FAILED') {
       this.logger.error(
         `Image processing failed: post ${data.postId}, index ${data.index}`,
       );
       await this.imagesRepository.deletePost(data.postId);
+      this.logger.log(`Failed image result handled: ${context}`);
       return;
     }
 
+    this.logger.log(`Post image update started: ${context}`);
     await this.imagesRepository.updateImage(
       data.postId,
       data.index,
       data.image,
       MediaStatus.READY,
     );
+    this.logger.log(`Post image update returned: ${context}`);
     if (data.preview) {
+      this.logger.log(`Post preview update started: ${context}`);
       await this.imagesRepository.updatePreview(data.postId, data.preview);
+      this.logger.log(`Post preview update completed: ${context}`);
     }
     this.sse.emit(SseEventEnum.POST_MEDIA_UPDATED, {
       postId: data.postId,
     });
+    this.logger.log(
+      `SSE emitted locally: ${context} type=${SseEventEnum.POST_MEDIA_UPDATED}`,
+    );
   }
 
   private async markCompleted(id: string): Promise<void> {
@@ -119,10 +147,13 @@ export class ImageResultInboxService {
         updatedAt: new Date(),
       },
     });
+    this.logger.warn(
+      `Inbox failure status saved: inboxId=${id} status=${attempts + 1 > 2 ? EventStatus.ERROR : EventStatus.UNPROCESSED} attempts=${attempts + 1}`,
+    );
   }
 
   private async updateExpiredEvents(): Promise<void> {
-    await this.prisma.inboxEvent.updateMany({
+    const result = await this.prisma.inboxEvent.updateMany({
       where: {
         status: EventStatus.PROCESSING,
         type: 'post.image.updated.v1',
@@ -134,5 +165,8 @@ export class ImageResultInboxService {
         lastError: 'PROCESSING_TIMEOUT',
       },
     });
+    if (result.count > 0) {
+      this.logger.warn(`Expired inbox events reset: count=${result.count}`);
+    }
   }
 }
