@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
-import { EventStatus, MediaStatus } from '../../generated/prisma/client.js';
+import { EventStatus } from '../../generated/prisma/client.js';
 import { PrismaService } from '../../infrastructure/prisma/prisma.service.js';
 import { SseService } from '../sse/sse.service.js';
 import { SseEventEnum } from '../sse/types/sse-event.type.js';
@@ -110,13 +110,16 @@ export class ImageResultInboxService {
       data.postId,
       data.index,
       data.image,
-      MediaStatus.READY,
     );
     this.logger.log(`Post image update returned: ${context}`);
     if (data.preview) {
       this.logger.log(`Post preview update started: ${context}`);
       await this.imagesRepository.updatePreview(data.postId, data.preview);
       this.logger.log(`Post preview update completed: ${context}`);
+    }
+    if (!(await this.imagesRepository.markReadyIfComplete(data.postId))) {
+      this.logger.log(`Post readiness unchanged, SSE skipped: ${context}`);
+      return;
     }
     this.sse.emit(SseEventEnum.POST_MEDIA_UPDATED, {
       postId: data.postId,

@@ -3,8 +3,6 @@ import { PostsRepository } from '../../../infrastructure/repositories/post-repos
 import { CreatePostLocationDto } from '../../../api/dto/create-post.dto.js';
 import { MediaStatus, Prisma } from '../../../../../generated/prisma/client.js';
 import { DomainExceptions } from '../../../../../core/exceptions/domain-exceptions.js';
-import { SseService } from '../../../../../core/sse/sse.service.js';
-import { SseEventEnum } from '../../../../../core/sse/types/sse-event.type.js';
 import { Logger } from '@nestjs/common';
 import { MainRabbitMqProducerService } from '../../../../../core/rabbitmq/main-rabbitmq-producer.service.js';
 import {
@@ -27,7 +25,6 @@ export class CreatePostUseCase implements ICommandHandler<CreatePostCommand> {
   constructor(
     private readonly postRepository: PostsRepository,
     private readonly rabbitMqProducer: MainRabbitMqProducerService,
-    private readonly sse: SseService,
   ) {}
 
   async execute(command: CreatePostCommand): Promise<{ postId: string }> {
@@ -40,8 +37,6 @@ export class CreatePostUseCase implements ICommandHandler<CreatePostCommand> {
       locations: command.locations,
       userId: command.userId,
     });
-
-    this.sse.emit(SseEventEnum.POST_CREATED, { postId: post.id });
 
     // The HTTP request must not wait for RabbitMQ. If this process stops before
     // publishing finishes, the affected image slots will remain unresolved.

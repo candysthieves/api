@@ -1,5 +1,4 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { MediaStatus } from '../../generated/prisma/client.js';
 import type { MediaFile } from '../../../../../libs/contracts/index.js';
 import { PrismaService } from '../../infrastructure/prisma/prisma.service.js';
 
@@ -12,15 +11,13 @@ export class PostImagesRepository {
     postId: string,
     index: number,
     image: MediaFile | null,
-    mediaStatus: MediaStatus,
   ): Promise<void> {
     this.logger.log(
-      `Post image SQL started: postId=${postId} index=${index} fileId=${image?.fileId ?? 'null'} mediaStatus=${mediaStatus}`,
+      `Post image SQL started: postId=${postId} index=${index} fileId=${image?.fileId ?? 'null'}`,
     );
     const affectedRows = await this.prisma.$executeRaw`
       UPDATE "Post"
       SET images = jsonb_set(images, ARRAY[${String(index)}]::text[], ${JSON.stringify(image)}::jsonb, false),
-          media_status = ${mediaStatus}::"MediaStatus",
           updated_at = NOW()
       WHERE id = ${postId}::uuid
     `;
@@ -42,6 +39,24 @@ export class PostImagesRepository {
     this.logger.log(
       `Post preview saved: postId=${postId} fileId=${preview.fileId}`,
     );
+  }
+
+  async markReadyIfComplete(postId: string): Promise<boolean> {
+    // The conditional UPDATE chooses one winner even across main replicas.
+    const affectedRows = await this.prisma.$executeRaw`
+      UPDATE "Post"
+      SET media_status = 'READY'::"MediaStatus", updated_at = NOW()
+      WHERE id = ${postId}::uuid
+        AND media_status = 'PROCESSING'::"MediaStatus"
+        AND jsonb_typeof(images) = 'array'
+        AND images <> '[]'::jsonb
+        AND NOT (images @> '[null]'::jsonb)
+        AND jsonb_typeof(preview) = 'object'
+    `;
+    this.logger.log(
+      `Post readiness checked: postId=${postId} becameReady=${affectedRows === 1}`,
+    );
+    return affectedRows === 1;
   }
 
   async deletePost(postId: string): Promise<void> {
