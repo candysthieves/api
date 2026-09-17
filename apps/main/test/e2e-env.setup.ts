@@ -1,5 +1,5 @@
-process.env.PORT ??= '8080';
-process.env.APP_URL ??= 'http://localhost:8080';
+process.env.PORT ??= '6666';
+process.env.APP_URL ??= 'http://localhost:6666';
 process.env.CLIENT_URL ??= 'http://localhost:3000';
 process.env.DATABASE_URL ??=
   'postgresql://postgres:postgres@localhost:5432/postgres?schema=public';

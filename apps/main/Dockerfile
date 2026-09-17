@@ -1,6 +1,6 @@
 # Check out https://hub.docker.com/_/node to select a new base image
 FROM node:24.18-alpine
-ARG port=8080
+ARG port=6666
 ARG service=main
 ENV SERVICE=$service
 ENV PORT=$port
