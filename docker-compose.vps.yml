@@ -29,6 +29,7 @@ services:
         format: raw
     environment:
       NODE_ENV: production
+      PORT: '8080'
     depends_on:
       - files
     logging:

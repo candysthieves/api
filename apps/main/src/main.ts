@@ -8,7 +8,6 @@ import { Logger } from '@nestjs/common';
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
-  app.enableCors();
   const appConfig = app.get<AppConfig>(AppConfig);
 
   setupApp(app);
