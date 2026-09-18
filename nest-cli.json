@@ -9,11 +9,11 @@
     "assets": [
       {
         "include": "env/.env.*",
-        "outDir": "dist/apps/main"
+        "outDir": "dist/apps/main/apps/main/src"
       },
       {
         "include": "assets/**/*",
-        "outDir": "dist/apps/main"
+        "outDir": "dist/apps/main/apps/main/src"
       }
     ],
     "watchAssets": true

@@ -1,26 +1,30 @@
-import { Inject, Injectable } from '@nestjs/common';
-import { ClientProxy } from '@nestjs/microservices';
-import { lastValueFrom } from 'rxjs';
-import { RabbitMessageDto } from './dto/rabbit-message.dto.js';
-
-const MAIN_RMQ_CLIENT = 'MAIN_RMQ_CLIENT';
+import { AmqpConnection } from '@golevelup/nestjs-rabbitmq';
+import { ConfigService } from '@nestjs/config';
+import type { ChannelWrapper } from 'amqp-connection-manager';
+import type { ImageEvent } from '../../../../libs/contracts/index.js';
+import { Injectable } from '@nestjs/common';
 
 @Injectable()
 export class FilesRabbitMqProducerService {
   constructor(
-    @Inject(MAIN_RMQ_CLIENT) private readonly mainClient: ClientProxy,
+    private readonly connection: AmqpConnection,
+    private readonly config: ConfigService,
   ) {}
 
-  async sendTestResponse(response: RabbitMessageDto): Promise<void> {
-    await lastValueFrom(this.mainClient.emit('rabbit.test.response', response));
-  }
-
-  async publishMediaEvent(event: {
-    eventId: string;
-    consumer: string;
-    type: string;
-    data: Record<string, unknown>;
-  }): Promise<void> {
-    await lastValueFrom(this.mainClient.emit('post.media.event', event));
+  async publishOutputEvent(event: ImageEvent): Promise<void> {
+    if (!this.connection.connected) throw new Error('TRANSPORT_UNAVAILABLE');
+    const options: NonNullable<Parameters<ChannelWrapper['publish']>[3]> = {
+      persistent: true,
+      timeout: 5_000,
+      messageId: event.eventId,
+      contentType: 'application/json',
+      type: event.type,
+    };
+    await this.connection.publish(
+      '',
+      `${this.config.getOrThrow<string>('RABBITMQ_FILES_TO_MAIN_QUEUE')}.post-images.results.v1`,
+      Buffer.from(JSON.stringify(event)),
+      options,
+    );
   }
 }

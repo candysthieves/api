@@ -47,7 +47,8 @@ export function ApiUserDeletedPosts() {
     }),
 
     ApiOkResponse({
-      description: 'User deleted posts successfully retrieved.',
+      description:
+        'User deleted posts successfully retrieved. Images preserve upload order and contain null for slots without a ready image. Preview is null until the first image is ready.',
       schema: {
         example: {
           items: [
@@ -84,7 +85,8 @@ export function ApiUserDeletedPosts() {
     }),
 
     ApiForbiddenResponse({
-      description: 'You do not have permission to view deleted posts of this user.',
+      description:
+        'You do not have permission to view deleted posts of this user.',
     }),
 
     ApiNotFoundResponse({

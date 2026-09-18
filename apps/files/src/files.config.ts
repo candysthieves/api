@@ -13,9 +13,6 @@ export class FilesConfig {
   readonly s3SecretAccessKey: string;
   readonly s3Endpoint?: string;
   readonly s3ForcePathStyle: boolean;
-  readonly rabbitMqUrl: string;
-  readonly rabbitMqMainToFilesQueue: string;
-  readonly rabbitMqFilesToMainQueue: string;
 
   constructor(configService: ConfigService) {
     this.port = configService.getOrThrow<number>('PORT');
@@ -31,13 +28,6 @@ export class FilesConfig {
     this.s3Endpoint = configService.get<string>('S3_ENDPOINT');
     this.s3ForcePathStyle = configService.getOrThrow<boolean>(
       'S3_FORCE_PATH_STYLE',
-    );
-    this.rabbitMqUrl = configService.getOrThrow<string>('RABBITMQ_URL');
-    this.rabbitMqMainToFilesQueue = configService.getOrThrow<string>(
-      'RABBITMQ_MAIN_TO_FILES_QUEUE',
-    );
-    this.rabbitMqFilesToMainQueue = configService.getOrThrow<string>(
-      'RABBITMQ_FILES_TO_MAIN_QUEUE',
     );
   }
 }

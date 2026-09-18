@@ -50,22 +50,9 @@ export class DomainExceptionFilter implements ExceptionFilter<DomainException> {
         break;
     }
 
-    if (
-      request.method === 'POST' &&
-      (request.path === '/api/v1/auth/login' || request.path === '/api/v1/posts')
-    ) {
-      this.logger.warn(
-        JSON.stringify({
-          event: 'http_domain_exception',
-          requestId:
-            (request as Request & { requestId?: string }).requestId ?? null,
-          method: request.method,
-          path: request.path,
-          statusCode: status,
-          errorCode: exception.errorCode,
-        }),
-      );
-    }
+    this.logger.warn(
+      `${request.method} ${request.path}: HTTP ${status}, error ${exception.errorCode}`,
+    );
 
     response.status(status).json({
       code: exception.errorCode,

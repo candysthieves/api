@@ -6,41 +6,43 @@
 
 Это backend Lumosapp: NestJS-монорепозиторий с двумя приложениями и общими контрактами.
 
-| Путь | Ответственность |
-| --- | --- |
-| `apps/main` | HTTP API: пользователи, авторизация, сессии, посты; PostgreSQL через Prisma; взаимодействие с файловым сервисом |
-| `apps/files` | Загрузка, обработка и удаление файлов; Sharp для изображений, S3 для объектов, MongoDB/Mongoose для данных файлового сервиса |
-| `libs/contracts` | Общие контракты файловых операций; публичные экспорты через `index.ts` |
-| `apps/main/prisma` | Prisma-схема и миграции основного приложения |
-| `apps/main/test` | Тесты основного приложения, включая HTTP e2e |
-| `docs/superpowers/specs` | Согласуемые решения и требования |
-| `docs/superpowers/plans` | Планы реализации; наличие плана не означает, что код уже реализован |
+| Путь                     | Ответственность                                                                                                              |
+| ------------------------ | ---------------------------------------------------------------------------------------------------------------------------- |
+| `apps/main`              | HTTP API: пользователи, авторизация, сессии, посты; PostgreSQL через Prisma; взаимодействие с файловым сервисом              |
+| `apps/files`             | Загрузка, обработка и удаление файлов; Sharp для изображений, S3 для объектов, MongoDB/Mongoose для данных файлового сервиса |
+| `libs/contracts`         | Общие контракты файловых операций; публичные экспорты через `index.ts`                                                       |
+| `apps/main/prisma`       | Prisma-схема и миграции основного приложения                                                                                 |
+| `apps/main/test`         | Тесты основного приложения, включая HTTP e2e                                                                                 |
+| `docs/superpowers/specs` | Согласуемые решения и требования                                                                                             |
+| `docs/superpowers/plans` | Планы реализации; наличие плана не означает, что код уже реализован                                                          |
 
 Основные бизнес-модули находятся в `apps/main/src/modules/user-accounts` и `apps/files/src/modules/files`. Пользователи и посты сейчас принадлежат одному модулю main: не создавай новые границы модулей без необходимости задачи.
 
-Между приложениями используются Nest TCP и RabbitMQ. Текущий `FilesTcpClient` отправляет пакет изображений поста командой `upload-post-files`, подтверждает события командой `post-media-event-ack` и удаляет файлы через `delete-files`. Результаты обработки постов поступают в main через RabbitMQ. План пофайловой обработки `docs/superpowers/plans/2026-09-06-post-image-rabbitmq.md` описывает переход на другой поток; до его реализации не считай этот поток действующим.
+Main создаёт Post с null-позициями и возвращает `201 { postId }`, затем в фоне последовательно отправляет исходные изображения бинарным Buffer через RabbitMQ. Files проверяет отмену, однократно запускает обработку через минимальный учёт в `input_events`, сохраняет изображение (и preview для index=0), пишет результат прямо в `output_events`, завершает задание и подтверждает сообщение. Scheduler files публикует outbox с publisher confirm. Consumer main сохраняет проверенный результат в inbox до ack; scheduler main изменяет/удаляет Post и отправляет SSE. Ошибка обработки или публикации задания удаляет весь пост. Размеры изображений числовые; повторной обработки и совместимости со старыми данными нет.
+
+RabbitMQ обслуживается только `@golevelup/nestjs-rabbitmq`. TCP сохраняется для отмены `cancel-post-images` с `{ postId }`, удаления `delete-files` и остальных файловых операций. Действующий поток и ограничения описаны в [2026-09-08-simplify-post-image-flow-design.md](docs/superpowers/specs/2026-09-08-simplify-post-image-flow-design.md). Outbox исходных картинок в main отсутствует: падение main до завершения фоновой отправки может оставить незавершённый пост.
 
 ## Основные библиотеки
 
 Версии зависимостей проверяй в `package.json` и `pnpm-lock.yaml`; не обновляй их попутно.
 
-| Библиотека / инструмент | Назначение в проекте |
-| --- | --- |
-| TypeScript, ESM, pnpm | Язык, система модулей, управление зависимостями; версия pnpm закреплена в `packageManager` |
-| NestJS, `@nestjs/platform-express` | Приложения, HTTP-контроллеры, модули и dependency injection |
-| `@nestjs/cqrs` | Команды, запросы и их обработчики |
-| Prisma, `@prisma/adapter-pg`, `pg` | Доступ main к PostgreSQL |
-| Mongoose, `@nestjs/mongoose` | Работа files с MongoDB |
-| `@nestjs/microservices`, RxJS | Межсервисные клиенты и обработчики, Observable и таймауты |
-| `amqplib`, `amqp-connection-manager` | AMQP/RabbitMQ |
-| Sharp, AWS SDK S3 | Преобразование изображений и хранение файлов |
-| `class-validator`, `class-transformer` | Валидация и преобразование входных DTO |
-| `@nestjs/swagger` | Описание HTTP API |
-| JWT, Passport, Argon2, `cookie-parser` | Токены, OAuth, хеширование паролей и cookie |
-| `@nestjs/config`, dotenv | Конфигурация приложений |
-| Nodemailer | Отправка почты |
-| Jest, `@nestjs/testing`, Supertest | Unit-тесты и HTTP-проверки |
-| ESLint, Prettier | Проверка и форматирование кода |
+| Библиотека / инструмент                | Назначение в проекте                                                                       |
+| -------------------------------------- | ------------------------------------------------------------------------------------------ |
+| TypeScript, ESM, pnpm                  | Язык, система модулей, управление зависимостями; версия pnpm закреплена в `packageManager` |
+| NestJS, `@nestjs/platform-express`     | Приложения, HTTP-контроллеры, модули и dependency injection                                |
+| `@nestjs/cqrs`                         | Команды, запросы и их обработчики                                                          |
+| Prisma, `@prisma/adapter-pg`, `pg`     | Доступ main к PostgreSQL                                                                   |
+| Mongoose, `@nestjs/mongoose`           | Работа files с MongoDB                                                                     |
+| `@nestjs/microservices`, RxJS          | Межсервисные клиенты и обработчики, Observable и таймауты                                  |
+| `amqplib`, `amqp-connection-manager`   | AMQP/RabbitMQ                                                                              |
+| Sharp, AWS SDK S3                      | Преобразование изображений и хранение файлов                                               |
+| `class-validator`, `class-transformer` | Валидация и преобразование входных DTO                                                     |
+| `@nestjs/swagger`                      | Описание HTTP API                                                                          |
+| JWT, Passport, Argon2, `cookie-parser` | Токены, OAuth, хеширование паролей и cookie                                                |
+| `@nestjs/config`, dotenv               | Конфигурация приложений                                                                    |
+| Nodemailer                             | Отправка почты                                                                             |
+| Jest, `@nestjs/testing`, Supertest     | Unit-тесты и HTTP-проверки                                                                 |
+| ESLint, Prettier                       | Проверка и форматирование кода                                                             |
 
 ## Паттерны и размещение кода
 
@@ -66,7 +68,7 @@
 ### Ошибки, валидация и контракты
 
 - В main используй `DomainExceptions`, существующие `ErrorStatus` и `DomainExceptionFilter` из `apps/main/src/core/exceptions`. Не вводи параллельный формат ошибок.
-- Настройка HTTP приложения находится в `apps/main/src/setup/app-setup.ts`: префикс `api/v1`, глобальная валидация DTO и фильтр ошибок. Swagger доступен по `api/v1/docs`.
+- Настройка HTTP приложения находится в `apps/main/src/setup/app-setup.ts`: маршруты без глобального префикса, глобальная валидация DTO и фильтр ошибок. Swagger доступен по `/docs`.
 - HTTP DTO, view types и межсервисные контракты имеют разные назначения. Не возвращай модель БД вместо публичного ответа без явного преобразования.
 - При изменении HTTP-контракта согласуй DTO, mapper/view type и Swagger. Проверяй авторизацию и принадлежность ресурса в самом сценарии, а не только наличие guard.
 - Конфигурацию получай через существующие config-компоненты приложения. Секреты и содержимое `.env` не выводи в логи, ответы или документацию.
@@ -75,19 +77,19 @@
 
 Имена в коде — на английском. Файлы и каталоги — `kebab-case`, классы и типы — `PascalCase`, функции, методы и переменные — `camelCase`. Для констант уровня модуля и DI-токенов используй `UPPER_SNAKE_CASE`, как `FILES_TCP_CLIENT`.
 
-| Назначение | Файл | Символ |
-| --- | --- | --- |
-| Use case | `create-post.usecase.ts` | `CreatePostUseCase` |
-| Команда этого сценария | В том же `create-post.usecase.ts` | `CreatePostCommand` |
-| Query handler | `profile-query-handler.ts` | Следуй именованию query/handler в соседних обработчиках |
-| Контроллер | `auth.controller.ts` | `AuthController` |
-| Сервис | `auth-session.service.ts` | `AuthSessionService` |
-| Repository | `posts.repository.ts` | `PostsRepository` |
-| DTO | `create-post.dto.ts` | `CreatePostDto` |
-| Mapper | `auth.mapper.ts` | `AuthMapper` |
-| Тип ответа | `profile-view.type.ts` | `ProfileViewType` |
-| Adapter | `s3.adapter.ts` | `S3Adapter` |
-| Unit-тест use case | `create-post.usecase.spec.ts` | Название проверяемого сценария в `describe` |
+| Назначение             | Файл                              | Символ                                                  |
+| ---------------------- | --------------------------------- | ------------------------------------------------------- |
+| Use case               | `create-post.usecase.ts`          | `CreatePostUseCase`                                     |
+| Команда этого сценария | В том же `create-post.usecase.ts` | `CreatePostCommand`                                     |
+| Query handler          | `profile-query-handler.ts`        | Следуй именованию query/handler в соседних обработчиках |
+| Контроллер             | `auth.controller.ts`              | `AuthController`                                        |
+| Сервис                 | `auth-session.service.ts`         | `AuthSessionService`                                    |
+| Repository             | `posts.repository.ts`             | `PostsRepository`                                       |
+| DTO                    | `create-post.dto.ts`              | `CreatePostDto`                                         |
+| Mapper                 | `auth.mapper.ts`                  | `AuthMapper`                                            |
+| Тип ответа             | `profile-view.type.ts`            | `ProfileViewType`                                       |
+| Adapter                | `s3.adapter.ts`                   | `S3Adapter`                                             |
+| Unit-тест use case     | `create-post.usecase.spec.ts`     | Название проверяемого сценария в `describe`             |
 
 Для всех новых use case файлов обязателен суффикс `.usecase.ts`. Не используй `.use.case.ts`, `-use.case.ts` или запятую вместо точки. Существующие несовпадения не являются образцом; массовое переименование выполняется отдельной задачей.
 
@@ -106,15 +108,15 @@
 
 Команды выполняются из корня; актуальные scripts находятся в `package.json`.
 
-| Задача | Script |
-| --- | --- |
-| Разработка main | `pnpm run start:dev:main` |
-| Разработка files | `pnpm run start:dev:files` |
-| Сборка main | `pnpm run build:main` |
-| Сборка files | `pnpm run build:files` |
-| Unit-тесты | `pnpm run test` |
-| HTTP e2e main | `pnpm run test:e2e` |
-| Покрытие | `pnpm run test:cov` |
+| Задача                                     | Script                           |
+| ------------------------------------------ | -------------------------------- |
+| Разработка main                            | `pnpm run start:dev:main`        |
+| Разработка files                           | `pnpm run start:dev:files`       |
+| Сборка main                                | `pnpm run build:main`            |
+| Сборка files                               | `pnpm run build:files`           |
+| Unit-тесты                                 | `pnpm run test`                  |
+| HTTP e2e main                              | `pnpm run test:e2e`              |
+| Покрытие                                   | `pnpm run test:cov`              |
 | Генерация Prisma client для локального env | `pnpm run prisma:generate:local` |
 
 `test` содержит `--passWithNoTests`: успешный exit code без найденных тестов не доказывает покрытие. Проверяй количество выполненных тестов. `lint` содержит `--fix` и изменяет файлы; не запускай его как read-only проверку всего репозитория. `format` указывает корневые `src`/`test`, поэтому не считай его форматированием всего монорепозитория. Миграционные scripts содержат фиксированные имена и выбор окружения: перед запуском прочитай script и проверь целевую БД.

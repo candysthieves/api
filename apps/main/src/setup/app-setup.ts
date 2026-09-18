@@ -7,15 +7,12 @@ import { fileURLToPath } from 'node:url';
 import { DomainExceptionFilter } from '../core/exceptions/domain-exception.filter.js';
 import { DomainError } from '../core/exceptions/domain-error.js';
 import { DomainExceptions } from '../core/exceptions/domain-exceptions.js';
-import { HttpRequestLoggingMiddleware } from '../core/logging/http-request-logging.middleware.js';
 
 const currentDirectory = dirname(fileURLToPath(import.meta.url));
 
 export function setupApp(app: NestExpressApplication): void {
-  const requestLogger = new HttpRequestLoggingMiddleware();
-  app.use(requestLogger.use.bind(requestLogger));
   app.useStaticAssets(join(currentDirectory, '..', 'assets'), {
-    prefix: '/api/v1/swagger-assets',
+    prefix: '/swagger-assets',
   });
 
   app.enableCors({
@@ -28,7 +25,6 @@ export function setupApp(app: NestExpressApplication): void {
   });
   app.use(cookieParser());
   app.useGlobalFilters(new DomainExceptionFilter());
-  app.setGlobalPrefix('api/v1');
   app.useGlobalPipes(
     new ValidationPipe({
       transform: true,
@@ -71,7 +67,7 @@ export function setupApp(app: NestExpressApplication): void {
     )
     .build();
   const document = SwaggerModule.createDocument(app, swaggerConfig);
-  SwaggerModule.setup('api/v1/docs', app, document, {
+  SwaggerModule.setup('docs', app, document, {
     customCss: `
       body {
         background: #111827;
@@ -83,7 +79,7 @@ export function setupApp(app: NestExpressApplication): void {
         z-index: 1;
         background:
           linear-gradient(rgba(17, 24, 39, 0.72), rgba(17, 24, 39, 0.72)),
-          url('/api/v1/swagger-assets/swagger-background.png') center / cover fixed !important;
+          url('/swagger-assets/swagger-background.png') center / cover fixed !important;
       }
 
       #swagger-background-video {

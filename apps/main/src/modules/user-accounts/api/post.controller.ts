@@ -11,11 +11,9 @@ import {
   Query,
   Put,
   UploadedFiles,
-  Req,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
-import type { Request } from 'express';
 import { ApiTags } from '@nestjs/swagger';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
@@ -111,7 +109,6 @@ export class PostController {
     @Body() createDto: CreatePostDto,
     @User() user: JwtAccessPayload,
     @UploadedFiles() files: Express.Multer.File[],
-    @Req() request: Request,
   ): Promise<{ postId: string }> {
     return this.commandBus.execute(
       new CreatePostCommand(
@@ -119,7 +116,6 @@ export class PostController {
         user.userId,
         files,
         createDto.location,
-        (request as Request & { requestId?: string }).requestId ?? '',
       ),
     );
   }

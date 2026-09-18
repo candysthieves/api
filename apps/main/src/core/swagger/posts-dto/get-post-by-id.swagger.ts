@@ -29,7 +29,8 @@ export function ApiGetPostById() {
     }),
 
     ApiOkResponse({
-      description: 'Post successfully retrieved.',
+      description:
+        'Post successfully retrieved. Images preserve upload order and contain null for slots without a ready image. Preview is null until the first image is ready.',
       schema: {
         example: {
           id: '550e8400-e29b-41d4-a716-446655440001',
@@ -104,7 +105,8 @@ export function ApiGetPostById() {
           code: {
             type: 'number',
             example: ErrorStatus.ACCESS_TOKEN_EXPIRED,
-            description: 'Error status code (74 for expired, 80 for session not found)',
+            description:
+              'Error status code (74 for expired, 80 for session not found)',
           },
           errorsMessages: {
             type: 'array',

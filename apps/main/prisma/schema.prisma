@@ -76,7 +76,6 @@ model Post {
   /// [PostPreview]
   preview       Json?       @db.JsonB
   mediaStatus   MediaStatus @default(PROCESSING) @map("media_status")
-  mediaError    String?     @map("media_error")
   userId        String      @map("user_id")
   user          User        @relation(fields: [userId], references: [id])
   createdAt     DateTime    @default(now()) @map("created_at")
@@ -104,7 +103,7 @@ model OutputEvent {
   @@index([status, nextAttemptAt])
 }
 
-model InputEvent {
+model InboxEvent {
   id            String      @id @default(uuid()) @db.Uuid
   eventId       String      @unique @map("event_id") @db.Uuid
   consumer      String
@@ -119,6 +118,7 @@ model InputEvent {
   updatedAt     DateTime    @updatedAt @map("updated_at")
 
   @@index([status, nextAttemptAt])
+  @@map("InputEvent")
 }
 
 model Session {

@@ -1,7 +1,7 @@
 # Check out https://hub.docker.com/_/node to select a new base image
 FROM node:24.18-alpine
-ARG port
-ARG service
+ARG port=6666
+ARG service=main
 ENV SERVICE=$service
 ENV PORT=$port
 
@@ -26,8 +26,6 @@ COPY --chown=node . .
 
 RUN pnpm run prisma:generate
 RUN pnpm run build:${SERVICE}
-RUN mkdir -p dist/apps/main/assets \
-  && cp -R apps/main/src/assets/. dist/apps/main/assets/
 
 # Bind to all network interfaces so that it can be mapped to the host OS
 

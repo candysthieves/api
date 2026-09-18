@@ -2,3 +2,10 @@ node_modules
 dist
 coverage
 .git
+**/.env
+**/.env.*
+**/*.env
+.codegraph
+.codex
+.agents
+apps/main/src/generated/prisma

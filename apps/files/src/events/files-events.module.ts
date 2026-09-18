@@ -1,27 +1,24 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { RabbitMqModule } from '../rabbitmq/rabbitmq.module.js';
-import { FilesEventsController } from './files-events.controller.js';
+import { InputEvent, InputEventSchema } from './schemas/input-event.schema.js';
+import {
+  OutputEvent,
+  OutputEventSchema,
+} from './schemas/output-event.schema.js';
+import { FilesInboxRepository } from './files-inbox.repository.js';
+import { FilesOutboxRepository } from './files-outbox.repository.js';
 import { FilesEventsService } from './files-events.service.js';
-import { StoredEvent, StoredEventSchema } from './schemas/event.schema.js';
+
 @Module({
   imports: [
     RabbitMqModule,
     MongooseModule.forFeature([
-      {
-        name: StoredEvent.name,
-        schema: StoredEventSchema,
-        collection: 'output_events',
-      },
-      {
-        name: 'InputEvent',
-        schema: StoredEventSchema,
-        collection: 'input_events',
-      },
+      { name: InputEvent.name, schema: InputEventSchema },
+      { name: OutputEvent.name, schema: OutputEventSchema },
     ]),
   ],
-  controllers: [FilesEventsController],
-  providers: [FilesEventsService],
-  exports: [FilesEventsService, MongooseModule],
+  providers: [FilesInboxRepository, FilesOutboxRepository, FilesEventsService],
+  exports: [FilesInboxRepository, FilesOutboxRepository],
 })
 export class FilesEventsModule {}

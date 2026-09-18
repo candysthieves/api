@@ -59,3 +59,5 @@ report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 # Compiled artifacts for the files application
 /apps/files/src/**/*.js
 /apps/files/src/**/*.js.map
+/.main.env
+/.files.env

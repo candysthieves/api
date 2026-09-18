@@ -29,7 +29,7 @@ describe('Sessions e2e tests', () => {
   });
 
   beforeEach(async () => {
-    await request(httpServer).delete('/api/v1/testing/all-data').expect(204);
+    await request(httpServer).delete('/testing/all-data').expect(204);
   });
 
   afterAll(async () => {
@@ -38,7 +38,7 @@ describe('Sessions e2e tests', () => {
 
   async function registerAndConfirmUser(inputDto: RegistrationDto) {
     await request(httpServer)
-      .post('/api/v1/auth/registration')
+      .post('/auth/registration')
       .send({
         username: inputDto.username,
         email: inputDto.email,
@@ -54,7 +54,7 @@ describe('Sessions e2e tests', () => {
     });
 
     await request(httpServer)
-      .post('/api/v1/auth/registration-confirmation')
+      .post('/auth/registration-confirmation')
       .send({ code: user.confirmationCode })
       .expect(204);
 
@@ -65,7 +65,7 @@ describe('Sessions e2e tests', () => {
     inputDto: Pick<RegistrationDto, 'email' | 'password'>,
   ) {
     return request(httpServer)
-      .post('/api/v1/auth/login')
+      .post('/auth/login')
       .send({
         email: inputDto.email,
         password: inputDto.password,
@@ -98,7 +98,7 @@ describe('Sessions e2e tests', () => {
 
   it('Get active sessions for the current user', async () => {
     await request(httpServer)
-      .get('/api/v1/security/session')
+      .get('/security/session')
       .set('Cookie', 'refreshToken=invalid-token')
       .expect(498);
 
@@ -118,7 +118,7 @@ describe('Sessions e2e tests', () => {
     });
 
     const sessions = await request(httpServer)
-      .get('/api/v1/security/session')
+      .get('/security/session')
       .set('Cookie', firstUser.secondLogin.headers['set-cookie'])
       .expect(200);
 
@@ -136,7 +136,7 @@ describe('Sessions e2e tests', () => {
 
   it('Delete all active sessions except the current one', async () => {
     await request(httpServer)
-      .delete('/api/v1/security/session')
+      .delete('/security/session')
       .set('Cookie', 'refreshToken=invalid-token')
       .expect(498);
 
@@ -157,27 +157,27 @@ describe('Sessions e2e tests', () => {
 
     // Получаем сессии первого юзера
     const firstUserSessions = await request(httpServer)
-      .get('/api/v1/security/session')
+      .get('/security/session')
       .set('Cookie', firstUser.secondLogin.headers['set-cookie'])
       .expect(200);
     expect(firstUserSessions.body).toHaveLength(2);
 
     // Получаем сессии второго юзера
     const secondUserSessions = await request(httpServer)
-      .get('/api/v1/security/session')
+      .get('/security/session')
       .set('Cookie', secondUser.secondLogin.headers['set-cookie'])
       .expect(200);
     expect(secondUserSessions.body).toHaveLength(2);
 
     // Заряжаем токен 1 юзера и удаляем все сессии, кроме текущей, для 1 юзера
     await request(httpServer)
-      .delete('/api/v1/security/session')
+      .delete('/security/session')
       .set('Cookie', firstUser.secondLogin.headers['set-cookie'])
       .expect(204);
 
     // Достаём оставшуюся сессию для 1 юзера
     const deletedFirstUserSessions = await request(httpServer)
-      .get('/api/v1/security/session')
+      .get('/security/session')
       .set('Cookie', firstUser.secondLogin.headers['set-cookie'])
       .expect(200);
 
@@ -193,7 +193,7 @@ describe('Sessions e2e tests', () => {
 
     // Проверяем, что сессии 2 пользователя не тронуты
     const sessionsForSecondUser = await request(httpServer)
-      .get('/api/v1/security/session')
+      .get('/security/session')
       .set('Cookie', secondUser.secondLogin.headers['set-cookie'])
       .expect(200);
     expect(sessionsForSecondUser.body).toHaveLength(2);
@@ -203,7 +203,7 @@ describe('Sessions e2e tests', () => {
 
   it('Terminate a session by Id', async () => {
     await request(httpServer)
-      .delete('/api/v1/security/session/123')
+      .delete('/security/session/123')
       .set('Cookie', 'refreshToken=invalid-token')
       .expect(498);
 
@@ -225,13 +225,13 @@ describe('Sessions e2e tests', () => {
     // Заряжаем токен 1 юзера, что бы уничтожить сессию 1 первого юзера
     // Первый, пытается удалить сессию второго
     await request(httpServer)
-      .delete(`/api/v1/security/session/${firstUser.secondSession.id}`)
+      .delete(`/security/session/${firstUser.secondSession.id}`)
       .set('Cookie', secondUser.secondLogin.headers['set-cookie'])
       .expect(403);
 
     // Не найдена такая сессия
     await request(httpServer)
-      .delete(`/api/v1/security/session/123`)
+      .delete(`/security/session/123`)
       .set('Cookie', firstUser.secondLogin.headers['set-cookie'])
       .expect(404);
 
@@ -239,19 +239,19 @@ describe('Sessions e2e tests', () => {
 
     // Проверяем сессии первого юзера, после удаления
     await request(httpServer)
-      .delete(`/api/v1/security/session/${firstUser.firstSession.id}`)
+      .delete(`/security/session/${firstUser.firstSession.id}`)
       .set('Cookie', firstUser.secondLogin.headers['set-cookie'])
       .expect(204);
 
     const firstUserSessions = await request(httpServer)
-      .get('/api/v1/security/session')
+      .get('/security/session')
       .set('Cookie', firstUser.secondLogin.headers['set-cookie'])
       .expect(200);
 
     // Проверяем сессии второго юзера, после удаления, сессии первого юзера
     expect(firstUserSessions.body).toHaveLength(1);
     const secondUserSessions = await request(httpServer)
-      .get('/api/v1/security/session')
+      .get('/security/session')
       .set('Cookie', secondUser.secondLogin.headers['set-cookie'])
       .expect(200);
     expect(secondUserSessions.body).toHaveLength(2);
