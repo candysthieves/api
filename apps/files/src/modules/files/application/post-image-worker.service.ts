@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { FilesConfig } from '../../../files.config.js';
 import { Cron } from '@nestjs/schedule';
 import type {
   ImageInputEvent,
@@ -20,11 +21,15 @@ export class PostImageWorkerService {
     private readonly s3: S3Adapter,
     private readonly cancelledPosts: CancelledPostRepository,
     private readonly outbox: FilesOutboxRepository,
+    private readonly config: FilesConfig,
   ) {}
 
   @Cron('* * * * * *', { waitForCompletion: true })
   async processPending(): Promise<void> {
-    await this.inbox.run((event) => this.processImage(event));
+    await this.inbox.run(
+      (event) => this.processImage(event),
+      this.config.postImageConcurrency,
+    );
   }
 
   async processImage(record: StoredEvent): Promise<void> {

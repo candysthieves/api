@@ -4,6 +4,7 @@ import { ConfigService } from '@nestjs/config';
 @Injectable()
 export class FilesConfig {
   readonly port: number;
+  readonly postImageConcurrency: number;
   readonly tcpHost: string;
   readonly tcpPort: number;
   readonly mongodbUri: string;
@@ -15,6 +16,9 @@ export class FilesConfig {
   readonly s3ForcePathStyle: boolean;
 
   constructor(configService: ConfigService) {
+    this.postImageConcurrency = configService.getOrThrow<number>(
+      'POST_IMAGE_CONCURRENCY',
+    );
     this.port = configService.getOrThrow<number>('PORT');
     this.tcpHost = configService.getOrThrow<string>('TCP_HOST');
     this.tcpPort = configService.getOrThrow<number>('TCP_PORT');

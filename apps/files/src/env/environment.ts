@@ -65,6 +65,12 @@ export class EnvironmentVariables {
   @Max(65535)
   RABBITMQ_PREFETCH_COUNT = 20;
 
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(Number.MAX_SAFE_INTEGER)
+  POST_IMAGE_CONCURRENCY = 5;
+
   @IsString()
   @IsNotEmpty()
   RABBITMQ_MAIN_TO_FILES_QUEUE!: string;

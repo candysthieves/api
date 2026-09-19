@@ -43,7 +43,10 @@ export class MongoEventRepository {
     );
   }
 
-  async run(handle: (event: StoredEvent) => Promise<void>): Promise<void> {
+  async run(
+    handle: (event: StoredEvent) => Promise<void>,
+    concurrency = 10,
+  ): Promise<void> {
     if (this.running) return;
     this.running = true;
     try {
@@ -57,7 +60,7 @@ export class MongoEventRepository {
           ],
         })
         .sort({ createdAt: 1 })
-        .limit(10)
+        .limit(concurrency)
         .exec();
       const results = await Promise.allSettled(
         events.map(async (pending) => {

@@ -65,3 +65,15 @@ docker compose -f docker-compose.vps.yml -f docker-compose.release.yml up -d mai
 - [Ручной запуск GitHub Actions](https://docs.github.com/en/actions/how-tos/manage-workflow-runs/manually-run-a-workflow)
 - [Compose в production](https://docs.docker.com/compose/how-tos/production/)
 - [Prisma migrate deploy](https://www.prisma.io/docs/orm/reference/prisma-cli-reference#migrate-deploy)
+
+## Post image concurrency
+
+Set `POST_IMAGE_CONCURRENCY=5` in the server's `.files.env`.
+The default is 5; the value must be a positive integer.
+This limits concurrent post image processing from the MongoDB inbox.
+The first deployment requires an updated files image supporting this variable.
+Later value changes only require recreating the container:
+
+```bash
+docker compose -f docker-compose.vps.yml up -d --force-recreate files
+```
