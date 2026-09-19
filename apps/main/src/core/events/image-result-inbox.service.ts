@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { PrismaService } from '../../infrastructure/prisma/prisma.service.js';
 import { SseService } from '../sse/sse.service.js';
@@ -9,6 +9,8 @@ import { EventStoreService } from './event-store.service.js';
 
 @Injectable()
 export class ImageResultInboxService {
+  private readonly logger = new Logger(ImageResultInboxService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly sse: SseService,
@@ -52,5 +54,8 @@ export class ImageResultInboxService {
     this.sse.emit(SseEventEnum.POST_MEDIA_UPDATED, {
       postId: data.postId,
     });
+    this.logger.log(
+      `Post READY; SSE emitted: event=${SseEventEnum.POST_MEDIA_UPDATED} postId=${data.postId}`,
+    );
   }
 }
