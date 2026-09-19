@@ -1,23 +1,9 @@
-import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument } from 'mongoose';
-import type { ImageEvent } from '../../../../../libs/contracts/index.js';
+import { Schema, SchemaFactory } from '@nestjs/mongoose';
+import { StoredEvent } from './stored-event.schema.js';
 
-export type OutputEventDocument = HydratedDocument<OutputEvent>;
-
-@Schema({ collection: 'output_events', timestamps: true })
-export class OutputEvent {
-  @Prop({ required: true, unique: true, index: true }) eventId: string;
-  @Prop({ required: true }) consumer: 'MAIN';
-  @Prop({ required: true }) type: 'post.image.updated.v1';
-  @Prop({ required: true, type: Object }) data: ImageEvent['data'];
-  @Prop({ required: true, default: 'UNPROCESSED' }) status:
-    'UNPROCESSED' | 'OK';
-}
-
+@Schema({ collection: 'output_events', versionKey: false })
+export class OutputEvent extends StoredEvent {}
 export const OutputEventSchema = SchemaFactory.createForClass(OutputEvent);
-OutputEventSchema.index({ type: 1, status: 1 });
-
-OutputEventSchema.index(
-  { 'data.postId': 1, 'data.index': 1, 'data.status': 1 },
-  { unique: true },
-);
+OutputEventSchema.index({ status: 1, nextAttemptAt: 1 });
+OutputEventSchema.index({ status: 1, processingStartedAt: 1 });
+OutputEventSchema.index({ status: 1, completedAt: 1 });

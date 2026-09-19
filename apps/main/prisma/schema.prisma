@@ -87,37 +87,43 @@ model Post {
 }
 
 model OutputEvent {
-  id            String      @id @default(uuid()) @db.Uuid
-  eventId       String      @unique @map("event_id") @db.Uuid
-  consumer      String
-  type          String
+  eventId             String      @id @map("event_id") @db.Uuid
+  consumer            String?
+  type                String?
   /// [Prisma.JsonValue]
-  data          Json        @db.JsonB
-  status        EventStatus @default(UNPROCESSED)
-  attempts      Int         @default(0)
-  lastError     String?     @map("last_error")
-  nextAttemptAt DateTime?   @map("next_attempt_at")
-  createdAt     DateTime    @default(now()) @map("created_at")
-  updatedAt     DateTime    @updatedAt @map("updated_at")
+  data                Json?       @db.JsonB
+  body                Bytes?      @db.ByteA
+  status              EventStatus @default(UNPROCESSED)
+  attempts            Int?        @default(0)
+  processingStartedAt DateTime?   @map("processing_started_at")
+  nextAttemptAt       DateTime?   @map("next_attempt_at")
+  completedAt         DateTime?   @map("completed_at")
+  lastError           String?     @map("last_error")
+  createdAt           DateTime?   @default(now()) @map("created_at")
 
   @@index([status, nextAttemptAt])
+  @@index([status, processingStartedAt])
+  @@index([status, completedAt])
 }
 
 model InboxEvent {
-  id            String      @id @default(uuid()) @db.Uuid
-  eventId       String      @unique @map("event_id") @db.Uuid
-  consumer      String
-  type          String
+  eventId             String      @id @map("event_id") @db.Uuid
+  consumer            String?
+  type                String?
   /// [Prisma.JsonValue]
-  data          Json        @db.JsonB
-  status        EventStatus @default(UNPROCESSED)
-  attempts      Int         @default(0)
-  lastError     String?     @map("last_error")
-  nextAttemptAt DateTime?   @map("next_attempt_at")
-  createdAt     DateTime    @default(now()) @map("created_at")
-  updatedAt     DateTime    @updatedAt @map("updated_at")
+  data                Json?       @db.JsonB
+  body                Bytes?      @db.ByteA
+  status              EventStatus @default(UNPROCESSED)
+  attempts            Int?        @default(0)
+  processingStartedAt DateTime?   @map("processing_started_at")
+  nextAttemptAt       DateTime?   @map("next_attempt_at")
+  completedAt         DateTime?   @map("completed_at")
+  lastError           String?     @map("last_error")
+  createdAt           DateTime?   @default(now()) @map("created_at")
 
   @@index([status, nextAttemptAt])
+  @@index([status, processingStartedAt])
+  @@index([status, completedAt])
   @@map("InputEvent")
 }
 

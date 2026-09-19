@@ -1,8 +1,6 @@
 export const MAX_POST_IMAGES = 8;
 export const MAX_POST_IMAGE_SIZE = 5 * 1024 * 1024;
 
-export type ImageStatus = 'READY' | 'FAILED';
-
 export type MediaFile = {
   fileId: string;
   url: string;
@@ -11,6 +9,7 @@ export type MediaFile = {
 };
 
 export type ImageInputEvent = {
+  eventId: string;
   postId: string;
   index: number;
   originalName: string;
@@ -26,8 +25,8 @@ export type ImageEvent = {
   data: {
     postId: string;
     index: number;
-    status: ImageStatus;
-    image: MediaFile | null;
+    status: 'READY';
+    image: MediaFile;
     preview: MediaFile | null;
   };
 };
@@ -47,19 +46,14 @@ export function validateImageEvent(
   if (
     !isUuid(data.postId) ||
     !isIntegerInRange(data.index, 0, MAX_POST_IMAGES - 1) ||
-    typeof data.status !== 'string' ||
-    !['READY', 'FAILED'].includes(data.status)
+    data.status !== 'READY'
   )
     throw new Error('INVALID_IMAGE_STATE');
-  if (data.status === 'READY') {
-    if (
-      !isMediaFile(data.image) ||
-      (data.index === 0 ? !isMediaFile(data.preview) : data.preview !== null)
-    )
-      throw new Error('INVALID_READY_EVENT');
-  } else if (data.image !== null || data.preview !== null) {
-    throw new Error('INVALID_MEDIA_EVENT');
-  }
+  if (
+    !isMediaFile(data.image) ||
+    (data.index === 0 ? !isMediaFile(data.preview) : data.preview !== null)
+  )
+    throw new Error('INVALID_READY_EVENT');
 }
 
 function isMediaFile(value: unknown): value is MediaFile {

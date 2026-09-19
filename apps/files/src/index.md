@@ -1,12 +1,14 @@
 # Post Images: RabbitMQ
 
-Main returns HTTP 201 with `{ postId }`, then publishes each original image as a binary Buffer with headers. Files checks cancellation and claims `postId:index` in `input_events` once. It saves the main image and, for index 0, its preview, writes READY/FAILED directly to `output_events`, records the terminal event state, and acknowledges the RabbitMQ event.
+Main persists Post and one binary outbox event per image before returning `201 { postId }`. Its scheduler publishes originals with their UUID as messageId. The files consumer validates and stores inbox bytes before ack; persistence failure requeues, invalid input is rejected.
 
-The files NestJS Cron scheduler publishes pending outbox results sequentially with publisher confirm before marking them OK. Main acknowledges each validated result after saving it to its inbox; its Cron scheduler processes up to 10 oldest pending results per pass. A successful result updates one JSONB image position and its optional preview, then sends SSE; a failed result only deletes the post. Errors are retried after 10 seconds using updatedAt, with ERROR after the third failure. Repeated delivery never restarts image processing. A processing or event-publication failure deletes the entire post. Dimensions are positive numbers and pending image positions remain null.
+The files inbox scheduler checks cancellation, processes the image and preview for index 0, saves an immutable result outbox with the same UUID, and completes the inbox. An existing outbox (including a cleaned record) skips reprocessing. Both outbox schedulers require publisher confirm. Main stores results before ack and fills only empty Post positions and preview; missing posts are successful skips. Readiness emits the existing SSE notification.
 
-TCP cancellation uses `{ cmd: 'cancel-post-images' }` with `{ postId }`; the marker lasts 24 hours. Existing TCP operations below remain available.
+Every processing scheduler runs each second, handles up to 10 events sequentially, and prevents local overlap. All four stores allow 3 attempts with a 10-second delay, recover PROCESSING older than a minute every 10 seconds, and clean terminal payloads after an hour while retaining ID/status forever. Exhaustion leaves ERROR without deleting the post or creating FAILED. One instance per service; no transactions or separate jobs.
 
-See [the current design](../../../docs/superpowers/specs/2026-09-08-simplify-post-image-flow-design.md) for recovery, ack timing and limitations, including the intentionally absent main dispatch outbox.
+TCP cancellation uses `{ cmd: 'cancel-post-images' }` with `{ postId }`; its existing 24-hour marker remains. Existing TCP operations below remain available.
+
+See [the current design and migration procedure](../../../docs/superpowers/specs/2026-09-19-durable-image-events-design.md).
 
 ---
 

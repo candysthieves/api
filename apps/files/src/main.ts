@@ -6,58 +6,24 @@ import { Logger } from '@nestjs/common';
 
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, {
+    logger: ['log', 'warn', 'error', 'fatal'],
+  });
 
   const config = app.get(FilesConfig);
 
   app.enableShutdownHooks();
 
-  process.on('uncaughtException', (err: Error) => {
-    logger.fatal(
-      JSON.stringify({
-        event: 'uncaught_exception',
-        error: err.message,
-        stack: err.stack,
-        memoryUsage: process.memoryUsage(),
-      }),
-    );
+  process.on('uncaughtException', (error: Error) => {
+    logger.fatal('Uncaught exception', error.stack);
   });
 
   process.on('unhandledRejection', (reason: unknown) => {
     logger.fatal(
-      JSON.stringify({
-        event: 'unhandled_rejection',
-        reason: reason instanceof Error ? reason.message : String(reason),
-        stack: reason instanceof Error ? reason.stack : undefined,
-        memoryUsage: process.memoryUsage(),
-      }),
+      'Unhandled rejection',
+      reason instanceof Error ? reason.stack : String(reason),
     );
   });
-
-  for (const signal of ['SIGTERM', 'SIGINT']) {
-    process.on(signal, () => {
-      logger.warn(
-        JSON.stringify({
-          event: 'process_signal_received',
-          signal,
-          memoryUsage: process.memoryUsage(),
-        }),
-      );
-    });
-  }
-
-  setInterval(() => {
-    const mem = process.memoryUsage();
-    logger.log(
-      JSON.stringify({
-        event: 'files_heartbeat_memory',
-        rssMiB: Math.round(mem.rss / 1024 / 1024),
-        heapUsedMiB: Math.round(mem.heapUsed / 1024 / 1024),
-        heapTotalMiB: Math.round(mem.heapTotal / 1024 / 1024),
-        externalMiB: Math.round(mem.external / 1024 / 1024),
-      }),
-    );
-  }, 30_000).unref();
 
   app.connectMicroservice<MicroserviceOptions>(
     {
@@ -73,7 +39,17 @@ async function bootstrap() {
   await app.init();
   await app.startAllMicroservices();
 
-  logger.log(`Files service started on ${config.tcpHost}:${config.tcpPort}`);
+  const startupInfo = [`Port:    ${config.tcpPort}`, 'MongoDB: connected'];
+  const width = Math.max(...startupInfo.map((line) => line.length));
+  console.log(
+    [
+      '',
+      `┌${'─'.repeat(width + 2)}┐`,
+      ...startupInfo.map((line) => `│ ${line.padEnd(width)} │`),
+      `└${'─'.repeat(width + 2)}┘`,
+      '',
+    ].join('\n'),
+  );
 }
 bootstrap().catch((error: unknown) => {
   new Logger('Bootstrap').fatal(

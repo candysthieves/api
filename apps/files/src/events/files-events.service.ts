@@ -1,34 +1,39 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { Cron, CronExpression } from '@nestjs/schedule';
+import { Injectable } from '@nestjs/common';
+import { Cron } from '@nestjs/schedule';
+import type { ImageEvent } from '../../../../libs/contracts/index.js';
 import { FilesRabbitMqProducerService } from '../rabbitmq/files-rabbitmq-producer.service.js';
 import { FilesOutboxRepository } from './files-outbox.repository.js';
+import { FilesInboxRepository } from './files-inbox.repository.js';
 
 @Injectable()
 export class FilesEventsService {
-  private readonly logger = new Logger(FilesEventsService.name);
-
   constructor(
     private readonly outbox: FilesOutboxRepository,
-    private readonly rabbitMqProducer: FilesRabbitMqProducerService,
+    private readonly producer: FilesRabbitMqProducerService,
+    private readonly inbox: FilesInboxRepository,
   ) {}
 
-  @Cron(CronExpression.EVERY_SECOND, { waitForCompletion: true })
-  private async processingOutPutEvents(): Promise<void> {
-    try {
-      for (const event of await this.outbox.findPending(10)) {
-        await this.rabbitMqProducer.publishOutputEvent({
-          eventId: event.eventId,
-          consumer: event.consumer,
-          type: event.type,
-          data: event.data,
-        });
-        await this.outbox.markPublished(event.eventId);
-      }
-    } catch (error) {
-      this.logger.error(
-        'Unable to deliver file events',
-        error instanceof Error ? error.stack : undefined,
-      );
-    }
+  @Cron('* * * * * *', { waitForCompletion: true })
+  async processPending(): Promise<void> {
+    await this.outbox.run(async (event) => {
+      await this.producer.publishOutputEvent({
+        eventId: event._id,
+        consumer: 'MAIN',
+        type: 'post.image.updated.v1',
+        data: event.data as ImageEvent['data'],
+      });
+    });
+  }
+
+  @Cron('*/10 * * * * *', { waitForCompletion: true })
+  async recover(): Promise<void> {
+    await this.inbox.recover();
+    await this.outbox.recover();
+  }
+
+  @Cron('0 * * * * *', { waitForCompletion: true })
+  async cleanup(): Promise<void> {
+    await this.inbox.cleanup();
+    await this.outbox.cleanup();
   }
 }

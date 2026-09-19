@@ -1,3 +1,5 @@
+import { EventStoreService } from './event-store.service.js';
+import { ImageOutboxService } from './image-outbox.service.js';
 import { Module } from '@nestjs/common';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { ConfigService } from '@nestjs/config';
@@ -25,12 +27,15 @@ import { ImageResultInboxConsumer } from './image-result-inbox.consumer.js';
     ]),
   ],
   providers: [
+    EventStoreService,
+    ImageOutboxService,
     ImageResultInboxService,
     FilesTcpClient,
     PostImagesRepository,
     ImageResultInboxConsumer,
   ],
   exports: [
+    ImageOutboxService,
     FilesTcpClient,
     ImageResultInboxService,
     PostImagesRepository,

@@ -36,10 +36,6 @@ export class CleanupUnusedPostFilesUseCase implements ICommandHandler<
     const hours = command.olderThanHours || 24;
     const cutoffDate = new Date(Date.now() - hours * 60 * 60 * 1000);
 
-    this.logger.log(
-      `Starting cleanup for files older than ${hours}h (${cutoffDate.toISOString()})`,
-    );
-
     // 1. Удаляем файлы, которые есть в Mongo, но отсутствуют в постах Postgres
     const deletedDbCount = await this.cleanUnusedDbFiles(
       command.activeFileIds,
@@ -49,9 +45,11 @@ export class CleanupUnusedPostFilesUseCase implements ICommandHandler<
     // 2. Удаляем файлы из S3, про которые вообще нет записей в Mongo
     const deletedS3OrphanCount = await this.cleanOrphanS3Files(cutoffDate);
 
-    this.logger.log(
-      `Cleanup finished: ${deletedDbCount} db files removed, ${deletedS3OrphanCount} s3 orphans removed.`,
-    );
+    if (deletedDbCount > 0 || deletedS3OrphanCount > 0) {
+      this.logger.log(
+        `Cleanup finished: ${deletedDbCount} db files removed, ${deletedS3OrphanCount} s3 orphans removed.`,
+      );
+    }
 
     return ObjectResult.success({ deletedDbCount, deletedS3OrphanCount });
   }

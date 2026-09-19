@@ -2,56 +2,24 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import type { ImageInputEvent } from '../../../../libs/contracts/index.js';
-import {
-  InputEvent,
-  type InputEventDocument,
-} from './schemas/input-event.schema.js';
+import { InputEvent } from './schemas/input-event.schema.js';
+import { StoredEvent } from './schemas/stored-event.schema.js';
+import { MongoEventRepository } from './mongo-event.repository.js';
 
 @Injectable()
-export class FilesInboxRepository {
-  constructor(
-    @InjectModel(InputEvent.name)
-    private readonly inputEvents: Model<InputEventDocument>,
-  ) {}
-
-  async hasFailedEvent(postId: string): Promise<boolean> {
-    return Boolean(
-      await this.inputEvents.exists({ postId, state: 'FAILED' }).exec(),
-    );
+export class FilesInboxRepository extends MongoEventRepository {
+  constructor(@InjectModel(InputEvent.name) model: Model<StoredEvent>) {
+    super(model);
   }
 
-  async findEvent(
-    event: Pick<ImageInputEvent, 'postId' | 'index'>,
-  ): Promise<InputEvent | null> {
-    return this.inputEvents
-      .findOne({ eventId: `${event.postId}:${event.index}` })
-      .exec();
-  }
-
-  async createEvent(
-    event: Pick<ImageInputEvent, 'postId' | 'index'>,
-  ): Promise<void> {
-    await this.inputEvents.create({
-      eventId: `${event.postId}:${event.index}`,
-      postId: event.postId,
-      index: event.index,
-      state: 'PROCESSING',
+  async accept(event: ImageInputEvent): Promise<void> {
+    const { eventId, body, ...data } = event;
+    await this.insert({
+      _id: eventId,
+      data,
+      body,
+      status: 'UNPROCESSED',
+      attempts: 0,
     });
-  }
-
-  async updateEvent(
-    event: Pick<ImageInputEvent, 'postId' | 'index'>,
-    state: 'READY' | 'FAILED',
-  ): Promise<void> {
-    await this.inputEvents
-      .updateOne(
-        {
-          eventId: `${event.postId}:${event.index}`,
-          state:
-            state === 'READY' ? 'PROCESSING' : { $in: ['PROCESSING', 'READY'] },
-        },
-        { $set: { state } },
-      )
-      .exec();
   }
 }

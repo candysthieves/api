@@ -18,7 +18,7 @@ import { MainRabbitMqProducerService } from './main-rabbitmq-producer.service.js
         };
         return {
           uri: config.getOrThrow<string>('RABBITMQ_URL'),
-          prefetchCount: 1,
+          prefetchCount: config.getOrThrow<number>('RABBITMQ_PREFETCH_COUNT'),
           enableDirectReplyTo: false,
           queues: [
             { name: inputEvents, options: imageQueueOptions },

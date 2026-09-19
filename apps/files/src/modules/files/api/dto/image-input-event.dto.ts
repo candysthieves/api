@@ -16,6 +16,9 @@ import {
 
 export class ImageInputEventDto implements ImageInputEvent {
   @IsUUID()
+  eventId: string;
+
+  @IsUUID()
   postId: string;
 
   @IsInt()
@@ -51,6 +54,7 @@ export class ImageInputEventDto implements ImageInputEvent {
   ): ImageInputEventDto {
     const headers = message.properties.headers ?? {};
     const dto = new ImageInputEventDto();
+    dto.eventId = message.properties.messageId as string;
     dto.postId = headers.postId as string;
     dto.index = headers.index as number;
     dto.originalName = headers.originalName as string;

@@ -1,15 +1,9 @@
-import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument } from 'mongoose';
+import { Schema, SchemaFactory } from '@nestjs/mongoose';
+import { StoredEvent } from './stored-event.schema.js';
 
-export type InputEventDocument = HydratedDocument<InputEvent>;
-
-@Schema({ collection: 'input_events', timestamps: true })
-export class InputEvent {
-  @Prop({ required: true, unique: true, index: true }) eventId: string;
-  @Prop({ required: true }) postId: string;
-  @Prop({ required: true }) index: number;
-  @Prop({ required: true, enum: ['PROCESSING', 'READY', 'FAILED'] })
-  state: 'PROCESSING' | 'READY' | 'FAILED';
-}
-
+@Schema({ collection: 'input_events', versionKey: false })
+export class InputEvent extends StoredEvent {}
 export const InputEventSchema = SchemaFactory.createForClass(InputEvent);
+InputEventSchema.index({ status: 1, nextAttemptAt: 1 });
+InputEventSchema.index({ status: 1, processingStartedAt: 1 });
+InputEventSchema.index({ status: 1, completedAt: 1 });

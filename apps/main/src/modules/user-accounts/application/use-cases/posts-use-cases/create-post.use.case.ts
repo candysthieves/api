@@ -4,7 +4,7 @@ import { CreatePostLocationDto } from '../../../api/dto/create-post.dto.js';
 import { MediaStatus, Prisma } from '../../../../../generated/prisma/client.js';
 import { DomainExceptions } from '../../../../../core/exceptions/domain-exceptions.js';
 import { Logger } from '@nestjs/common';
-import { MainRabbitMqProducerService } from '../../../../../core/rabbitmq/main-rabbitmq-producer.service.js';
+import { ImageOutboxService } from '../../../../../core/events/image-outbox.service.js';
 import {
   MAX_POST_IMAGE_SIZE,
   MAX_POST_IMAGES,
@@ -24,7 +24,7 @@ export class CreatePostUseCase implements ICommandHandler<CreatePostCommand> {
   private readonly logger = new Logger(CreatePostUseCase.name);
   constructor(
     private readonly postRepository: PostsRepository,
-    private readonly rabbitMqProducer: MainRabbitMqProducerService,
+    private readonly outbox: ImageOutboxService,
   ) {}
 
   async execute(command: CreatePostCommand): Promise<{ postId: string }> {
@@ -38,40 +38,20 @@ export class CreatePostUseCase implements ICommandHandler<CreatePostCommand> {
       userId: command.userId,
     });
 
-    // The HTTP request must not wait for RabbitMQ. If this process stops before
-    // publishing finishes, the affected image slots will remain unresolved.
-    void this.dispatchImages(post.id, command.files).catch((error: unknown) => {
-      this.logger.error(
-        `Post image dispatch compensation failed: post ${post.id}`,
-        error instanceof Error ? error.stack : undefined,
-      );
-    });
-
-    return { postId: post.id };
-  }
-
-  private async dispatchImages(
-    postId: string,
-    files: Express.Multer.File[],
-  ): Promise<void> {
     try {
-      for (const [index, file] of files.entries()) {
-        await this.rabbitMqProducer.publishImage({
-          postId,
-          index,
-          originalName: file.originalname,
-          mimeType: file.mimetype,
-          size: file.size,
-          body: file.buffer,
-        });
-      }
+      await this.outbox.save(post.id, command.files);
     } catch (error) {
-      this.logger.error(
-        `Post image dispatch failed: post ${postId}`,
-        error instanceof Error ? error.stack : undefined,
-      );
-      await this.postRepository.deletePost(postId);
+      const results = await Promise.allSettled([
+        this.outbox.abort(post.id),
+        this.postRepository.deletePost(post.id),
+      ]);
+      for (const result of results) {
+        if (result.status === 'rejected')
+          this.logger.error('Post creation compensation failed', result.reason);
+      }
+      throw error;
     }
+    return { postId: post.id };
   }
 
   private validateFiles(files: Express.Multer.File[]): void {
