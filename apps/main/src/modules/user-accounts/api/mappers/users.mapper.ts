@@ -8,7 +8,7 @@ export class UsersMapper {
   static getDefaultAvatar(): AvatarProfileType {
     return {
       fileId: '550e8400-e29b-41d4-a716-446655440001',
-      url: 'https://lumusapp-528592447405-eu-north-1-an.s3.eu-north-1.amazonaws.com/files/fallback/profile.webp',
+      url: 'https://lumusapp-528592447405-eu-north-1-an.s3.eu-north-1.amazonaws.com/files/avatar_close/avavatar.ru-indoor_setting-big_eyes-2272.webp',
       width: 8000,
       height: 8000,
     };
@@ -17,7 +17,7 @@ export class UsersMapper {
   static getDefaultAvatarPreview(): AvatarProfileType {
     return {
       fileId: '550e8400-e29b-41d4-a716-446655440002',
-      url: 'https://lumusapp-528592447405-eu-north-1-an.s3.eu-north-1.amazonaws.com/files/fallback/profile.webp',
+      url: 'https://lumusapp-528592447405-eu-north-1-an.s3.eu-north-1.amazonaws.com/files/avatar_close/avavatar.ru-indoor_setting-big_eyes-2272.webp',
       width: 8000,
       height: 8000,
     };
