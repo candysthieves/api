@@ -35,6 +35,6 @@ export class ImageProcessingService {
   }
 
   private compress(image: Sharp): Sharp {
-    return image.webp({ quality: 80 });
+    return image.webp({ quality: 50 });
   }
 }
