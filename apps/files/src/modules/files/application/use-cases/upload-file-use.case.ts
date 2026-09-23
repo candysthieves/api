@@ -36,7 +36,8 @@ export class UploadFileUseCase implements ICommandHandler<
         errors: [
           {
             field: 'file',
-            message: 'File size must not exceed 5 MB',
+            message:
+              'The photo must be less than 5 Mb and have JPEG, JPG or PNG format',
           },
         ],
       });
@@ -53,7 +54,8 @@ export class UploadFileUseCase implements ICommandHandler<
         errors: [
           {
             field: 'file',
-            message: 'Invalid image file. Only JPEG, JPG and PNG are allowed',
+            message:
+              'The photo must be less than 5 Mb and have JPEG, JPG or PNG format',
           },
         ],
       });
@@ -69,7 +71,8 @@ export class UploadFileUseCase implements ICommandHandler<
         errors: [
           {
             field: 'file',
-            message: 'Corrupted or unreadable image file',
+            message:
+              'The photo must be less than 5 Mb and have JPEG, JPG or PNG format',
           },
         ],
       });
