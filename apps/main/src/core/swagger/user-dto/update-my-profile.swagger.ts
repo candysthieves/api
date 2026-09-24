@@ -2,23 +2,33 @@ import { applyDecorators } from '@nestjs/common';
 import {
   ApiBadRequestResponse,
   ApiBearerAuth,
+  ApiBody,
   ApiOkResponse,
   ApiOperation,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
+import { ErrorStatus } from '../../exceptions/domain-exception-code.js';
+import { UpdateProfileDto } from '../../../modules/user-accounts/api/dto/update-profile.dto.js';
 
 export function ApiUpdateMyProfile() {
   return applyDecorators(
     ApiBearerAuth('accessToken'),
 
     ApiOperation({
-      summary: 'Update current user profile',
+      summary: 'Update current user profile or get profile data',
       description:
-        'Updates the profile information of the authenticated user and returns updated profile data.',
+        'Updates the profile information of the authenticated user if body is provided, or simply returns current profile data if the body is empty.',
+    }),
+
+    ApiBody({
+      type: UpdateProfileDto,
+      required: false,
+      description:
+        'Profile update payload. Can be omitted or empty to simply retrieve current profile.',
     }),
 
     ApiOkResponse({
-      description: 'Profile successfully updated',
+      description: 'Profile successfully retrieved or updated',
       schema: {
         example: {
           username: 'john_doe',
@@ -33,23 +43,30 @@ export function ApiUpdateMyProfile() {
     }),
 
     ApiBadRequestResponse({
-      description: 'Validation failed for input data.',
+      description:
+        'Validation failed for input data or username is already taken.',
       schema: {
         type: 'object',
         required: ['code', 'errorsMessages'],
         properties: {
-          code: { type: 'number', example: 50 },
+          code: {
+            type: 'number',
+            enum: [
+              ErrorStatus.VALIDATION_ERROR,
+              ErrorStatus.USERNAME_ALREADY_EXISTS,
+            ],
+            example: ErrorStatus.USERNAME_ALREADY_EXISTS,
+          },
           errorsMessages: {
             type: 'array',
             items: {
               type: 'object',
               required: ['field', 'message'],
               properties: {
-                field: { type: 'string', example: 'aboutMe' },
+                field: { type: 'string', example: 'username' },
                 message: {
                   type: 'string',
-                  example:
-                    'aboutMe must be shorter than or equal to 200 characters',
+                  example: 'Username already exists',
                 },
               },
             },

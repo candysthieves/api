@@ -52,7 +52,7 @@ export class UsersController {
   @UseGuards(AccessTokenGuard)
   @ApiUpdateMyProfile()
   async updateMyProfile(
-    @Body() dto: UpdateProfileDto,
+    @Body() dto: UpdateProfileDto = {},
     @User() user: JwtAccessPayload,
   ): Promise<MyProfileType> {
     return this.commandBus.execute<UpdateMyProfileCommand, MyProfileType>(
