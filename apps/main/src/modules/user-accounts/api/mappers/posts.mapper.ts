@@ -34,14 +34,14 @@ export class PostsMapper {
 
   static toPostByIdView(
     post: PostWithAuthor,
-    isOwner: boolean,
+    viewerStatus: UserViewerStatus,
   ): PostByIdViewType {
     const postView: Partial<PostViewType> = this.toPostView(post);
     delete postView.willBeDeleted;
 
     return {
       ...(postView as Omit<PostViewType, 'willBeDeleted'>),
-      isOwner,
+      viewerStatus,
     };
   }
 

@@ -44,7 +44,6 @@ import { GetUserProfileQueryHandler } from './application/query-handler/users/ge
 import { PostsQueryRepository } from './infrastructure/repositories/post-repositories/posts.query.repository.js';
 import { GetAllPostsQueryHandler } from './application/query-handler/posts/get-all-posts.query-handler.js';
 import { FindPostsByUserIdAndCursorQueryHandler } from './application/query-handler/posts/find-posts-by-user-id-and-cursor.query-handler.js';
-import { FindDeletedPostsByUserIdAndCursorQueryHandler } from './application/query-handler/posts/find-deleted-posts-by-user-id-and-cursor.query-handler.js';
 import { GetPostByIdQueryHandler } from './application/query-handler/posts/get-post-by-id.query-handler.js';
 import { GetDeletedPostByIdQueryHandler } from './application/query-handler/posts/get-deleted-post-by-id.query-handler.js';
 import { GetMyDeletedPostsQueryHandler } from './application/query-handler/posts/get-my-deleted-posts.query-handler.js';
@@ -84,7 +83,6 @@ import { UpdateMyProfileUseCase } from './application/use-cases/users-use-cases/
     GetUsersCountQueryHandler,
     GetUserProfileQueryHandler,
     FindPostsByUserIdAndCursorQueryHandler,
-    FindDeletedPostsByUserIdAndCursorQueryHandler,
     GetPostByIdQueryHandler,
     GetDeletedPostByIdQueryHandler,
     GetMyDeletedPostsQueryHandler,

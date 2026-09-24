@@ -28,12 +28,12 @@ export class GetUserProfileQueryHandler implements IQueryHandler<
   }: GetUserProfileQuery): Promise<GetUserProfileType> {
     const user = await this.usersQueryRepository.findByIdOrNotFound(userId);
 
-    const relationStatus = getViewerStatus(user.id, currentUserId);
+    const viewerStatus = getViewerStatus(user.id, currentUserId);
 
     const postsCount = await this.postsQueryRepository.countPostsByUserId(
       user.id,
     );
 
-    return UsersMapper.toGetUserProfileView(user, postsCount, relationStatus);
+    return UsersMapper.toGetUserProfileView(user, postsCount, viewerStatus);
   }
 }

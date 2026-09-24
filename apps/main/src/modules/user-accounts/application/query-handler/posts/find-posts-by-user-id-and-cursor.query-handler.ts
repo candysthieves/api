@@ -37,13 +37,13 @@ export class FindPostsByUserIdAndCursorQueryHandler implements IQueryHandler<Fin
 
     const { items, nextCursor, hasNextPage } = paginateByCursor(posts, limit);
 
-    const relationStatus = getViewerStatus(user.id, currentUserId);
+    const viewerStatus = getViewerStatus(user.id, currentUserId);
 
     return PostsMapper.toUserPostsView(
       items,
       nextCursor,
       hasNextPage,
-      relationStatus,
+      viewerStatus,
     );
   }
 }
