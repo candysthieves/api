@@ -1,13 +1,27 @@
-import { IsDateString, IsOptional, IsString, MaxLength } from 'class-validator';
+import {
+  IsDateString,
+  IsOptional,
+  IsString,
+  Length,
+  Matches,
+  MaxLength,
+} from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
+import { Trim } from '../../../../core/decorators/trim.decorator.js';
 
 export class UpdateProfileDto {
   @ApiPropertyOptional({
     description: 'Unique username',
     example: 'john_doe',
+    minLength: 6,
+    maxLength: 30,
+    pattern: '^[A-Za-z0-9_-]+$',
   })
   @IsOptional()
+  @Trim()
   @IsString()
+  @Length(6, 30)
+  @Matches(/^[A-Za-z0-9_-]+$/)
   username?: string;
 
   @ApiPropertyOptional({
