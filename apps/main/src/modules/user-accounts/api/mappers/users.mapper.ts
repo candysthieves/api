@@ -3,6 +3,8 @@ import { User } from '../../../../generated/prisma/client.js';
 import { GetUserProfileType } from '../view-types/users/get-user-profile.type.js';
 
 import { AvatarProfileType } from '../view-types/users/avatar-profile.type.js';
+import { DateTime } from 'luxon';
+import { MyProfileType } from '../view-types/users/my-profile.type.js';
 
 export class UsersMapper {
   static getDefaultAvatar(): AvatarProfileType {
@@ -48,6 +50,20 @@ export class UsersMapper {
       publicationsCount,
 
       isOwner,
+    };
+  }
+
+  static toMyProfileView(user: User): MyProfileType {
+    return {
+      username: user.username,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      dateOfBirth: user.dateOfBirth
+        ? DateTime.fromJSDate(user.dateOfBirth).toFormat('yyyy-MM-dd')
+        : null,
+      country: null,
+      city: null,
+      aboutMe: user.aboutMe,
     };
   }
 }

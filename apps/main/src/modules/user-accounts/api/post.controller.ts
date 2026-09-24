@@ -44,6 +44,8 @@ import { UpdatePostDto } from './dto/update-post.dto.js';
 import { UpdatePostCommand } from '../application/use-cases/posts-use-cases/update-post.usecase.js';
 import { ApiUpdatePost } from '../../../core/swagger/posts-dto/update-post.swagger.js';
 import { ApiGetAllPosts } from '../../../core/swagger/posts-dto/get-posts.swagger.js';
+import { ApiUserPosts } from '../../../core/swagger/posts-dto/get-user-posts.swagger.js';
+import { FindPostsByUserIdAndCursorQuery } from '../application/query-handler/posts/find-posts-by-user-id-and-cursor.query-handler.js';
 
 @ApiTags('Posts')
 @Controller('posts')
@@ -58,6 +60,40 @@ export class PostController {
   getAllPosts(@Query() query: GetPostsQueryParamsDto) {
     return this.queryBus.execute<GetAllPostsQuery>(
       new GetAllPostsQuery(query.cursor, query.limit),
+    );
+  }
+
+  //'owner' | 'user' | 'friend'
+  //"viewerStatus": "user"
+  @Get(':userId')
+  @UseGuards(AccessTokenGuard)
+  @ApiUserPosts()
+  getPostsForUser(
+    @Query() query: GetPostsQueryParamsDto,
+    @Param('userId') userId: string,
+    @User() user: JwtAccessPayload,
+  ) {
+    return this.queryBus.execute(
+      new FindPostsByUserIdAndCursorQuery(
+        userId,
+        user.userId,
+        query.cursor,
+        query.limit,
+      ),
+    );
+  }
+
+  //'owner' | 'user' | 'friend'
+  //"viewerStatus": "user"
+  @Get(':postId')
+  @UseGuards(AccessTokenGuard)
+  @ApiGetPostById()
+  getPostById(
+    @Param('postId', ParseUUIDPipe) postId: string,
+    @User() user: JwtAccessPayload,
+  ): Promise<PostByIdViewType> {
+    return this.queryBus.execute<GetPostByIdQuery, PostByIdViewType>(
+      new GetPostByIdQuery(postId, user.userId),
     );
   }
 
@@ -84,18 +120,6 @@ export class PostController {
       GetDeletedPostByIdQuery,
       PostWithAuthorViewType
     >(new GetDeletedPostByIdQuery(postId, user.userId));
-  }
-
-  @Get(':postId')
-  @UseGuards(AccessTokenGuard)
-  @ApiGetPostById()
-  getPostById(
-    @Param('postId', ParseUUIDPipe) postId: string,
-    @User() user: JwtAccessPayload,
-  ): Promise<PostByIdViewType> {
-    return this.queryBus.execute<GetPostByIdQuery, PostByIdViewType>(
-      new GetPostByIdQuery(postId, user.userId),
-    );
   }
 
   @Post()

@@ -1,14 +1,22 @@
-import { Post } from '../../../../generated/prisma/client.js';
+import { PostAuthorViewType } from '../view-types/posts/post-author-view.type.js';
+import { PostWithAuthor } from '../../infrastructure/types/post-with-author.type.js';
+import { UsersMapper } from './users.mapper.js';
 import { PostViewType } from '../view-types/posts/post-view.type.js';
 import { PostByIdViewType } from '../view-types/posts/post-by-id-view.type.js';
+import { PostWithAuthorViewType } from '../view-types/posts/post-with-author-view.type.js';
 import { GetAllPostsViewType } from '../view-types/posts/get-posts-view.type.js';
 import { GetUserPostsViewType } from '../view-types/posts/get-user-posts-view.type.js';
-import { PostWithAuthor } from '../../infrastructure/types/post-with-author.type.js';
-import { PostWithAuthorViewType } from '../view-types/posts/post-with-author-view.type.js';
-import { UsersMapper } from './users.mapper.js';
 
 export class PostsMapper {
-  static toPostView(post: Post): PostViewType {
+  static toAuthorView(author: PostWithAuthor['user']): PostAuthorViewType {
+    return {
+      id: author.id,
+      username: author.username,
+      avatarPreviewUrl: UsersMapper.getDefaultAvatarPreview(),
+    };
+  }
+
+  static toPostView(post: PostWithAuthor): PostViewType {
     return {
       id: post.id,
       description: post.description,
@@ -16,6 +24,7 @@ export class PostsMapper {
       preview: post.preview,
       createdAt: post.createdAt.toISOString(),
       willBeDeleted: post.willBeDeleted?.toISOString() || null,
+      author: this.toAuthorView(post.user),
     };
   }
 
@@ -23,36 +32,17 @@ export class PostsMapper {
     post: PostWithAuthor,
     isOwner: boolean,
   ): PostByIdViewType {
-    const postView = this.toPostView(post);
+    const postView: Partial<PostViewType> = this.toPostView(post);
+    delete postView.willBeDeleted;
 
     return {
-      id: postView.id,
-      description: postView.description,
-      images: postView.images,
-      preview: postView.preview,
-      createdAt: postView.createdAt,
-      author: {
-        id: post.user.id,
-        username: post.user.username,
-        avatarUrl: UsersMapper.getDefaultAvatar(),
-        avatarPreviewUrl: UsersMapper.getDefaultAvatarPreview(),
-      },
+      ...(postView as Omit<PostViewType, 'willBeDeleted'>),
       isOwner,
     };
   }
 
   static toPostWithAuthorView(post: PostWithAuthor): PostWithAuthorViewType {
-    const postView = this.toPostView(post);
-
-    return {
-      ...postView,
-      author: {
-        id: post.user.id,
-        username: post.user.username,
-        avatarUrl: UsersMapper.getDefaultAvatar(),
-        avatarPreviewUrl: UsersMapper.getDefaultAvatarPreview(),
-      },
-    };
+    return this.toPostView(post);
   }
 
   static toAllPostsView(
@@ -68,7 +58,7 @@ export class PostsMapper {
   }
 
   static toUserPostsView(
-    posts: Post[],
+    posts: PostWithAuthor[],
     nextCursor: string | null,
     hasNextPage: boolean,
     isOwner: boolean,

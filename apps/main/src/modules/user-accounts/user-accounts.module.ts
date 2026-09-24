@@ -26,7 +26,7 @@ import { HardDeletePostUseCase } from './application/use-cases/posts-use-cases/h
 import { RestorePostUseCase } from './application/use-cases/posts-use-cases/restore-post.usecase.js';
 import { SoftDeletePostUseCase } from './application/use-cases/posts-use-cases/soft-delete-post.usecase.js';
 import { DeactivateSessionUseCase } from './application/use-cases/sessions-use-cases/deactivate-session.usecase.js';
-import { DeleteOtherSessionsUseCase } from './application/use-cases/sessions-use-cases/delete-other-sessions-use.case.js';
+import { DeleteOtherSessionsUsecase } from './application/use-cases/sessions-use-cases/delete-other-sessions-usecase.js';
 import { AuthController } from './api/auth.controller.js';
 import { AccessTokenGuard } from './api/guards/access-token.guard.js';
 import { PostController } from './api/post.controller.js';
@@ -48,6 +48,7 @@ import { FindDeletedPostsByUserIdAndCursorQueryHandler } from './application/que
 import { GetPostByIdQueryHandler } from './application/query-handler/posts/get-post-by-id.query-handler.js';
 import { GetDeletedPostByIdQueryHandler } from './application/query-handler/posts/get-deleted-post-by-id.query-handler.js';
 import { GetMyDeletedPostsQueryHandler } from './application/query-handler/posts/get-my-deleted-posts.query-handler.js';
+import { UpdateMyProfileUseCase } from './application/use-cases/users-use-cases/update-my-profile.usecase.js';
 
 @Module({
   imports: [CqrsModule, EventsModule],
@@ -59,10 +60,11 @@ import { GetMyDeletedPostsQueryHandler } from './application/query-handler/posts
   ],
   providers: [
     RegistrationUseCase,
+    UpdateMyProfileUseCase,
     LoginUseCase,
     LogoutUseCase,
     RefreshTokenUseCase,
-    DeleteOtherSessionsUseCase,
+    DeleteOtherSessionsUsecase,
     DeactivateSessionUseCase,
     ConfirmEmailUseCase,
     ResendEmailUseCase,
@@ -87,7 +89,6 @@ import { GetMyDeletedPostsQueryHandler } from './application/query-handler/posts
     GetDeletedPostByIdQueryHandler,
     GetMyDeletedPostsQueryHandler,
 
-
     UsersRepository,
     SessionsRepository,
     OAuthRepository,
@@ -106,4 +107,3 @@ import { GetMyDeletedPostsQueryHandler } from './application/query-handler/posts
   ],
 })
 export class UserAccountsModule {}
-

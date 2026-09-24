@@ -69,6 +69,16 @@ export function ApiUserPosts() {
               },
               createdAt: '2026-09-03T10:30:00.000Z',
               willBeDeleted: null,
+              author: {
+                id: '550e8400-e29b-41d4-a716-446655440000',
+                username: 'john_doe',
+                avatarPreviewUrl: {
+                  fileId: '550e8400-e29b-41d4-a716-446655440002',
+                  url: 'https://lumusapp-528592447405-eu-north-1-an.s3.eu-north-1.amazonaws.com/files/fallback/profile.webp',
+                  width: 8000,
+                  height: 8000,
+                },
+              },
             },
           ],
           nextCursor: '2026-09-03T10:20:00.000Z',
