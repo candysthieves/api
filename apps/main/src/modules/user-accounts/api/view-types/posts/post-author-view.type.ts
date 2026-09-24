@@ -1,7 +1,7 @@
-import { AvatarProfileType } from '../users/avatar-profile.type.js';
+import { AvatarPreview } from '../../../../../core/types/prisma/json-types.js';
 
 export type PostAuthorViewType = {
   id: string;
   username: string;
-  avatarPreviewUrl: AvatarProfileType;
+  avatarPreviewUrl: AvatarPreview;
 };

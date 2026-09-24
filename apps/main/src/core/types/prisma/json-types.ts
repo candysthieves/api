@@ -18,6 +18,10 @@ export type PostImages = (PostImage | null)[];
 
 export type PostPreview = FileType | null;
 
+export type AvatarImage = FileType | null;
+
+export type AvatarPreview = FileType | null;
+
 declare global {
   namespace PrismaJson {
     type PostLocations = import('./json-types.js').PostLocations;

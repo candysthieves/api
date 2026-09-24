@@ -16,7 +16,7 @@ export class PostsMapper {
     return {
       id: author.id,
       username: author.username,
-      avatarPreviewUrl: UsersMapper.getDefaultAvatarPreview(),
+      avatarPreviewUrl: UsersMapper.getDefaultAvatarPreview() ?? null,
     };
   }
 

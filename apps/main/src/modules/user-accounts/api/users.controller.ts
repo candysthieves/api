@@ -13,6 +13,9 @@ import { ApiUpdateMyProfile } from '../../../core/swagger/user-dto/update-my-pro
 import { UpdateMyProfileCommand } from '../application/use-cases/users-use-cases/update-my-profile.usecase.js';
 import { UpdateProfileDto } from './dto/update-profile.dto.js';
 import { MyProfileType } from './view-types/users/my-profile.type.js';
+import { GetAvatarQuery } from '../application/query-handler/users/get-avatar-query-handler.js';
+import { GetMyAvatarType } from './view-types/users/get-my-avatar.type.js';
+import { ApiGetMyAvatar } from '../../../core/swagger/user-dto/get-my-avatar.swagger.js';
 
 @Controller('users')
 export class UsersController {
@@ -54,6 +57,15 @@ export class UsersController {
   ): Promise<MyProfileType> {
     return this.commandBus.execute<UpdateMyProfileCommand, MyProfileType>(
       new UpdateMyProfileCommand(user.userId, dto),
+    );
+  }
+
+  @Get('my-avatar')
+  @UseGuards(AccessTokenGuard)
+  @ApiGetMyAvatar()
+  getAvatar(@User() user: JwtAccessPayload): Promise<GetMyAvatarType> {
+    return this.queryBus.execute<GetAvatarQuery, GetMyAvatarType>(
+      new GetAvatarQuery(user.userId),
     );
   }
 }

@@ -29,8 +29,147 @@ export function ApiGetAllPosts() {
 
     ApiOkResponse({
       description:
-        'Posts successfully retrieved. Images preserve upload order and contain null for slots without a ready image. Preview is null until the first image is ready.',
+        'Posts successfully retrieved. Images preserve upload order and contain null for slots without a ready image. Preview is null until the first image is ready. Author avatarPreviewUrl contains preview image or null if author has no avatar.',
       schema: {
+        type: 'object',
+        required: ['items', 'nextCursor', 'hasNextPage'],
+        properties: {
+          items: {
+            type: 'array',
+            items: {
+              type: 'object',
+              required: [
+                'id',
+                'description',
+                'images',
+                'preview',
+                'createdAt',
+                'willBeDeleted',
+                'author',
+              ],
+              properties: {
+                id: {
+                  type: 'string',
+                  format: 'uuid',
+                  example: '550e8400-e29b-41d4-a716-446655440000',
+                },
+                description: {
+                  type: 'string',
+                  example: 'My first post',
+                },
+                images: {
+                  type: 'array',
+                  items: {
+                    nullable: true,
+                    oneOf: [
+                      {
+                        type: 'object',
+                        required: ['fileId', 'url', 'width', 'height'],
+                        properties: {
+                          fileId: {
+                            type: 'string',
+                            format: 'uuid',
+                            example: '550e8400-e29b-41d4-a716-446655440001',
+                          },
+                          url: {
+                            type: 'string',
+                            example: 'https://example.com/image.webp',
+                          },
+                          width: { type: 'number', example: 1920 },
+                          height: { type: 'number', example: 1080 },
+                        },
+                      },
+                      { type: 'null' },
+                    ],
+                  },
+                },
+                preview: {
+                  nullable: true,
+                  oneOf: [
+                    {
+                      type: 'object',
+                      required: ['fileId', 'url', 'width', 'height'],
+                      properties: {
+                        fileId: {
+                          type: 'string',
+                          format: 'uuid',
+                          example: '550e8400-e29b-41d4-a716-446655440001',
+                        },
+                        url: {
+                          type: 'string',
+                          example: 'https://example.com/preview.webp',
+                        },
+                        width: { type: 'number', example: 400 },
+                        height: { type: 'number', example: 225 },
+                      },
+                    },
+                    { type: 'null' },
+                  ],
+                },
+                createdAt: {
+                  type: 'string',
+                  format: 'date-time',
+                  example: '2026-09-03T10:30:00.000Z',
+                },
+                willBeDeleted: {
+                  type: 'string',
+                  format: 'date-time',
+                  nullable: true,
+                  example: null,
+                },
+                author: {
+                  type: 'object',
+                  required: ['id', 'username', 'avatarPreviewUrl'],
+                  properties: {
+                    id: {
+                      type: 'string',
+                      format: 'uuid',
+                      example: '550e8400-e29b-41d4-a716-446655440002',
+                    },
+                    username: {
+                      type: 'string',
+                      example: 'john_doe',
+                    },
+                    avatarPreviewUrl: {
+                      nullable: true,
+                      oneOf: [
+                        {
+                          type: 'object',
+                          required: ['fileId', 'url', 'width', 'height'],
+                          properties: {
+                            fileId: {
+                              type: 'string',
+                              format: 'uuid',
+                              example: '550e8400-e29b-41d4-a716-446655440002',
+                            },
+                            url: {
+                              type: 'string',
+                              example:
+                                'https://lumusapp-528592447405-eu-north-1-an.s3.eu-north-1.amazonaws.com/files/fallback/profile.webp',
+                            },
+                            width: { type: 'number', example: 8000 },
+                            height: { type: 'number', example: 8000 },
+                          },
+                        },
+                        { type: 'null' },
+                      ],
+                    },
+                  },
+                },
+              },
+            },
+          },
+          nextCursor: {
+            type: 'string',
+            format: 'date-time',
+            nullable: true,
+            example: '2026-09-03T10:20:00.000Z',
+          },
+          hasNextPage: {
+            type: 'boolean',
+            example: true,
+          },
+        },
         example: {
           items: [
             {
