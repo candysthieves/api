@@ -1,4 +1,5 @@
 import { AvatarProfileType } from './avatar-profile.type.js';
+import { UserViewerStatus } from '../../../../../core/enums/user-viewer-status.enum.js';
 
 export type GetUserProfileType = {
   id: string;
@@ -11,5 +12,5 @@ export type GetUserProfileType = {
   followingCount: number;
   publicationsCount: number;
 
-  isOwner: boolean;
+  viewerStatus: UserViewerStatus;
 };

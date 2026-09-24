@@ -10,6 +10,7 @@ import {
 } from '@nestjs/swagger';
 import { applyDecorators } from '@nestjs/common';
 import { ErrorStatus } from '../../exceptions/domain-exception-code.js';
+import { UserViewerStatus } from '../../enums/user-viewer-status.enum.js';
 
 export function ApiGetPostById() {
   return applyDecorators(
@@ -18,7 +19,7 @@ export function ApiGetPostById() {
     ApiOperation({
       summary: 'Get post by ID',
       description:
-        'Returns a post by its ID with an isOwner flag indicating whether the current authenticated user is the owner.',
+        "Returns a post by its ID with viewerStatus ('owner' | 'user' | 'friend') indicating the relationship of the current authenticated user to the post author.",
     }),
 
     ApiParam({
@@ -60,7 +61,7 @@ export function ApiGetPostById() {
               height: 8000,
             },
           },
-          isOwner: true,
+          viewerStatus: UserViewerStatus.OWNER,
         },
       },
     }),

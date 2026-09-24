@@ -3,6 +3,7 @@ import { UsersQueryRepository } from '../../../infrastructure/repositories/user-
 import { PostsQueryRepository } from '../../../infrastructure/repositories/post-repositories/posts.query.repository.js';
 import { UsersMapper } from '../../../api/mappers/users.mapper.js';
 import { GetUserProfileType } from '../../../api/view-types/users/get-user-profile.type.js';
+import { getViewerStatus } from '../../../../../core/helpers/get-viewer-status.helper.js';
 
 export class GetUserProfileQuery {
   constructor(
@@ -27,12 +28,12 @@ export class GetUserProfileQueryHandler implements IQueryHandler<
   }: GetUserProfileQuery): Promise<GetUserProfileType> {
     const user = await this.usersQueryRepository.findByIdOrNotFound(userId);
 
-    const isOwner: boolean = user.id === currentUserId;
+    const relationStatus = getViewerStatus(user.id, currentUserId);
 
     const postsCount = await this.postsQueryRepository.countPostsByUserId(
       user.id,
     );
 
-    return UsersMapper.toGetUserProfileView(user, postsCount, isOwner);
+    return UsersMapper.toGetUserProfileView(user, postsCount, relationStatus);
   }
 }

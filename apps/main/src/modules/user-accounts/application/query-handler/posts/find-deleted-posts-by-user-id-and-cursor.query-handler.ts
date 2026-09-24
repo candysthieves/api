@@ -5,6 +5,7 @@ import { PostsMapper } from '../../../api/mappers/posts.mapper.js';
 import { DomainExceptions } from '../../../../../core/exceptions/domain-exceptions.js';
 import { ErrorStatus } from '../../../../../core/exceptions/domain-exception-code.js';
 import { paginateByCursor } from '../../../../../core/helpers/cursor-pagination.helper.js';
+import { getViewerStatus } from '../../../../../core/helpers/get-viewer-status.helper.js';
 
 export class FindDeletedPostsByUserIdAndCursorQuery {
   constructor(
@@ -47,13 +48,13 @@ export class FindDeletedPostsByUserIdAndCursorQueryHandler implements IQueryHand
 
     const { items, nextCursor, hasNextPage } = paginateByCursor(posts, limit);
 
-    const isOwner = user.id === currentUserId;
+    const relationStatus = getViewerStatus(user.id, currentUserId);
 
     return PostsMapper.toUserPostsView(
       items,
       nextCursor,
       hasNextPage,
-      isOwner,
+      relationStatus,
     );
   }
 }

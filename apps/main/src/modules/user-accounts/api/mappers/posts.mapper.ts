@@ -9,6 +9,7 @@ import { PostByIdViewType } from '../view-types/posts/post-by-id-view.type.js';
 import { PostWithAuthorViewType } from '../view-types/posts/post-with-author-view.type.js';
 import { GetAllPostsViewType } from '../view-types/posts/get-posts-view.type.js';
 import { GetUserPostsViewType } from '../view-types/posts/get-user-posts-view.type.js';
+import { UserViewerStatus } from '../../../../core/enums/user-viewer-status.enum.js';
 
 export class PostsMapper {
   static toAuthorView(author: PostAuthor): PostAuthorViewType {
@@ -64,13 +65,13 @@ export class PostsMapper {
     posts: PostWithAuthor[],
     nextCursor: string | null,
     hasNextPage: boolean,
-    isOwner: boolean,
+    viewerStatus: UserViewerStatus,
   ): GetUserPostsViewType {
     return {
       items: posts.map((post) => this.toPostView(post)),
       nextCursor,
       hasNextPage,
-      isOwner,
+      viewerStatus,
     };
   }
 }

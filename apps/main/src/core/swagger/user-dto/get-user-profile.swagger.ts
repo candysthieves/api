@@ -7,6 +7,7 @@ import {
   ApiUnauthorizedResponse,
   ApiNotFoundResponse,
 } from '@nestjs/swagger';
+import { UserViewerStatus } from '../../enums/user-viewer-status.enum.js';
 
 export function ApiGetUserProfile() {
   return applyDecorators(
@@ -15,7 +16,7 @@ export function ApiGetUserProfile() {
     ApiOperation({
       summary: 'Get user profile',
       description:
-        'Returns the profile of the specified user. The response also contains the number of publications and indicates whether the profile belongs to the current authenticated user.',
+        "Returns the profile of the specified user. The response also contains the number of publications and viewerStatus indicating the relationship of the current authenticated user to the profile ('owner' | 'user' | 'friend').",
     }),
 
     ApiParam({
@@ -48,7 +49,7 @@ export function ApiGetUserProfile() {
           followersCount: 0,
           followingCount: 0,
           publicationsCount: 12,
-          isOwner: false,
+          viewerStatus: UserViewerStatus.USER,
         },
       },
     }),

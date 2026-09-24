@@ -7,6 +7,7 @@ import {
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 import { applyDecorators } from '@nestjs/common';
+import { UserViewerStatus } from '../../enums/user-viewer-status.enum.js';
 
 export function ApiUserPosts() {
   return applyDecorators(
@@ -15,7 +16,7 @@ export function ApiUserPosts() {
     ApiOperation({
       summary: 'Get user posts',
       description:
-        'Returns posts of a specific user with cursor-based pagination.',
+        "Returns posts of a specific user with cursor-based pagination. Includes viewerStatus ('owner' | 'user' | 'friend') indicating the viewer relationship to the user.",
     }),
 
     ApiParam({
@@ -83,7 +84,7 @@ export function ApiUserPosts() {
           ],
           nextCursor: '2026-09-03T10:20:00.000Z',
           hasNextPage: true,
-          isOwner: false,
+          viewerStatus: UserViewerStatus.USER,
         },
       },
     }),

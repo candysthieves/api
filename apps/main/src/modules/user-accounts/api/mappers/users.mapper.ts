@@ -5,6 +5,7 @@ import { GetUserProfileType } from '../view-types/users/get-user-profile.type.js
 import { AvatarProfileType } from '../view-types/users/avatar-profile.type.js';
 import { DateTime } from 'luxon';
 import { MyProfileType } from '../view-types/users/my-profile.type.js';
+import { UserViewerStatus } from '../../../../core/enums/user-viewer-status.enum.js';
 
 export class UsersMapper {
   static getDefaultAvatar(): AvatarProfileType {
@@ -34,7 +35,7 @@ export class UsersMapper {
   static toGetUserProfileView(
     user: User,
     publicationsCount: number,
-    isOwner: boolean,
+    viewerStatus: UserViewerStatus,
   ): GetUserProfileType {
     return {
       id: user.id,
@@ -49,7 +50,7 @@ export class UsersMapper {
       followingCount: 0,
       publicationsCount,
 
-      isOwner,
+      viewerStatus,
     };
   }
 
