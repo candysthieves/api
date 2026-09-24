@@ -1,5 +1,8 @@
 import { PostAuthorViewType } from '../view-types/posts/post-author-view.type.js';
-import { PostWithAuthor } from '../../infrastructure/types/post-with-author.type.js';
+import {
+  PostAuthor,
+  PostWithAuthor,
+} from '../../infrastructure/types/post-with-author.type.js';
 import { UsersMapper } from './users.mapper.js';
 import { PostViewType } from '../view-types/posts/post-view.type.js';
 import { PostByIdViewType } from '../view-types/posts/post-by-id-view.type.js';
@@ -8,7 +11,7 @@ import { GetAllPostsViewType } from '../view-types/posts/get-posts-view.type.js'
 import { GetUserPostsViewType } from '../view-types/posts/get-user-posts-view.type.js';
 
 export class PostsMapper {
-  static toAuthorView(author: PostWithAuthor['user']): PostAuthorViewType {
+  static toAuthorView(author: PostAuthor): PostAuthorViewType {
     return {
       id: author.id,
       username: author.username,
