@@ -80,7 +80,7 @@ export class PostsQueryRepository {
     userId: string,
     cursor: string | undefined,
     limit: number,
-  ) {
+  ): Promise<PostWithAuthor[]> {
     return this.prismaPost.findMany({
       where: {
         userId,
@@ -94,7 +94,14 @@ export class PostsQueryRepository {
           },
         }),
       },
-
+      include: {
+        user: {
+          select: {
+            id: true,
+            username: true,
+          },
+        },
+      },
       orderBy: {
         createdAt: 'desc',
       },

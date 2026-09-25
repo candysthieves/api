@@ -4,25 +4,19 @@ import { PostsMapper } from '../../../api/mappers/posts.mapper.js';
 import { PostByIdViewType } from '../../../api/view-types/posts/post-by-id-view.type.js';
 
 export class GetPostByIdQuery {
-  constructor(
-    public readonly postId: string,
-    public readonly currentUserId: string,
-  ) {}
+  constructor(public readonly postId: string) {}
 }
 
 @QueryHandler(GetPostByIdQuery)
-export class GetPostByIdQueryHandler
-  implements IQueryHandler<GetPostByIdQuery, PostByIdViewType>
-{
+export class GetPostByIdQueryHandler implements IQueryHandler<
+  GetPostByIdQuery,
+  PostByIdViewType
+> {
   constructor(private readonly postsQueryRepository: PostsQueryRepository) {}
 
-  async execute({
-    postId,
-    currentUserId,
-  }: GetPostByIdQuery): Promise<PostByIdViewType> {
+  async execute({ postId }: GetPostByIdQuery): Promise<PostByIdViewType> {
     const post = await this.postsQueryRepository.findByIdOrNotFound(postId);
-    const isOwner = post.userId === currentUserId;
 
-    return PostsMapper.toPostByIdView(post, isOwner);
+    return PostsMapper.toPostByIdView(post);
   }
 }

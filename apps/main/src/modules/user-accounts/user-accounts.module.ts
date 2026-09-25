@@ -26,9 +26,10 @@ import { HardDeletePostUseCase } from './application/use-cases/posts-use-cases/h
 import { RestorePostUseCase } from './application/use-cases/posts-use-cases/restore-post.usecase.js';
 import { SoftDeletePostUseCase } from './application/use-cases/posts-use-cases/soft-delete-post.usecase.js';
 import { DeactivateSessionUseCase } from './application/use-cases/sessions-use-cases/deactivate-session.usecase.js';
-import { DeleteOtherSessionsUseCase } from './application/use-cases/sessions-use-cases/delete-other-sessions-use.case.js';
+import { DeleteOtherSessionsUsecase } from './application/use-cases/sessions-use-cases/delete-other-sessions-usecase.js';
 import { AuthController } from './api/auth.controller.js';
 import { AccessTokenGuard } from './api/guards/access-token.guard.js';
+import { OptionalAccessTokenGuard } from './api/guards/optional-access-token.guard.js';
 import { PostController } from './api/post.controller.js';
 import { SessionsController } from './api/sessions.controller.js';
 import { UsersController } from './api/users.controller.js';
@@ -44,10 +45,11 @@ import { GetUserProfileQueryHandler } from './application/query-handler/users/ge
 import { PostsQueryRepository } from './infrastructure/repositories/post-repositories/posts.query.repository.js';
 import { GetAllPostsQueryHandler } from './application/query-handler/posts/get-all-posts.query-handler.js';
 import { FindPostsByUserIdAndCursorQueryHandler } from './application/query-handler/posts/find-posts-by-user-id-and-cursor.query-handler.js';
-import { FindDeletedPostsByUserIdAndCursorQueryHandler } from './application/query-handler/posts/find-deleted-posts-by-user-id-and-cursor.query-handler.js';
 import { GetPostByIdQueryHandler } from './application/query-handler/posts/get-post-by-id.query-handler.js';
 import { GetDeletedPostByIdQueryHandler } from './application/query-handler/posts/get-deleted-post-by-id.query-handler.js';
 import { GetMyDeletedPostsQueryHandler } from './application/query-handler/posts/get-my-deleted-posts.query-handler.js';
+import { UpdateMyProfileUseCase } from './application/use-cases/users-use-cases/update-my-profile.usecase.js';
+import { GetAvatarQueryHandler } from './application/query-handler/users/get-avatar-query-handler.js';
 
 @Module({
   imports: [CqrsModule, EventsModule],
@@ -59,10 +61,11 @@ import { GetMyDeletedPostsQueryHandler } from './application/query-handler/posts
   ],
   providers: [
     RegistrationUseCase,
+    UpdateMyProfileUseCase,
     LoginUseCase,
     LogoutUseCase,
     RefreshTokenUseCase,
-    DeleteOtherSessionsUseCase,
+    DeleteOtherSessionsUsecase,
     DeactivateSessionUseCase,
     ConfirmEmailUseCase,
     ResendEmailUseCase,
@@ -78,15 +81,14 @@ import { GetMyDeletedPostsQueryHandler } from './application/query-handler/posts
     SoftDeletePostUseCase,
     UpdatePostUseCase,
     FindAllSessionsQueryHandler,
+    GetAvatarQueryHandler,
     ProfileQueryHandler,
     GetUsersCountQueryHandler,
     GetUserProfileQueryHandler,
     FindPostsByUserIdAndCursorQueryHandler,
-    FindDeletedPostsByUserIdAndCursorQueryHandler,
     GetPostByIdQueryHandler,
     GetDeletedPostByIdQueryHandler,
     GetMyDeletedPostsQueryHandler,
-
 
     UsersRepository,
     SessionsRepository,
@@ -103,7 +105,7 @@ import { GetMyDeletedPostsQueryHandler } from './application/query-handler/posts
     GoogleStrategy,
     GithubStrategy,
     AccessTokenGuard,
+    OptionalAccessTokenGuard,
   ],
 })
 export class UserAccountsModule {}
-

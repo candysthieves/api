@@ -1,4 +1,7 @@
 import { Prisma } from '../../../../generated/prisma/client.js';
+import { UpdateProfileDto } from '../../api/dto/update-profile.dto.js';
+import { DateTime } from 'luxon';
+import { UserUpdateInput } from '../../../../generated/prisma/models/User.js';
 
 export class UserDataFactory {
   static prepareCreateData(
@@ -19,6 +22,23 @@ export class UserDataFactory {
       isEmailConfirmed: isEmailConfirmed,
       firstName: firstName,
       lastName: lastName,
+    };
+  }
+
+  static prepareUpdateProfileData(dto: UpdateProfileDto): UserUpdateInput {
+    return {
+      username: dto.username,
+      firstName: dto.firstName,
+      lastName: dto.lastName,
+      // country: dto.country,
+      // city: dto.city,
+      aboutMe: dto.aboutMe,
+
+      dateOfBirth: dto.dateOfBirth
+        ? DateTime.fromISO(dto.dateOfBirth, { zone: 'utc' })
+            .startOf('day')
+            .toJSDate()
+        : undefined,
     };
   }
 

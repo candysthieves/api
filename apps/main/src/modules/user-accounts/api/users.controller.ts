@@ -1,5 +1,5 @@
-import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common';
-import { QueryBus } from '@nestjs/cqrs';
+import { Body, Controller, Get, Param, Patch, UseGuards } from '@nestjs/common';
+import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { GetUsersCountQuery } from '../application/query-handler/users/get-users-count-query-handler.js';
 import { GetUsersCountType } from './view-types/users/get-users-count.type.js';
 import { ApiGetUsersCount } from '../../../core/swagger/user-dto/get-users-count.swagger.js';
@@ -9,13 +9,21 @@ import { User } from './decorators/user.decorator.js';
 import type { JwtAccessPayload } from '../../../core/types/jwt-payload.type.js';
 import { AccessTokenGuard } from './guards/access-token.guard.js';
 import { ApiGetUserProfile } from '../../../core/swagger/user-dto/get-user-profile.swagger.js';
-import { GetPostsQueryParamsDto } from './dto/get-posts-query-params.dto.js';
-import { FindPostsByUserIdAndCursorQuery } from '../application/query-handler/posts/find-posts-by-user-id-and-cursor.query-handler.js';
-import { ApiUserPosts } from '../../../core/swagger/posts-dto/get-user-posts.swagger.js';
+import { ApiUpdateMyProfile } from '../../../core/swagger/user-dto/update-my-profile.swagger.js';
+import { UpdateMyProfileCommand } from '../application/use-cases/users-use-cases/update-my-profile.usecase.js';
+import { UpdateProfileDto } from './dto/update-profile.dto.js';
+import { MyProfileType } from './view-types/users/my-profile.type.js';
+import { GetAvatarQuery } from '../application/query-handler/users/get-avatar-query-handler.js';
+import { GetMyAvatarType } from './view-types/users/get-my-avatar.type.js';
+import { ApiGetMyAvatar } from '../../../core/swagger/user-dto/get-my-avatar.swagger.js';
+import { OptionalAccessTokenGuard } from './guards/optional-access-token.guard.js';
 
 @Controller('users')
 export class UsersController {
-  constructor(private readonly queryBus: QueryBus) {}
+  constructor(
+    private readonly queryBus: QueryBus,
+    private readonly commandBus: CommandBus,
+  ) {}
 
   @Get('count')
   @ApiGetUsersCount()
@@ -25,35 +33,38 @@ export class UsersController {
     );
   }
 
-  @Get(':userId/posts')
-  @UseGuards(AccessTokenGuard)
-  @ApiUserPosts()
-  getPostsForUser(
-    @Query() query: GetPostsQueryParamsDto,
-    @Param('userId') userId: string,
-    @User() user: JwtAccessPayload,
-  ) {
-    return this.queryBus.execute(
-      new FindPostsByUserIdAndCursorQuery(
-        userId,
-        user.userId,
-        query.cursor,
-        query.limit,
-      ),
-    );
-  }
-
-  @Get(':userId/profile')
-  @UseGuards(AccessTokenGuard)
+  //'owner' | 'user' | 'friend'
+  //"viewerStatus": "user"
+  @Get('profile/:userId')
+  @UseGuards(OptionalAccessTokenGuard)
   @ApiGetUserProfile()
   async getUserProfile(
     @Param('userId') userId: string,
-    @User() user: JwtAccessPayload,
+    @User() user: JwtAccessPayload | null,
   ): Promise<GetUserProfileType> {
-    const currentUserId: string = user.userId;
-
     return this.queryBus.execute<GetUserProfileQuery, GetUserProfileType>(
-      new GetUserProfileQuery(userId, currentUserId),
+      new GetUserProfileQuery(userId, user ? user.userId : null),
+    );
+  }
+
+  @Patch('my-profile')
+  @UseGuards(AccessTokenGuard)
+  @ApiUpdateMyProfile()
+  async updateMyProfile(
+    @Body() dto: UpdateProfileDto = {},
+    @User() user: JwtAccessPayload,
+  ): Promise<MyProfileType> {
+    return this.commandBus.execute<UpdateMyProfileCommand, MyProfileType>(
+      new UpdateMyProfileCommand(user.userId, dto),
+    );
+  }
+
+  @Get('my-avatar')
+  @UseGuards(AccessTokenGuard)
+  @ApiGetMyAvatar()
+  getAvatar(@User() user: JwtAccessPayload): Promise<GetMyAvatarType> {
+    return this.queryBus.execute<GetAvatarQuery, GetMyAvatarType>(
+      new GetAvatarQuery(user.userId),
     );
   }
 }

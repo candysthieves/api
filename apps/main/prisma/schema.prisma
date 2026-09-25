@@ -31,12 +31,15 @@ enum MediaStatus {
 }
 
 model User {
-  id        String  @id @default(uuid())
-  email     String  @unique
-  password  String
-  username  String  @unique
-  firstName String? @map("first_name")
-  lastName  String? @map("last_name")
+  id       String @id @default(uuid())
+  email    String @unique
+  password String
+  username String @unique
+
+  firstName   String?   @map("first_name")
+  lastName    String?   @map("last_name")
+  aboutMe     String?   @map("about_me")
+  dateOfBirth DateTime? @map("date_of_birth")
 
   isEmailConfirmed          Boolean   @default(false) @map("is_email_confirmed")
   confirmationCode          String?   @unique @map("confirmation_code")

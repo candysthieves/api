@@ -2,14 +2,7 @@ import {
   PostImages,
   PostPreview,
 } from '../../../../../core/types/prisma/json-types.js';
-import { AvatarProfileType } from '../users/avatar-profile.type.js';
-
-type PostAuthorView = {
-  id: string;
-  username: string;
-  avatarUrl: AvatarProfileType;
-  avatarPreviewUrl: AvatarProfileType;
-};
+import { PostAuthorViewType } from './post-author-view.type.js';
 
 export type PostWithAuthorViewType = {
   id: string;
@@ -18,5 +11,5 @@ export type PostWithAuthorViewType = {
   preview: PostPreview;
   createdAt: string;
   willBeDeleted: string | null;
-  author: PostAuthorView;
+  author: PostAuthorViewType;
 };

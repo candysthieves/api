@@ -3,13 +3,14 @@ import { PostsQueryRepository } from '../../../infrastructure/repositories/post-
 import { UsersQueryRepository } from '../../../infrastructure/repositories/user-repositories/users.query.repository.js';
 import { PostsMapper } from '../../../api/mappers/posts.mapper.js';
 import { paginateByCursor } from '../../../../../core/helpers/cursor-pagination.helper.js';
+import { getViewerStatus } from '../../../../../core/helpers/get-viewer-status.helper.js';
 
 export class FindPostsByUserIdAndCursorQuery {
   constructor(
     public readonly userId: string,
-    public readonly currentUserId: string,
-    public readonly cursor: string | undefined,
-    public readonly limit: number,
+    public readonly currentUserId?: string | null,
+    public readonly cursor?: string,
+    public readonly limit: number = 10,
   ) {}
 }
 
@@ -36,13 +37,13 @@ export class FindPostsByUserIdAndCursorQueryHandler implements IQueryHandler<Fin
 
     const { items, nextCursor, hasNextPage } = paginateByCursor(posts, limit);
 
-    const isOwner = user.id === currentUserId;
+    const viewerStatus = getViewerStatus(user.id, currentUserId);
 
     return PostsMapper.toUserPostsView(
       items,
       nextCursor,
       hasNextPage,
-      isOwner,
+      viewerStatus,
     );
   }
 }

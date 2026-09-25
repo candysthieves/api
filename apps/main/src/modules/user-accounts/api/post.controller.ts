@@ -44,6 +44,9 @@ import { UpdatePostDto } from './dto/update-post.dto.js';
 import { UpdatePostCommand } from '../application/use-cases/posts-use-cases/update-post.usecase.js';
 import { ApiUpdatePost } from '../../../core/swagger/posts-dto/update-post.swagger.js';
 import { ApiGetAllPosts } from '../../../core/swagger/posts-dto/get-posts.swagger.js';
+import { ApiUserPosts } from '../../../core/swagger/posts-dto/get-user-posts.swagger.js';
+import { FindPostsByUserIdAndCursorQuery } from '../application/query-handler/posts/find-posts-by-user-id-and-cursor.query-handler.js';
+import { OptionalAccessTokenGuard } from './guards/optional-access-token.guard.js';
 
 @ApiTags('Posts')
 @Controller('posts')
@@ -86,15 +89,31 @@ export class PostController {
     >(new GetDeletedPostByIdQuery(postId, user.userId));
   }
 
+  @Get('user/:userId')
+  @UseGuards(OptionalAccessTokenGuard)
+  @ApiUserPosts()
+  getPostsForUser(
+    @Query() query: GetPostsQueryParamsDto,
+    @Param('userId', ParseUUIDPipe) userId: string,
+    @User() user: JwtAccessPayload | null,
+  ) {
+    return this.queryBus.execute(
+      new FindPostsByUserIdAndCursorQuery(
+        userId,
+        user ? user.userId : null,
+        query.cursor,
+        query.limit,
+      ),
+    );
+  }
+
   @Get(':postId')
-  @UseGuards(AccessTokenGuard)
   @ApiGetPostById()
   getPostById(
     @Param('postId', ParseUUIDPipe) postId: string,
-    @User() user: JwtAccessPayload,
   ): Promise<PostByIdViewType> {
     return this.queryBus.execute<GetPostByIdQuery, PostByIdViewType>(
-      new GetPostByIdQuery(postId, user.userId),
+      new GetPostByIdQuery(postId),
     );
   }
 
