@@ -7,14 +7,12 @@ import {
 } from '@nestjs/swagger';
 import { applyDecorators } from '@nestjs/common';
 import { ErrorStatus } from '../../exceptions/domain-exception-code.js';
-import { UserViewerStatus } from '../../enums/user-viewer-status.enum.js';
 
 export function ApiGetPostById() {
   return applyDecorators(
     ApiOperation({
-      summary: 'Get post by ID (Optional auth)',
-      description:
-        "**[Optional authorization]** Returns a post by its ID. Bearer accessToken is optional. If provided, viewerStatus ('owner' | 'user' | 'friend') reflects the relationship to the post author; otherwise, viewerStatus is 'user'.",
+      summary: 'Get post by ID',
+      description: 'Returns a post by its ID.',
     }),
 
     ApiParam({
@@ -36,7 +34,6 @@ export function ApiGetPostById() {
           'preview',
           'createdAt',
           'author',
-          'viewerStatus',
         ],
         properties: {
           id: {
@@ -141,10 +138,6 @@ export function ApiGetPostById() {
               },
             },
           },
-          viewerStatus: {
-            enum: Object.values(UserViewerStatus),
-            example: UserViewerStatus.OWNER,
-          },
         },
         example: {
           id: '550e8400-e29b-41d4-a716-446655440001',
@@ -174,7 +167,6 @@ export function ApiGetPostById() {
               height: 8000,
             },
           },
-          viewerStatus: UserViewerStatus.OWNER,
         },
       },
     }),

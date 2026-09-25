@@ -64,40 +64,6 @@ export class PostController {
     );
   }
 
-  //'owner' | 'user' | 'friend'
-  //"viewerStatus": "user"
-  @Get(':userId')
-  @UseGuards(OptionalAccessTokenGuard)
-  @ApiUserPosts()
-  getPostsForUser(
-    @Query() query: GetPostsQueryParamsDto,
-    @Param('userId') userId: string,
-    @User() user: JwtAccessPayload | null,
-  ) {
-    return this.queryBus.execute(
-      new FindPostsByUserIdAndCursorQuery(
-        userId,
-        user ? user.userId : null,
-        query.cursor,
-        query.limit,
-      ),
-    );
-  }
-
-  //'owner' | 'user' | 'friend'
-  //"viewerStatus": "user"
-  @Get(':postId')
-  @UseGuards(OptionalAccessTokenGuard)
-  @ApiGetPostById()
-  getPostById(
-    @Param('postId', ParseUUIDPipe) postId: string,
-    @User() user: JwtAccessPayload | null,
-  ): Promise<PostByIdViewType> {
-    return this.queryBus.execute<GetPostByIdQuery, PostByIdViewType>(
-      new GetPostByIdQuery(postId, user ? user.userId : null),
-    );
-  }
-
   @Get('deleted-posts')
   @UseGuards(AccessTokenGuard)
   @ApiGetMyDeletedPosts()
@@ -121,6 +87,34 @@ export class PostController {
       GetDeletedPostByIdQuery,
       PostWithAuthorViewType
     >(new GetDeletedPostByIdQuery(postId, user.userId));
+  }
+
+  @Get('user/:userId')
+  @UseGuards(OptionalAccessTokenGuard)
+  @ApiUserPosts()
+  getPostsForUser(
+    @Query() query: GetPostsQueryParamsDto,
+    @Param('userId', ParseUUIDPipe) userId: string,
+    @User() user: JwtAccessPayload | null,
+  ) {
+    return this.queryBus.execute(
+      new FindPostsByUserIdAndCursorQuery(
+        userId,
+        user ? user.userId : null,
+        query.cursor,
+        query.limit,
+      ),
+    );
+  }
+
+  @Get(':postId')
+  @ApiGetPostById()
+  getPostById(
+    @Param('postId', ParseUUIDPipe) postId: string,
+  ): Promise<PostByIdViewType> {
+    return this.queryBus.execute<GetPostByIdQuery, PostByIdViewType>(
+      new GetPostByIdQuery(postId),
+    );
   }
 
   @Post()

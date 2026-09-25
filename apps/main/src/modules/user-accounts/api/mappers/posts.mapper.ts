@@ -32,16 +32,12 @@ export class PostsMapper {
     };
   }
 
-  static toPostByIdView(
-    post: PostWithAuthor,
-    viewerStatus: UserViewerStatus,
-  ): PostByIdViewType {
+  static toPostByIdView(post: PostWithAuthor): PostByIdViewType {
     const postView: Partial<PostViewType> = this.toPostView(post);
     delete postView.willBeDeleted;
 
     return {
       ...(postView as Omit<PostViewType, 'willBeDeleted'>),
-      viewerStatus,
     };
   }
 
