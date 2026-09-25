@@ -43,8 +43,7 @@ export class UsersMapper {
     return {
       id: user.id,
       username: user.username,
-      description:
-        'Превращаю макеты дизайнеров в живой код, воюю с центрированием div и делаю так, чтобы пользователям было красиво и удобно.',
+      description: user.aboutMe,
 
       avatarUrl: this.getDefaultAvatar() ?? null,
       avatarPreviewUrl: this.getDefaultAvatarPreview() ?? null,

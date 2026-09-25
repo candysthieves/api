@@ -3,20 +3,16 @@ import {
   ApiOkResponse,
   ApiParam,
   ApiQuery,
-  ApiBearerAuth,
-  ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 import { applyDecorators } from '@nestjs/common';
 import { UserViewerStatus } from '../../enums/user-viewer-status.enum.js';
 
 export function ApiUserPosts() {
   return applyDecorators(
-    ApiBearerAuth('accessToken'),
-
     ApiOperation({
-      summary: 'Get user posts',
+      summary: 'Get user posts (Optional auth)',
       description:
-        "Returns posts of a specific user with cursor-based pagination. Includes viewerStatus ('owner' | 'user' | 'friend') indicating the viewer relationship to the user.",
+        "**[Optional authorization]** Returns posts of a specific user with cursor-based pagination. Bearer accessToken is optional. If provided, viewerStatus ('owner' | 'user' | 'friend') reflects the relationship to the user; otherwise, viewerStatus is 'user'.",
     }),
 
     ApiParam({
@@ -230,10 +226,6 @@ export function ApiUserPosts() {
           viewerStatus: UserViewerStatus.USER,
         },
       },
-    }),
-
-    ApiUnauthorizedResponse({
-      description: 'Access token is missing, invalid, or expired.',
     }),
   );
 }

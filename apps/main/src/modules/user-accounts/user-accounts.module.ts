@@ -29,6 +29,7 @@ import { DeactivateSessionUseCase } from './application/use-cases/sessions-use-c
 import { DeleteOtherSessionsUsecase } from './application/use-cases/sessions-use-cases/delete-other-sessions-usecase.js';
 import { AuthController } from './api/auth.controller.js';
 import { AccessTokenGuard } from './api/guards/access-token.guard.js';
+import { OptionalAccessTokenGuard } from './api/guards/optional-access-token.guard.js';
 import { PostController } from './api/post.controller.js';
 import { SessionsController } from './api/sessions.controller.js';
 import { UsersController } from './api/users.controller.js';
@@ -104,6 +105,7 @@ import { GetAvatarQueryHandler } from './application/query-handler/users/get-ava
     GoogleStrategy,
     GithubStrategy,
     AccessTokenGuard,
+    OptionalAccessTokenGuard,
   ],
 })
 export class UserAccountsModule {}

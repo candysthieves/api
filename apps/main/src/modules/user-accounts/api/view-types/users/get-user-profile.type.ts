@@ -7,7 +7,7 @@ import {
 export type GetUserProfileType = {
   id: string;
   username: string;
-  description: string;
+  description: string | null;
 
   avatarUrl: AvatarImage;
   avatarPreviewUrl: AvatarPreview;

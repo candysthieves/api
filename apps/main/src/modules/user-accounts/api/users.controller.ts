@@ -16,6 +16,7 @@ import { MyProfileType } from './view-types/users/my-profile.type.js';
 import { GetAvatarQuery } from '../application/query-handler/users/get-avatar-query-handler.js';
 import { GetMyAvatarType } from './view-types/users/get-my-avatar.type.js';
 import { ApiGetMyAvatar } from '../../../core/swagger/user-dto/get-my-avatar.swagger.js';
+import { OptionalAccessTokenGuard } from './guards/optional-access-token.guard.js';
 
 @Controller('users')
 export class UsersController {
@@ -35,16 +36,14 @@ export class UsersController {
   //'owner' | 'user' | 'friend'
   //"viewerStatus": "user"
   @Get('profile/:userId')
-  @UseGuards(AccessTokenGuard)
+  @UseGuards(OptionalAccessTokenGuard)
   @ApiGetUserProfile()
   async getUserProfile(
     @Param('userId') userId: string,
-    @User() user: JwtAccessPayload,
+    @User() user: JwtAccessPayload | null,
   ): Promise<GetUserProfileType> {
-    const currentUserId: string = user.userId;
-
     return this.queryBus.execute<GetUserProfileQuery, GetUserProfileType>(
-      new GetUserProfileQuery(userId, currentUserId),
+      new GetUserProfileQuery(userId, user ? user.userId : null),
     );
   }
 

@@ -1,22 +1,18 @@
 import { applyDecorators } from '@nestjs/common';
 import {
-  ApiBearerAuth,
   ApiOkResponse,
   ApiOperation,
   ApiParam,
-  ApiUnauthorizedResponse,
   ApiNotFoundResponse,
 } from '@nestjs/swagger';
 import { UserViewerStatus } from '../../enums/user-viewer-status.enum.js';
 
 export function ApiGetUserProfile() {
   return applyDecorators(
-    ApiBearerAuth('accessToken'),
-
     ApiOperation({
-      summary: 'Get user profile',
+      summary: 'Get user profile (Optional auth)',
       description:
-        "Returns the profile of the specified user. The response also contains the number of publications and viewerStatus indicating the relationship of the current authenticated user to the profile ('owner' | 'user' | 'friend').",
+        "**[Optional authorization]** Returns the profile of the specified user. Bearer accessToken is optional. If provided, viewerStatus ('owner' | 'user' | 'friend') reflects the relationship to the profile; otherwise, viewerStatus is 'user'. The response also contains the number of publications.",
     }),
 
     ApiParam({
@@ -136,10 +132,6 @@ export function ApiGetUserProfile() {
           viewerStatus: UserViewerStatus.USER,
         },
       },
-    }),
-
-    ApiUnauthorizedResponse({
-      description: 'Access token is missing, invalid, or expired.',
     }),
 
     ApiNotFoundResponse({

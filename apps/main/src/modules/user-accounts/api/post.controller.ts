@@ -46,6 +46,7 @@ import { ApiUpdatePost } from '../../../core/swagger/posts-dto/update-post.swagg
 import { ApiGetAllPosts } from '../../../core/swagger/posts-dto/get-posts.swagger.js';
 import { ApiUserPosts } from '../../../core/swagger/posts-dto/get-user-posts.swagger.js';
 import { FindPostsByUserIdAndCursorQuery } from '../application/query-handler/posts/find-posts-by-user-id-and-cursor.query-handler.js';
+import { OptionalAccessTokenGuard } from './guards/optional-access-token.guard.js';
 
 @ApiTags('Posts')
 @Controller('posts')
@@ -66,17 +67,17 @@ export class PostController {
   //'owner' | 'user' | 'friend'
   //"viewerStatus": "user"
   @Get(':userId')
-  @UseGuards(AccessTokenGuard)
+  @UseGuards(OptionalAccessTokenGuard)
   @ApiUserPosts()
   getPostsForUser(
     @Query() query: GetPostsQueryParamsDto,
     @Param('userId') userId: string,
-    @User() user: JwtAccessPayload,
+    @User() user: JwtAccessPayload | null,
   ) {
     return this.queryBus.execute(
       new FindPostsByUserIdAndCursorQuery(
         userId,
-        user.userId,
+        user ? user.userId : null,
         query.cursor,
         query.limit,
       ),
@@ -86,14 +87,14 @@ export class PostController {
   //'owner' | 'user' | 'friend'
   //"viewerStatus": "user"
   @Get(':postId')
-  @UseGuards(AccessTokenGuard)
+  @UseGuards(OptionalAccessTokenGuard)
   @ApiGetPostById()
   getPostById(
     @Param('postId', ParseUUIDPipe) postId: string,
-    @User() user: JwtAccessPayload,
+    @User() user: JwtAccessPayload | null,
   ): Promise<PostByIdViewType> {
     return this.queryBus.execute<GetPostByIdQuery, PostByIdViewType>(
-      new GetPostByIdQuery(postId, user.userId),
+      new GetPostByIdQuery(postId, user ? user.userId : null),
     );
   }
 

@@ -8,7 +8,7 @@ import { getViewerStatus } from '../../../../../core/helpers/get-viewer-status.h
 export class GetUserProfileQuery {
   constructor(
     public readonly userId: string,
-    public readonly currentUserId: string,
+    public readonly currentUserId?: string | null,
   ) {}
 }
 

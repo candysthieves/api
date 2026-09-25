@@ -8,9 +8,9 @@ import { getViewerStatus } from '../../../../../core/helpers/get-viewer-status.h
 export class FindPostsByUserIdAndCursorQuery {
   constructor(
     public readonly userId: string,
-    public readonly currentUserId: string,
-    public readonly cursor: string | undefined,
-    public readonly limit: number,
+    public readonly currentUserId?: string | null,
+    public readonly cursor?: string,
+    public readonly limit: number = 10,
   ) {}
 }
 
