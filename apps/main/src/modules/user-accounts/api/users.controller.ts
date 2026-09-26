@@ -13,6 +13,20 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Patch,
+  UseGuards,
+  Put,
+  UseInterceptors,
+  UploadedFile,
+  HttpCode,
+  HttpStatus,
+} from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { GetUsersCountQuery } from '../application/query-handler/users/get-users-count-query-handler.js';
 import { GetUsersCountType } from './view-types/users/get-users-count.type.js';
@@ -109,6 +123,22 @@ export class UsersController {
   async deleteMyAvatar(@User() user: JwtAccessPayload): Promise<void> {
     await this.commandBus.execute<DeleteMyAvatarCommand, void>(
       new DeleteMyAvatarCommand(user.userId),
+    );
+  }
+
+  @Put('my-avatar')
+  @HttpCode(HttpStatus.CREATED)
+  @UseGuards(AccessTokenGuard)
+  @UseInterceptors(
+    FileInterceptor('file', { limits: { fileSize: 10 * 1024 * 1024, files: 1 } }),
+  )
+  @ApiUpdateMyAvatar()
+  async updateMyAvatar(
+    @UploadedFile() file: Express.Multer.File | undefined,
+    @User() user: JwtAccessPayload,
+  ): Promise<{ userId: string }> {
+    return this.commandBus.execute(
+      new UpdateMyAvatarCommand(user.userId, file),
     );
   }
 }
