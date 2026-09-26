@@ -2,6 +2,8 @@ import { Prop } from '@nestjs/mongoose';
 import type {
   ImageEvent,
   ImageInputEvent,
+  AvatarImageEvent,
+  AvatarImageInputEvent,
 } from '../../../../../libs/contracts/index.js';
 
 export class StoredEvent {
@@ -14,7 +16,10 @@ export class StoredEvent {
   })
   status: 'UNPROCESSED' | 'PROCESSING' | 'OK' | 'ERROR';
   @Prop({ type: Object }) data?:
-    ImageEvent['data'] | Omit<ImageInputEvent, 'eventId' | 'body'>;
+    | ImageEvent['data']
+    | Omit<ImageInputEvent, 'eventId' | 'body'>
+    | AvatarImageEvent['data']
+    | Omit<AvatarImageInputEvent, 'eventId' | 'body'>;
   @Prop({ type: Buffer }) body?: Buffer;
   @Prop({ type: String }) consumer?: string;
   @Prop({ type: String }) type?: string;

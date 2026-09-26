@@ -1,4 +1,17 @@
-import { Body, Controller, Get, Param, Patch, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Patch,
+  UseGuards,
+  Put,
+  UseInterceptors,
+  UploadedFile,
+  HttpCode,
+  HttpStatus,
+} from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { GetUsersCountQuery } from '../application/query-handler/users/get-users-count-query-handler.js';
 import { GetUsersCountType } from './view-types/users/get-users-count.type.js';
@@ -16,6 +29,8 @@ import { MyProfileType } from './view-types/users/my-profile.type.js';
 import { GetAvatarQuery } from '../application/query-handler/users/get-avatar-query-handler.js';
 import { GetMyAvatarType } from './view-types/users/get-my-avatar.type.js';
 import { ApiGetMyAvatar } from '../../../core/swagger/user-dto/get-my-avatar.swagger.js';
+import { ApiUpdateMyAvatar } from '../../../core/swagger/user-dto/update-my-avatar.swagger.js';
+import { UpdateMyAvatarCommand } from '../application/use-cases/users-use-cases/update-my-avatar.usecase.js';
 import { OptionalAccessTokenGuard } from './guards/optional-access-token.guard.js';
 
 @Controller('users')
@@ -65,6 +80,22 @@ export class UsersController {
   getAvatar(@User() user: JwtAccessPayload): Promise<GetMyAvatarType> {
     return this.queryBus.execute<GetAvatarQuery, GetMyAvatarType>(
       new GetAvatarQuery(user.userId),
+    );
+  }
+
+  @Put('my-avatar')
+  @HttpCode(HttpStatus.CREATED)
+  @UseGuards(AccessTokenGuard)
+  @UseInterceptors(
+    FileInterceptor('file', { limits: { fileSize: 10 * 1024 * 1024, files: 1 } }),
+  )
+  @ApiUpdateMyAvatar()
+  async updateMyAvatar(
+    @UploadedFile() file: Express.Multer.File | undefined,
+    @User() user: JwtAccessPayload,
+  ): Promise<{ userId: string }> {
+    return this.commandBus.execute(
+      new UpdateMyAvatarCommand(user.userId, file),
     );
   }
 }

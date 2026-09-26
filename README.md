@@ -59,6 +59,17 @@ $ pnpm run test:cov
 
 ## Deployment
 
+### User avatar upload
+
+Before starting the updated services, apply the `20260926000000_user_avatar` database migration and regenerate the Prisma client from the repository root:
+
+```bash
+pnpm run prisma:migrate:deploy
+pnpm run prisma:generate:local
+```
+
+Deploy compatible `main` and `files` versions together. Both RabbitMQ connections must be able to declare the `.avatar-images.v1` and `.avatar-images.results.v1` queues using the existing `RABBITMQ_MAIN_TO_FILES_QUEUE` and `RABBITMQ_FILES_TO_MAIN_QUEUE` base names. Configure the HTTP reverse proxy request body limit to allow a multipart request containing a 10 MiB image plus multipart headers.
+
 When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
 
 If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:

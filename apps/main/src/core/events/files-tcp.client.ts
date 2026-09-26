@@ -49,6 +49,20 @@ export class FilesTcpClient {
         .pipe(timeout(60_000)),
     );
   }
+
+  async cleanupUnusedAvatarFiles(
+    activeFileIds: string[],
+    olderThanHours = 24,
+  ): Promise<FilesCleanupResult> {
+    return lastValueFrom(
+      this.fileMKSClient
+        .send<FilesCleanupResult>(
+          { cmd: 'cleanup-unused-avatar-files' },
+          { activeFileIds, olderThanHours },
+        )
+        .pipe(timeout(60_000)),
+    );
+  }
 }
 
 export function getFileIds(value: unknown): string[] {

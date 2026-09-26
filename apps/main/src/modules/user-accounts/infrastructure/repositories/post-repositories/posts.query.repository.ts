@@ -27,6 +27,7 @@ export class PostsQueryRepository {
           select: {
             id: true,
             username: true,
+            avatarPreview: true,
           },
         },
       },
@@ -56,6 +57,7 @@ export class PostsQueryRepository {
           select: {
             id: true,
             username: true,
+            avatarPreview: true,
           },
         },
       },
@@ -99,6 +101,7 @@ export class PostsQueryRepository {
           select: {
             id: true,
             username: true,
+            avatarPreview: true,
           },
         },
       },
@@ -132,6 +135,7 @@ export class PostsQueryRepository {
           select: {
             id: true,
             username: true,
+            avatarPreview: true,
           },
         },
       },
@@ -167,6 +171,7 @@ export class PostsQueryRepository {
           select: {
             id: true,
             username: true,
+            avatarPreview: true,
           },
         },
       },

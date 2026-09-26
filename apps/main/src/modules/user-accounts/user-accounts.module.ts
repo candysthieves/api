@@ -50,6 +50,7 @@ import { GetDeletedPostByIdQueryHandler } from './application/query-handler/post
 import { GetMyDeletedPostsQueryHandler } from './application/query-handler/posts/get-my-deleted-posts.query-handler.js';
 import { UpdateMyProfileUseCase } from './application/use-cases/users-use-cases/update-my-profile.usecase.js';
 import { GetAvatarQueryHandler } from './application/query-handler/users/get-avatar-query-handler.js';
+import { UpdateMyAvatarUseCase } from './application/use-cases/users-use-cases/update-my-avatar.usecase.js';
 
 @Module({
   imports: [CqrsModule, EventsModule],
@@ -62,6 +63,7 @@ import { GetAvatarQueryHandler } from './application/query-handler/users/get-ava
   providers: [
     RegistrationUseCase,
     UpdateMyProfileUseCase,
+    UpdateMyAvatarUseCase,
     LoginUseCase,
     LogoutUseCase,
     RefreshTokenUseCase,

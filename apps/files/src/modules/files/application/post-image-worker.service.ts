@@ -12,6 +12,7 @@ import { FilesService } from './files.service.js';
 import { FileType, type FileDocument } from '../schemas/files.schema.js';
 import { S3Adapter } from '../../../core/adapters/s3.adapter.js';
 import { CancelledPostRepository } from './cancelled-post.repository.js';
+import { AvatarImageProcessingService } from './avatar-image-processing.service.js';
 
 @Injectable()
 export class PostImageWorkerService {
@@ -22,12 +23,20 @@ export class PostImageWorkerService {
     private readonly cancelledPosts: CancelledPostRepository,
     private readonly outbox: FilesOutboxRepository,
     private readonly config: FilesConfig,
+    private readonly avatars: AvatarImageProcessingService,
   ) {}
 
   @Cron('* * * * * *', { waitForCompletion: true })
   async processPending(): Promise<void> {
     await this.inbox.run(
-      (event) => this.processImage(event),
+      (event) =>
+        event.type === 'avatar.image.process.v1'
+          ? this.avatars.processImage(event)
+          : event.type === 'post.image.process.v1' || !event.type
+            ? this.processImage(event)
+            : Promise.reject(
+                new Error(`UNKNOWN_IMAGE_EVENT_TYPE:${event.type}`),
+              ),
       this.config.postImageConcurrency,
     );
   }

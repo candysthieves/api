@@ -8,6 +8,8 @@ import { FilesTcpClient, FILES_TCP_CLIENT } from './files-tcp.client.js';
 import { PostImagesRepository } from './post-images.repository.js';
 import { RabbitMqModule } from '../rabbitmq/rabbitmq.module.js';
 import { ImageResultInboxConsumer } from './image-result-inbox.consumer.js';
+import { AvatarImageResultInboxConsumer } from './avatar-image-result-inbox.consumer.js';
+import { AvatarImagesRepository } from './avatar-images.repository.js';
 
 @Module({
   imports: [
@@ -33,6 +35,8 @@ import { ImageResultInboxConsumer } from './image-result-inbox.consumer.js';
     FilesTcpClient,
     PostImagesRepository,
     ImageResultInboxConsumer,
+    AvatarImageResultInboxConsumer,
+    AvatarImagesRepository,
   ],
   exports: [
     ImageOutboxService,

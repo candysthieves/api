@@ -12,6 +12,8 @@ import { FilesRabbitMqProducerService } from './files-rabbitmq-producer.service.
       useFactory: (config: ConfigService) => {
         const inputEvents = `${config.getOrThrow<string>('RABBITMQ_MAIN_TO_FILES_QUEUE')}.post-images.v1`;
         const results = `${config.getOrThrow<string>('RABBITMQ_FILES_TO_MAIN_QUEUE')}.post-images.results.v1`;
+        const avatarInput = `${config.getOrThrow<string>('RABBITMQ_MAIN_TO_FILES_QUEUE')}.avatar-images.v1`;
+        const avatarResults = `${config.getOrThrow<string>('RABBITMQ_FILES_TO_MAIN_QUEUE')}.avatar-images.results.v1`;
         const imageQueueOptions = {
           durable: true,
           arguments: { 'x-single-active-consumer': true },
@@ -23,12 +25,21 @@ import { FilesRabbitMqProducerService } from './files-rabbitmq-producer.service.
           queues: [
             { name: inputEvents, options: imageQueueOptions },
             { name: results, options: { durable: true } },
+            { name: avatarInput, options: imageQueueOptions },
+            { name: avatarResults, options: { durable: true } },
           ],
           handlers: {
             postImageInputEvents: {
               exchange: '',
               routingKey: inputEvents,
               queue: inputEvents,
+              queueOptions: imageQueueOptions,
+              deserializer: (body: Buffer) => body,
+            },
+            avatarImageInputEvents: {
+              exchange: '',
+              routingKey: avatarInput,
+              queue: avatarInput,
               queueOptions: imageQueueOptions,
               deserializer: (body: Buffer) => body,
             },

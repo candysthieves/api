@@ -7,6 +7,7 @@ import {
 import { FilesTcpClient } from '../../../core/events/files-tcp.client.js';
 import { PostsRepository } from '../infrastructure/repositories/post-repositories/posts.repository.js';
 import { AppConfig } from '../../../app.config.js';
+import { UsersRepository } from '../infrastructure/repositories/user-repositories/users.repository.js';
 
 // Запуск раз в 24 часа
 const CLEANUP_INTERVAL_MS = 24 * 60 * 60 * 1000;
@@ -23,6 +24,7 @@ export class UnusedImagesCleanupSchedulerService
 
   constructor(
     private readonly postsRepository: PostsRepository,
+    private readonly usersRepository: UsersRepository,
     private readonly filesClient: FilesTcpClient,
     private readonly appConfig: AppConfig,
   ) {}
@@ -68,6 +70,22 @@ export class UnusedImagesCleanupSchedulerService
           result.data || {};
         this.logger.log(
           `Cleanup completed successfully: deleted ${deletedDbCount} unused files and ${deletedS3OrphanCount} orphan S3 objects.`,
+        );
+      }
+
+      const activeAvatarIds =
+        await this.usersRepository.getAllActiveAvatarFileIds();
+      const avatarResult = await this.filesClient.cleanupUnusedAvatarFiles(
+        activeAvatarIds,
+        24,
+      );
+      if (avatarResult.error) {
+        this.logger.error('Avatar cleanup failed:', avatarResult.error);
+      } else {
+        const { deletedDbCount = 0, deletedS3OrphanCount = 0 } =
+          avatarResult.data || {};
+        this.logger.log(
+          `Avatar cleanup completed successfully: deleted ${deletedDbCount} unused files and ${deletedS3OrphanCount} orphan S3 objects.`,
         );
       }
     } catch (error) {

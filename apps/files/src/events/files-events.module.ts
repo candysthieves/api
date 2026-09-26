@@ -9,6 +9,7 @@ import {
 import { FilesInboxRepository } from './files-inbox.repository.js';
 import { FilesOutboxRepository } from './files-outbox.repository.js';
 import { FilesEventsService } from './files-events.service.js';
+import { AvatarImageQueueService } from '../modules/files/application/avatar-image-queue.service.js';
 
 @Module({
   imports: [
@@ -18,7 +19,12 @@ import { FilesEventsService } from './files-events.service.js';
       { name: OutputEvent.name, schema: OutputEventSchema },
     ]),
   ],
-  providers: [FilesInboxRepository, FilesOutboxRepository, FilesEventsService],
+  providers: [
+    FilesInboxRepository,
+    FilesOutboxRepository,
+    FilesEventsService,
+    AvatarImageQueueService,
+  ],
   exports: [FilesInboxRepository, FilesOutboxRepository],
 })
 export class FilesEventsModule {}
