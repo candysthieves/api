@@ -36,6 +36,16 @@ export class FilesTcpClient {
     return { data: null, error: null };
   }
 
+  async deleteFiles(fileIds: string[]): Promise<FilesDeletionResult> {
+    if (!fileIds.length) return { data: null, error: null };
+
+    return lastValueFrom(
+      this.fileMKSClient
+        .send<FilesDeletionResult>({ cmd: 'delete-files' }, { fileIds })
+        .pipe(timeout(15_000)),
+    );
+  }
+
   async cleanupUnusedPostFiles(
     activeFileIds: string[],
     olderThanHours = 24,

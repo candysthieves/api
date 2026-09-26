@@ -50,6 +50,9 @@ import { GetDeletedPostByIdQueryHandler } from './application/query-handler/post
 import { GetMyDeletedPostsQueryHandler } from './application/query-handler/posts/get-my-deleted-posts.query-handler.js';
 import { UpdateMyProfileUseCase } from './application/use-cases/users-use-cases/update-my-profile.usecase.js';
 import { GetAvatarQueryHandler } from './application/query-handler/users/get-avatar-query-handler.js';
+import { DeleteMyAvatarUseCase } from './application/use-cases/users-use-cases/delete-my-avatar.usecase.js';
+import { AvatarFileDeletionsRepository } from './infrastructure/repositories/user-repositories/avatar-file-deletions.repository.js';
+import { AvatarFileDeletionSchedulerService } from './application/avatar-file-deletion-scheduler.service.js';
 import { UpdateMyAvatarUseCase } from './application/use-cases/users-use-cases/update-my-avatar.usecase.js';
 
 @Module({
@@ -64,6 +67,8 @@ import { UpdateMyAvatarUseCase } from './application/use-cases/users-use-cases/u
     RegistrationUseCase,
     UpdateMyProfileUseCase,
     UpdateMyAvatarUseCase,
+    UpdateMyAvatarUseCase,
+    DeleteMyAvatarUseCase,
     LoginUseCase,
     LogoutUseCase,
     RefreshTokenUseCase,
@@ -93,6 +98,7 @@ import { UpdateMyAvatarUseCase } from './application/use-cases/users-use-cases/u
     GetMyDeletedPostsQueryHandler,
 
     UsersRepository,
+    AvatarFileDeletionsRepository,
     SessionsRepository,
     OAuthRepository,
     PostsRepository,
@@ -102,6 +108,7 @@ import { UpdateMyAvatarUseCase } from './application/use-cases/users-use-cases/u
     AuthSessionService,
     PasswordRecoveryService,
     PostDeletionSchedulerService,
+    AvatarFileDeletionSchedulerService,
     UnusedImagesCleanupSchedulerService,
     GetAllPostsQueryHandler,
     GoogleStrategy,
