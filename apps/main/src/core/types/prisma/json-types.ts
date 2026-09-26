@@ -27,5 +27,7 @@ declare global {
     type PostLocations = import('./json-types.js').PostLocations;
     type PostImages = import('./json-types.js').PostImages;
     type PostPreview = import('./json-types.js').PostPreview;
+    type AvatarImage = import('./json-types.js').AvatarImage;
+    type AvatarPreview = import('./json-types.js').AvatarPreview;
   }
 }

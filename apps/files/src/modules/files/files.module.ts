@@ -19,6 +19,8 @@ import {
   CancelledPostSchema,
 } from './schemas/cancelled-post.schema.js';
 import { CancelledPostRepository } from './application/cancelled-post.repository.js';
+import { AvatarImageProcessingService } from './application/avatar-image-processing.service.js';
+import { CleanupUnusedAvatarFilesUseCase } from './application/use-cases/cleanup-unused-avatar-files.usecase.js';
 
 const useCases = [
   UploadFileUseCase,
@@ -26,6 +28,7 @@ const useCases = [
   DeleteFilesUseCase,
   RestoreFilesUseCase,
   CleanupUnusedPostFilesUseCase,
+  CleanupUnusedAvatarFilesUseCase,
 ];
 
 @Module({
@@ -49,6 +52,7 @@ const useCases = [
     PostImageWorkerService,
     PostImageQueueService,
     CancelledPostRepository,
+    AvatarImageProcessingService,
   ],
 })
 export class FilesModule {}

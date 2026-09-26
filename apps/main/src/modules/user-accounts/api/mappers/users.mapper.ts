@@ -45,8 +45,8 @@ export class UsersMapper {
       username: user.username,
       description: user.aboutMe,
 
-      avatarUrl: this.getDefaultAvatar() ?? null,
-      avatarPreviewUrl: this.getDefaultAvatarPreview() ?? null,
+      avatarUrl: (user.avatar as AvatarImage) ?? null,
+      avatarPreviewUrl: (user.avatarPreview as AvatarPreview) ?? null,
 
       followersCount: 0,
       followingCount: 0,
@@ -70,10 +70,10 @@ export class UsersMapper {
     };
   }
 
-  static toGetMyAvatarView(): GetMyAvatarType {
+  static toGetMyAvatarView(user: User): GetMyAvatarType {
     return {
-      avatarUrl: this.getDefaultAvatar() ?? null,
-      avatarPreviewUrl: this.getDefaultAvatarPreview() ?? null,
+      avatarUrl: (user.avatar as AvatarImage) ?? null,
+      avatarPreviewUrl: (user.avatarPreview as AvatarPreview) ?? null,
     };
   }
 }
