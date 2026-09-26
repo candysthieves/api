@@ -14,8 +14,9 @@ export class AvatarImageResultInboxConsumer {
   async handle(body: Buffer): Promise<void | Nack> {
     let event: AvatarImageEvent;
     try {
-      validateAvatarImageEvent(JSON.parse(body.toString('utf8')));
-      event = JSON.parse(body.toString('utf8')) as AvatarImageEvent;
+      const parsed: unknown = JSON.parse(body.toString('utf8'));
+      validateAvatarImageEvent(parsed);
+      event = parsed;
     } catch {
       this.logger.warn('Avatar result rejected: invalid contract');
       return new Nack(false);
