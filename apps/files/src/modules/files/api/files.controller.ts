@@ -22,6 +22,8 @@ import { UploadFileCommand } from '../application/use-cases/upload-file-use.case
 import { RpcValidationPipe } from '../../../core/pipes/rpc-validation.pipe.js';
 import { ValidationRpcExceptionFilter } from '../../../core/filters/validation-rpc-exception.filter.js';
 import { CancelledPostRepository } from '../application/cancelled-post.repository.js';
+import { CleanupUnusedAvatarFilesCommand } from '../application/use-cases/cleanup-unused-avatar-files.usecase.js';
+import type { CleanupUnusedAvatarFilesContract } from '../../../../../../libs/contracts/index.js';
 
 @UsePipes(RpcValidationPipe())
 @UseFilters(ValidationRpcExceptionFilter)
@@ -76,5 +78,17 @@ export class FilesController {
       CleanupUnusedPostFilesCommand,
       ObjectResult<CleanupResult>
     >(new CleanupUnusedPostFilesCommand(dto.activeFileIds, dto.olderThanHours));
+  }
+
+  @MessagePattern({ cmd: 'cleanup-unused-avatar-files' })
+  async cleanupUnusedAvatarFiles(
+    @Payload() dto: CleanupUnusedAvatarFilesContract,
+  ) {
+    return this.commandBus.execute(
+      new CleanupUnusedAvatarFilesCommand(
+        dto.activeFileIds,
+        dto.olderThanHours,
+      ),
+    );
   }
 }

@@ -1,6 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
-import type { ImageEvent } from '../../../../libs/contracts/index.js';
+import type {
+  AvatarImageEvent,
+  ImageEvent,
+} from '../../../../libs/contracts/index.js';
 import { FilesRabbitMqProducerService } from '../rabbitmq/files-rabbitmq-producer.service.js';
 import { FilesOutboxRepository } from './files-outbox.repository.js';
 import { FilesInboxRepository } from './files-inbox.repository.js';
@@ -16,12 +19,23 @@ export class FilesEventsService {
   @Cron('* * * * * *', { waitForCompletion: true })
   async processPending(): Promise<void> {
     await this.outbox.run(async (event) => {
-      await this.producer.publishOutputEvent({
-        eventId: event._id,
-        consumer: 'MAIN',
-        type: 'post.image.updated.v1',
-        data: event.data as ImageEvent['data'],
-      });
+      if (event.type === 'avatar.image.updated.v1') {
+        await this.producer.publishOutputEvent({
+          eventId: event._id,
+          consumer: 'MAIN',
+          type: event.type,
+          data: event.data as AvatarImageEvent['data'],
+        });
+      } else if (event.type === 'post.image.updated.v1' || !event.type) {
+        await this.producer.publishOutputEvent({
+          eventId: event._id,
+          consumer: 'MAIN',
+          type: 'post.image.updated.v1',
+          data: event.data as ImageEvent['data'],
+        });
+      } else {
+        throw new Error(`UNKNOWN_IMAGE_EVENT_TYPE:${event.type}`);
+      }
     });
   }
 

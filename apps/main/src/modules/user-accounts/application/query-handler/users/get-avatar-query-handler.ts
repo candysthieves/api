@@ -15,9 +15,9 @@ export class GetAvatarQueryHandler implements ICommandHandler<
   constructor(private readonly usersQueryRepository: UsersQueryRepository) {}
 
   async execute(command: GetAvatarQuery): Promise<GetMyAvatarType> {
-    //ЗАГЛУШКА ПОКА ЧТО УБЕРИ ПОТОМ!!!!!!!!!!
-    await this.usersQueryRepository.getUsersCount();
-
-    return UsersMapper.toGetMyAvatarView();
+    const user = await this.usersQueryRepository.findByIdOrNotFound(
+      command.userId,
+    );
+    return UsersMapper.toGetMyAvatarView(user);
   }
 }

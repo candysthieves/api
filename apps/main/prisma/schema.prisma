@@ -31,6 +31,10 @@ enum MediaStatus {
 }
 
 model User {
+  /// [AvatarImage]
+  avatar Json? @db.JsonB
+  /// [AvatarPreview]
+  avatarPreview Json? @map("avatar_preview") @db.JsonB
   id       String @id @default(uuid())
   email    String @unique
   password String

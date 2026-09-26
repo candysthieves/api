@@ -1,7 +1,10 @@
 import { randomUUID } from 'node:crypto';
 import { Injectable } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
-import type { ImageInputEvent } from '../../../../../libs/contracts/index.js';
+import type {
+  AvatarImageInputEvent,
+  ImageInputEvent,
+} from '../../../../../libs/contracts/index.js';
 import { PrismaService } from '../../infrastructure/prisma/prisma.service.js';
 import { MainRabbitMqProducerService } from '../rabbitmq/main-rabbitmq-producer.service.js';
 import { EventStoreService } from './event-store.service.js';
@@ -34,6 +37,23 @@ export class ImageOutboxService {
     }
   }
 
+  async saveAvatar(userId: string, file: Express.Multer.File): Promise<void> {
+    await this.prisma.outputEvent.create({
+      data: {
+        eventId: randomUUID(),
+        consumer: 'FILES',
+        type: 'avatar.image.process.v1',
+        data: {
+          userId,
+          originalName: file.originalname,
+          mimeType: file.mimetype,
+          size: file.size,
+        },
+        body: new Uint8Array(file.buffer),
+      },
+    });
+  }
+
   async abort(postId: string): Promise<void> {
     await this.prisma.outputEvent.updateMany({
       where: {
@@ -53,11 +73,18 @@ export class ImageOutboxService {
   async processPending(): Promise<void> {
     await this.events.run('outputEvent', async (event) => {
       if (!event.body || !event.data) throw new Error('MISSING_IMAGE_INPUT');
-      await this.producer.publishImage({
-        ...(event.data as Omit<ImageInputEvent, 'eventId' | 'body'>),
+      const common = {
+        ...(event.data as Record<string, unknown>),
         eventId: event.eventId,
         body: Buffer.from(event.body),
-      });
+      };
+      if (event.type === 'post.image.process.v1')
+        await this.producer.publishImage(common as unknown as ImageInputEvent);
+      else if (event.type === 'avatar.image.process.v1')
+        await this.producer.publishAvatarImage(
+          common as unknown as AvatarImageInputEvent,
+        );
+      else throw new Error(`UNKNOWN_IMAGE_EVENT_TYPE:${event.type}`);
     });
   }
 }

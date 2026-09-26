@@ -3,6 +3,7 @@ import { PrismaService } from '../../../../../infrastructure/prisma/prisma.servi
 import { DomainExceptions } from '../../../../../core/exceptions/domain-exceptions.js';
 import { ErrorStatus } from '../../../../../core/exceptions/domain-exception-code.js';
 import { Prisma, User } from '../../../../../generated/prisma/client.js';
+import { getFileIds } from '../../../../../core/events/files-tcp.client.js';
 import {
   UserCreateInput,
   UserUpdateInput,
@@ -54,6 +55,20 @@ export class UsersRepository {
     }
 
     return user;
+  }
+
+  async getAllActiveAvatarFileIds(): Promise<string[]> {
+    const users = await this.prismaUser.findMany({
+      select: { avatar: true, avatarPreview: true },
+    });
+    const ids = new Set<string>();
+    for (const user of users)
+      for (const id of [
+        ...getFileIds(user.avatar),
+        ...getFileIds(user.avatarPreview),
+      ])
+        ids.add(id);
+    return [...ids];
   }
 
   async findByConfirmationCode(code: string): Promise<User | null> {

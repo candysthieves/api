@@ -2,6 +2,7 @@ import { AmqpConnection } from '@golevelup/nestjs-rabbitmq';
 import { ConfigService } from '@nestjs/config';
 import type { ChannelWrapper } from 'amqp-connection-manager';
 import type { ImageInputEvent } from '../../../../../libs/contracts/index.js';
+import type { AvatarImageInputEvent } from '../../../../../libs/contracts/index.js';
 import { Injectable } from '@nestjs/common';
 import { firstValueFrom, from, timeout } from 'rxjs';
 
@@ -54,6 +55,26 @@ export class MainRabbitMqProducerService {
       `${this.config.getOrThrow<string>('RABBITMQ_MAIN_TO_FILES_QUEUE')}.post-images.v1`,
       event.body,
       options,
+    );
+  }
+
+  async publishAvatarImage(event: AvatarImageInputEvent): Promise<void> {
+    if (!this.connection.connected) throw new Error('TRANSPORT_UNAVAILABLE');
+    await this.connection.publish(
+      '',
+      `${this.config.getOrThrow<string>('RABBITMQ_MAIN_TO_FILES_QUEUE')}.avatar-images.v1`,
+      event.body,
+      {
+        persistent: true,
+        messageId: event.eventId,
+        contentType: event.mimeType,
+        type: 'avatar.image.process.v1',
+        headers: {
+          userId: event.userId,
+          originalName: event.originalName,
+          size: event.size,
+        },
+      },
     );
   }
 }

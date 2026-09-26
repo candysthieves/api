@@ -6,6 +6,8 @@ import { SseEventEnum } from '../sse/types/sse-event.type.js';
 import type { ImageEvent } from '../../../../../libs/contracts/index.js';
 import { PostImagesRepository } from './post-images.repository.js';
 import { EventStoreService } from './event-store.service.js';
+import type { AvatarImageEvent } from '../../../../../libs/contracts/index.js';
+import { AvatarImagesRepository } from './avatar-images.repository.js';
 
 @Injectable()
 export class ImageResultInboxService {
@@ -16,9 +18,10 @@ export class ImageResultInboxService {
     private readonly sse: SseService,
     private readonly imagesRepository: PostImagesRepository,
     private readonly events: EventStoreService,
+    private readonly avatarImages: AvatarImagesRepository,
   ) {}
 
-  async accept(event: ImageEvent): Promise<void> {
+  async accept(event: ImageEvent | AvatarImageEvent): Promise<void> {
     await this.prisma.inboxEvent.upsert({
       where: { eventId: event.eventId },
       create: event,
@@ -29,12 +32,31 @@ export class ImageResultInboxService {
   @Cron('* * * * * *', { waitForCompletion: true })
   async processPending(): Promise<void> {
     await this.events.run('inboxEvent', async (event) => {
-      await this.applyMediaEvent({
-        eventId: event.eventId,
-        consumer: 'MAIN',
-        type: 'post.image.updated.v1',
-        data: event.data as ImageEvent['data'],
-      });
+      if (event.type === 'avatar.image.updated.v1') {
+        const avatarEvent = {
+          eventId: event.eventId,
+          consumer: 'MAIN',
+          type: event.type,
+          data: event.data as unknown as AvatarImageEvent['data'],
+        };
+        if (
+          await this.avatarImages.applyAvatar(
+            avatarEvent.data.userId,
+            avatarEvent.data.image,
+            avatarEvent.data.preview,
+          )
+        )
+          this.sse.emit(SseEventEnum.AVATAR_UPDATED, {
+            userId: avatarEvent.data.userId,
+          });
+      } else if (event.type === 'post.image.updated.v1' || !event.type) {
+        await this.applyMediaEvent({
+          eventId: event.eventId,
+          consumer: 'MAIN',
+          type: 'post.image.updated.v1',
+          data: event.data as ImageEvent['data'],
+        });
+      } else throw new Error(`UNKNOWN_IMAGE_EVENT_TYPE:${event.type}`);
     });
   }
 
