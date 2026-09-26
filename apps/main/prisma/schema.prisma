@@ -59,6 +59,14 @@ model User {
   sessions      Session[]
 }
 
+model AvatarFileDeletion {
+  fileId   String   @id @map("file_id")
+  deleteAt DateTime @default(now()) @map("delete_at")
+
+  @@index([deleteAt])
+  @@map("avatar_file_deletion")
+}
+
 model OAuthAccount {
   id         String        @id @default(uuid())
   provider   OAuthProvider

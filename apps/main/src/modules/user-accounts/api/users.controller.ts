@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   Patch,
@@ -32,6 +33,8 @@ import { ApiGetMyAvatar } from '../../../core/swagger/user-dto/get-my-avatar.swa
 import { ApiUpdateMyAvatar } from '../../../core/swagger/user-dto/update-my-avatar.swagger.js';
 import { UpdateMyAvatarCommand } from '../application/use-cases/users-use-cases/update-my-avatar.usecase.js';
 import { OptionalAccessTokenGuard } from './guards/optional-access-token.guard.js';
+import { DeleteMyAvatarCommand } from '../application/use-cases/users-use-cases/delete-my-avatar.usecase.js';
+import { ApiDeleteMyAvatar } from '../../../core/swagger/user-dto/delete-my-avatar.swagger.js';
 
 @Controller('users')
 export class UsersController {
@@ -96,6 +99,16 @@ export class UsersController {
   ): Promise<{ userId: string }> {
     return this.commandBus.execute(
       new UpdateMyAvatarCommand(user.userId, file),
+    );
+  }
+
+  @Delete('my-avatar')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @UseGuards(AccessTokenGuard)
+  @ApiDeleteMyAvatar()
+  async deleteMyAvatar(@User() user: JwtAccessPayload): Promise<void> {
+    await this.commandBus.execute<DeleteMyAvatarCommand, void>(
+      new DeleteMyAvatarCommand(user.userId),
     );
   }
 }
