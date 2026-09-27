@@ -43,7 +43,7 @@ export class OAuthRepository {
     });
   }
 
-  async findByUserId(userId: string): Promise<OAuthAccount | null> {
+  async findByUserId(userId: number): Promise<OAuthAccount | null> {
     return this.prisma.oAuthAccount.findFirst({
       where: { userId: userId },
     });

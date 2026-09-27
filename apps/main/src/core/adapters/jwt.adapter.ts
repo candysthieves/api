@@ -29,10 +29,8 @@ export class JwtAdapter {
     );
   }
 
-  async createAccessToken(userId: string) {
-    const payload = {
-      userId: userId.toString(),
-    };
+  async createAccessToken(userId: number) {
+    const payload = { userId };
 
     return this.jwtService.signAsync(payload, {
       secret: this.jwt_secret_key,
@@ -40,8 +38,8 @@ export class JwtAdapter {
     });
   }
 
-  async createRefreshToken(userId: string, sessionId: string) {
-    const payload = { userId: userId.toString(), sessionId };
+  async createRefreshToken(userId: number, sessionId: string) {
+    const payload = { userId, sessionId };
 
     return this.jwtService.signAsync(payload, {
       secret: this.jwt_secret_refresh_key,

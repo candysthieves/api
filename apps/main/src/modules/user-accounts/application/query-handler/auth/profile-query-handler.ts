@@ -5,7 +5,7 @@ import { ProfileViewType } from '../../../api/view-types/auth/profile-view.type.
 import { User } from '../../../../../generated/prisma/client.js';
 
 export class ProfileQuery {
-  constructor(public readonly userId: string) {}
+  constructor(public readonly userId: number) {}
 }
 
 @QueryHandler(ProfileQuery)

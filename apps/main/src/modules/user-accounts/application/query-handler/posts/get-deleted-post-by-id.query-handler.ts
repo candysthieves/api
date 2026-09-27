@@ -8,14 +8,15 @@ import { ErrorStatus } from '../../../../../core/exceptions/domain-exception-cod
 export class GetDeletedPostByIdQuery {
   constructor(
     public readonly postId: string,
-    public readonly currentUserId: string,
+    public readonly currentUserId: number,
   ) {}
 }
 
 @QueryHandler(GetDeletedPostByIdQuery)
-export class GetDeletedPostByIdQueryHandler
-  implements IQueryHandler<GetDeletedPostByIdQuery, PostWithAuthorViewType>
-{
+export class GetDeletedPostByIdQueryHandler implements IQueryHandler<
+  GetDeletedPostByIdQuery,
+  PostWithAuthorViewType
+> {
   constructor(private readonly postsQueryRepository: PostsQueryRepository) {}
 
   async execute({

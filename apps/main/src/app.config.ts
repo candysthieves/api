@@ -25,6 +25,8 @@ export class AppConfig {
   readonly githubClientSecret: string;
   readonly clientUrl: string;
   readonly unusedFilesCleanupEnabled: boolean;
+  readonly adminUsername: string;
+  readonly adminPassword: string;
 
   constructor(@Inject(ConfigService) configService: ConfigService) {
     this.port = Number(configService.getOrThrow<string>('PORT'));
@@ -32,6 +34,8 @@ export class AppConfig {
     this.googleCallbackUrl = `${this.appUrl}/auth/google/callback`;
     this.githubCallbackUrl = `${this.appUrl}/auth/github/callback`;
     this.databaseUrl = configService.getOrThrow<string>('DATABASE_URL');
+    this.adminUsername = configService.getOrThrow<string>('ADMIN_USERNAME');
+    this.adminPassword = configService.getOrThrow<string>('ADMIN_PASSWORD');
     this.accessSecret = configService.getOrThrow<string>('JWT_SECRET_KEY');
     this.accessExpiresIn = configService.getOrThrow<string>('JWT_EXPIRES_IN');
     this.refreshSecret = configService.getOrThrow<string>(

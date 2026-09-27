@@ -21,11 +21,11 @@ export class AvatarImageProcessingService {
   async processImage(record: StoredEvent): Promise<void> {
     if (await this.outbox.exists(record._id)) return;
     const data = record.data as
-      | { userId: string; originalName: string; mimeType: string; size: number }
+      | { userId: number; originalName: string; mimeType: string; size: number }
       | undefined;
     if (!data || !record.body) throw new Error('MISSING_AVATAR_INPUT');
     const file = {
-      targetId: data.userId,
+      targetId: String(data.userId),
       buffer: record.body,
       size: data.size,
       mimeType: data.mimeType,

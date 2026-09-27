@@ -6,7 +6,7 @@ import { PrismaService } from '../../infrastructure/prisma/prisma.service.js';
 export class AvatarImagesRepository {
   constructor(private readonly prisma: PrismaService) {}
   async applyAvatar(
-    userId: string,
+    userId: number,
     image: MediaFile,
     preview: MediaFile,
   ): Promise<boolean> {

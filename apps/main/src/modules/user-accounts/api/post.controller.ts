@@ -47,6 +47,7 @@ import { ApiGetAllPosts } from '../../../core/swagger/posts-dto/get-posts.swagge
 import { ApiUserPosts } from '../../../core/swagger/posts-dto/get-user-posts.swagger.js';
 import { FindPostsByUserIdAndCursorQuery } from '../application/query-handler/posts/find-posts-by-user-id-and-cursor.query-handler.js';
 import { OptionalAccessTokenGuard } from './guards/optional-access-token.guard.js';
+import { PositiveIntPipe } from './pipes/positive-int.pipe.js';
 
 @ApiTags('Posts')
 @Controller('posts')
@@ -94,7 +95,7 @@ export class PostController {
   @ApiUserPosts()
   getPostsForUser(
     @Query() query: GetPostsQueryParamsDto,
-    @Param('userId', ParseUUIDPipe) userId: string,
+    @Param('userId', PositiveIntPipe) userId: number,
     @User() user: JwtAccessPayload | null,
   ) {
     return this.queryBus.execute(

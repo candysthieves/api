@@ -13,7 +13,7 @@ import {
 export class CreatePostCommand {
   constructor(
     public readonly description: string,
-    public readonly userId: string,
+    public readonly userId: number,
     public readonly files: Express.Multer.File[] = [],
     public readonly locations: CreatePostLocationDto[] = [],
   ) {}

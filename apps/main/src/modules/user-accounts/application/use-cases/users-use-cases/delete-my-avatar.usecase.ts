@@ -4,13 +4,14 @@ import { SseEventEnum } from '../../../../../core/sse/types/sse-event.type.js';
 import { AvatarFileDeletionsRepository } from '../../../infrastructure/repositories/user-repositories/avatar-file-deletions.repository.js';
 
 export class DeleteMyAvatarCommand {
-  constructor(public readonly userId: string) {}
+  constructor(public readonly userId: number) {}
 }
 
 @CommandHandler(DeleteMyAvatarCommand)
-export class DeleteMyAvatarUseCase
-  implements ICommandHandler<DeleteMyAvatarCommand, void>
-{
+export class DeleteMyAvatarUseCase implements ICommandHandler<
+  DeleteMyAvatarCommand,
+  void
+> {
   constructor(
     private readonly avatarFileDeletions: AvatarFileDeletionsRepository,
     private readonly sse: SseService,

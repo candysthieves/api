@@ -18,8 +18,8 @@ export function ApiGetUserProfile() {
     ApiParam({
       name: 'userId',
       description: 'ID of the user whose profile should be retrieved',
-      type: String,
-      example: 'f5a18989-10d9-4b0b-aac1-2df4430fa43c',
+      type: Number,
+      example: 42,
     }),
 
     ApiOkResponse({
@@ -40,9 +40,8 @@ export function ApiGetUserProfile() {
         ],
         properties: {
           id: {
-            type: 'string',
-            format: 'uuid',
-            example: 'f5a18989-10d9-4b0b-aac1-2df4430fa43c',
+            type: 'integer',
+            example: 42,
           },
           username: {
             type: 'string',
@@ -110,7 +109,7 @@ export function ApiGetUserProfile() {
           },
         },
         example: {
-          id: 'f5a18989-10d9-4b0b-aac1-2df4430fa43c',
+          id: 42,
           username: 'john_doe',
           description:
             'Превращаю макеты дизайнеров в живой код, воюю с центрированием div и делаю так, чтобы пользователям было красиво и удобно.',

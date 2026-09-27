@@ -17,9 +17,9 @@ export function ApiUserPosts() {
 
     ApiParam({
       name: 'userId',
-      type: String,
+      type: Number,
       description: 'Id of the user whose posts are requested.',
-      example: '550e8400-e29b-41d4-a716-446655440000',
+      example: 42,
     }),
 
     ApiQuery({
@@ -135,11 +135,7 @@ export function ApiUserPosts() {
                   type: 'object',
                   required: ['id', 'username', 'avatarPreviewUrl'],
                   properties: {
-                    id: {
-                      type: 'string',
-                      format: 'uuid',
-                      example: '550e8400-e29b-41d4-a716-446655440000',
-                    },
+                    id: { type: 'integer', example: 42 },
                     username: {
                       type: 'string',
                       example: 'john_doe',
@@ -210,7 +206,7 @@ export function ApiUserPosts() {
               createdAt: '2026-09-03T10:30:00.000Z',
               willBeDeleted: null,
               author: {
-                id: '550e8400-e29b-41d4-a716-446655440000',
+                id: 42,
                 username: 'john_doe',
                 avatarPreviewUrl: {
                   fileId: '550e8400-e29b-41d4-a716-446655440002',

@@ -3,7 +3,7 @@ import { SessionsRepository } from '../../../infrastructure/repositories/session
 
 export class DeleteOtherSessionsCommand {
   constructor(
-    public readonly userId: string,
+    public readonly userId: number,
     public readonly currentSessionId: string,
   ) {}
 }

@@ -8,7 +8,7 @@ import { getFileIds } from '../../../../../core/events/files-tcp.client.js';
 export class AvatarFileDeletionsRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  async scheduleCurrentAvatarForDeletion(userId: string): Promise<void> {
+  async scheduleCurrentAvatarForDeletion(userId: number): Promise<void> {
     await this.prisma.$transaction(async (transaction) => {
       const user = await transaction.user.findUnique({
         where: { id: userId },

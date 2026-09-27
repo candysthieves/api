@@ -9,7 +9,7 @@ export class UsersQueryRepository {
   constructor(private readonly prisma: PrismaService) {
     this.prismaUser = prisma.user;
   }
-  async findByIdOrNotFound(userId: string) {
+  async findByIdOrNotFound(userId: number) {
     const user = await this.prismaUser.findUnique({ where: { id: userId } });
 
     if (!user) {

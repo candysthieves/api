@@ -74,12 +74,12 @@ export class PostsQueryRepository {
     return post;
   }
 
-  async countPostsByUserId(userId: string): Promise<number> {
+  async countPostsByUserId(userId: number): Promise<number> {
     return this.prismaPost.count({ where: { userId: userId } });
   }
 
   async findPostsByUserIdAndCursor(
-    userId: string,
+    userId: number,
     cursor: string | undefined,
     limit: number,
   ): Promise<PostWithAuthor[]> {
@@ -114,7 +114,7 @@ export class PostsQueryRepository {
   }
 
   async findDeletedPostsByUserIdAndCursor(
-    userId: string,
+    userId: number,
     cursor: string | undefined,
     limit: number,
   ): Promise<PostWithAuthor[]> {

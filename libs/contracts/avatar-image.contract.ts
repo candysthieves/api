@@ -3,7 +3,7 @@ import type { MediaFile } from './post-image.contract.js';
 export const MAX_AVATAR_IMAGE_SIZE = 10 * 1024 * 1024;
 export type AvatarImageInputEvent = {
   eventId: string;
-  userId: string;
+  userId: number;
   originalName: string;
   mimeType: 'image/jpeg' | 'image/png';
   size: number;
@@ -13,7 +13,7 @@ export type AvatarImageEvent = {
   eventId: string;
   consumer: 'MAIN';
   type: 'avatar.image.updated.v1';
-  data: { userId: string; image: MediaFile; preview: MediaFile };
+  data: { userId: number; image: MediaFile; preview: MediaFile };
 };
 
 export function validateAvatarImageEvent(
@@ -25,7 +25,7 @@ export function validateAvatarImageEvent(
     value.consumer !== 'MAIN' ||
     value.type !== 'avatar.image.updated.v1' ||
     !record(value.data) ||
-    !uuid(value.data.userId) ||
+    !positiveInteger(value.data.userId) ||
     !media(value.data.image) ||
     !media(value.data.preview)
   )
@@ -42,6 +42,9 @@ function uuid(value: unknown): value is string {
       value,
     )
   );
+}
+function positiveInteger(value: unknown): value is number {
+  return typeof value === 'number' && Number.isSafeInteger(value) && value > 0;
 }
 function media(value: unknown): value is MediaFile {
   return (

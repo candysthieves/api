@@ -23,7 +23,7 @@ export class UsersRepository {
     return client.user.create({ data });
   }
 
-  async update(userId: string, data: UserUpdateInput): Promise<User> {
+  async update(userId: number, data: UserUpdateInput): Promise<User> {
     return this.prismaUser.update({
       where: {
         id: userId,
@@ -43,7 +43,7 @@ export class UsersRepository {
     return this.prismaUser.findUnique({ where: { email } });
   }
 
-  async findByIdOrNotFound(id: string): Promise<User> {
+  async findByIdOrNotFound(id: number): Promise<User> {
     const user = await this.prismaUser.findFirst({ where: { id } });
 
     if (!user) {
@@ -55,6 +55,33 @@ export class UsersRepository {
     }
 
     return user;
+  }
+
+  async findForDeletion(id: number) {
+    return this.prismaUser.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        avatar: true,
+        avatarPreview: true,
+        posts: { select: { images: true, preview: true } },
+      },
+    });
+  }
+
+  async findAllForDeletion() {
+    return this.prismaUser.findMany({
+      select: {
+        id: true,
+        avatar: true,
+        avatarPreview: true,
+        posts: { select: { images: true, preview: true } },
+      },
+    });
+  }
+
+  async deleteById(id: number): Promise<void> {
+    await this.prismaUser.delete({ where: { id } });
   }
 
   async getAllActiveAvatarFileIds(): Promise<string[]> {

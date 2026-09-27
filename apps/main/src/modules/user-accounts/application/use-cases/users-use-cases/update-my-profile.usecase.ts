@@ -10,7 +10,7 @@ import { ErrorStatus } from '../../../../../core/exceptions/domain-exception-cod
 
 export class UpdateMyProfileCommand {
   constructor(
-    public readonly userId: string,
+    public readonly userId: number,
     public readonly dto: UpdateProfileDto,
   ) {}
 }

@@ -35,7 +35,7 @@ model User {
   avatar Json? @db.JsonB
   /// [AvatarPreview]
   avatarPreview Json? @map("avatar_preview") @db.JsonB
-  id       String @id @default(uuid())
+  id       Int    @id @default(autoincrement())
   email    String @unique
   password String
   username String @unique
@@ -72,7 +72,7 @@ model OAuthAccount {
   provider   OAuthProvider
   providerId String        @map("provider_id")
   email      String
-  userId     String        @map("user_id")
+  userId     Int           @map("user_id")
   user       User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt  DateTime      @default(now()) @map("created_at")
   updatedAt  DateTime      @updatedAt @map("updated_at")
@@ -91,8 +91,8 @@ model Post {
   /// [PostPreview]
   preview       Json?       @db.JsonB
   mediaStatus   MediaStatus @default(PROCESSING) @map("media_status")
-  userId        String      @map("user_id")
-  user          User        @relation(fields: [userId], references: [id])
+  userId        Int         @map("user_id")
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt     DateTime    @default(now()) @map("created_at")
   updatedAt     DateTime    @updatedAt @map("updated_at")
   willBeDeleted DateTime?   @map("will_be_deleted")
@@ -145,7 +145,7 @@ model InboxEvent {
 model Session {
   id String @id @default(uuid())
 
-  userId     String    @map("user_id")
+  userId     Int       @map("user_id")
   user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   deviceName String    @map("device_name")
   ip         String

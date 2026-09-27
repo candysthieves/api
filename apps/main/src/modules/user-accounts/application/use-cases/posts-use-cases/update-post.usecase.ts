@@ -6,7 +6,7 @@ import { PostsRepository } from '../../../infrastructure/repositories/post-repos
 export class UpdatePostCommand {
   constructor(
     public readonly postId: string,
-    public readonly userId: string,
+    public readonly userId: number,
     public readonly description: string,
   ) {}
 }

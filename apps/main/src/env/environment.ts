@@ -51,6 +51,15 @@ export class EnvironmentVariables {
 
   @IsString()
   @IsNotEmpty()
+  @Matches(/^[^:]+$/)
+  ADMIN_USERNAME!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  ADMIN_PASSWORD!: string;
+
+  @IsString()
+  @IsNotEmpty()
   JWT_EXPIRES_IN!: string;
 
   @IsString()
