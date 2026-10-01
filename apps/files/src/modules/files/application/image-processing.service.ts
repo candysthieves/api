@@ -11,7 +11,6 @@ export class ImageProcessingService {
 
     const buffer = await image.toBuffer();
     const metadata = await sharp(buffer).metadata();
-
     return {
       buffer,
       size: buffer.length,
@@ -36,6 +35,6 @@ export class ImageProcessingService {
   }
 
   private compress(image: Sharp): Sharp {
-    return image.webp({ quality: 80 });
+    return image.webp({ quality: 50 });
   }
 }

@@ -2,48 +2,22 @@ import { Inject, Injectable } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { lastValueFrom, timeout } from 'rxjs';
 export const FILES_TCP_CLIENT = 'FILES_TCP_CLIENT';
-export type PostMediaJobAcceptance = {
-  data: { accepted: true; eventId: string } | null;
-  error: { code: string; errors: { field: string; message: string }[] } | null;
-};
 
 export type FilesDeletionResult = {
   data: null;
   error: { code: string; errors: { field: string; message: string }[] } | null;
 };
 
+type FilesCleanupResult = {
+  data: { deletedDbCount: number; deletedS3OrphanCount: number } | null;
+  error: FilesDeletionResult['error'];
+};
+
 @Injectable()
 export class FilesTcpClient {
-  constructor(@Inject(FILES_TCP_CLIENT) private readonly client: ClientProxy) {}
-  uploadPostFiles(
-    postId: string,
-    files: Express.Multer.File[],
-  ): Promise<PostMediaJobAcceptance> {
-    return lastValueFrom(
-      this.client
-        .send(
-          { cmd: 'upload-post-files' },
-          {
-            files: files.map((file) => ({
-              targetId: postId,
-              originalName: file.originalname,
-              mimeType: file.mimetype,
-              size: file.size,
-              buffer: file.buffer,
-            })),
-          },
-        )
-        .pipe(timeout(15_000)),
-    );
-  }
-  acknowledge(eventId: string): Promise<void> {
-    return lastValueFrom(
-      this.client
-        .send({ cmd: 'post-media-event-ack' }, { eventId })
-        .pipe(timeout(5_000)),
-    );
-  }
-
+  constructor(
+    @Inject(FILES_TCP_CLIENT) private readonly fileMKSClient: ClientProxy,
+  ) {}
   async deletePostMedia(
     images: unknown,
     preview: unknown,
@@ -52,7 +26,7 @@ export class FilesTcpClient {
       if (!fileIds.length) continue;
 
       const result = await lastValueFrom(
-        this.client
+        this.fileMKSClient
           .send<FilesDeletionResult>({ cmd: 'delete-files' }, { fileIds })
           .pipe(timeout(15_000)),
       );
@@ -61,9 +35,47 @@ export class FilesTcpClient {
 
     return { data: null, error: null };
   }
+
+  async deleteFiles(fileIds: string[]): Promise<FilesDeletionResult> {
+    if (!fileIds.length) return { data: null, error: null };
+
+    return lastValueFrom(
+      this.fileMKSClient
+        .send<FilesDeletionResult>({ cmd: 'delete-files' }, { fileIds })
+        .pipe(timeout(15_000)),
+    );
+  }
+
+  async cleanupUnusedPostFiles(
+    activeFileIds: string[],
+    olderThanHours = 24,
+  ): Promise<FilesCleanupResult> {
+    return lastValueFrom(
+      this.fileMKSClient
+        .send<FilesCleanupResult>(
+          { cmd: 'cleanup-unused-post-files' },
+          { activeFileIds, olderThanHours },
+        )
+        .pipe(timeout(60_000)),
+    );
+  }
+
+  async cleanupUnusedAvatarFiles(
+    activeFileIds: string[],
+    olderThanHours = 24,
+  ): Promise<FilesCleanupResult> {
+    return lastValueFrom(
+      this.fileMKSClient
+        .send<FilesCleanupResult>(
+          { cmd: 'cleanup-unused-avatar-files' },
+          { activeFileIds, olderThanHours },
+        )
+        .pipe(timeout(60_000)),
+    );
+  }
 }
 
-function getFileIds(value: unknown): string[] {
+export function getFileIds(value: unknown): string[] {
   const media: unknown[] = Array.isArray(value) ? value : [value];
 
   return media.flatMap((file): string[] => {

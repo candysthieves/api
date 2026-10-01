@@ -1,121 +1,69 @@
-import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { Cron } from '@nestjs/schedule';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import type { Model } from 'mongoose';
+import type {
+  AvatarImageEvent,
+  ImageEvent,
+} from '../../../../libs/contracts/index.js';
 import { FilesRabbitMqProducerService } from '../rabbitmq/files-rabbitmq-producer.service.js';
-import {
-  EventStatus,
-  StoredEvent,
-  StoredEventDocument,
-} from './schemas/event.schema.js';
-
-const PUBLISH_CONFIRMATION_TIMEOUT_MS = 3_000;
+import { FilesOutboxRepository } from './files-outbox.repository.js';
+import { FilesInboxRepository } from './files-inbox.repository.js';
+import { InputEvent } from './schemas/input-event.schema.js';
 
 @Injectable()
-export class FilesEventsService implements OnModuleInit, OnModuleDestroy {
-  private timer?: NodeJS.Timeout;
-  private isPublishing = false;
+export class FilesEventsService implements OnModuleInit {
+  private readonly logger = new Logger(FilesEventsService.name);
 
   constructor(
-    @InjectModel(StoredEvent.name)
-    private readonly output: Model<StoredEventDocument>,
+    private readonly outbox: FilesOutboxRepository,
     private readonly producer: FilesRabbitMqProducerService,
+    private readonly inbox: FilesInboxRepository,
+    @InjectModel(InputEvent.name)
+    private readonly inputEventModel: Model<InputEvent>,
   ) {}
 
-  onModuleInit(): void {
-    this.timer = setInterval(() => void this.publishPending(), 1000);
-  }
-
-  onModuleDestroy(): void {
-    if (this.timer) clearInterval(this.timer);
-  }
-
-  async create(type: string, data: Record<string, unknown>) {
-    const event = await this.output.create({
-      eventId: crypto.randomUUID(),
-      consumer: 'MAIN',
-      type,
-      data,
-      status: EventStatus.UNPROCESSED,
-      attempts: 0,
-    });
-    return event;
-  }
-
-  async acknowledge(eventId: string): Promise<boolean> {
-    const event = await this.output.findOne({ eventId }).exec();
-    if (!event) return false;
-    if (event.status !== EventStatus.OK) {
-      event.status = EventStatus.OK;
-      await event.save();
+  async onModuleInit(): Promise<void> {
+    const droppedIndexes = await this.inputEventModel.syncIndexes();
+    if (droppedIndexes.length) {
+      this.logger.warn(
+        `Removed obsolete MongoDB input event indexes: ${droppedIndexes.join(', ')}`,
+      );
     }
-    return true;
   }
 
-  private async publishPending(): Promise<void> {
-    if (this.isPublishing) return;
-    this.isPublishing = true;
-    try {
-      await this.requeueUnconfirmedEvents();
-
-      while (true) {
-        const now = new Date();
-        const event = await this.output
-          .findOneAndUpdate(
-            {
-              status: EventStatus.UNPROCESSED,
-              $or: [{ nextAttemptAt: null }, { nextAttemptAt: { $lte: now } }],
-            },
-            { $set: { status: EventStatus.SENDED }, $inc: { attempts: 1 } },
-            { returnDocument: 'after' },
-          )
-          .exec();
-        if (!event) return;
-
-        try {
-          await this.producer.publishMediaEvent({
-            eventId: event.eventId,
-            consumer: event.consumer,
-            type: event.type,
-            data: event.data,
-          });
-        } catch (error) {
-          await this.output
-            .updateOne(
-              { _id: event._id, status: EventStatus.SENDED },
-              {
-                $set: {
-                  status: EventStatus.UNPROCESSED,
-                  lastError:
-                    error instanceof Error ? error.message : String(error),
-                  nextAttemptAt: new Date(Date.now() + 10_000),
-                },
-              },
-            )
-            .exec();
-        }
+  @Cron('* * * * * *', { waitForCompletion: true })
+  async processPending(): Promise<void> {
+    await this.outbox.run(async (event) => {
+      if (event.type === 'avatar.image.updated.v1') {
+        await this.producer.publishOutputEvent({
+          eventId: event._id,
+          consumer: 'MAIN',
+          type: event.type,
+          data: event.data as AvatarImageEvent['data'],
+        });
+      } else if (event.type === 'post.image.updated.v1' || !event.type) {
+        await this.producer.publishOutputEvent({
+          eventId: event._id,
+          consumer: 'MAIN',
+          type: 'post.image.updated.v1',
+          data: event.data as ImageEvent['data'],
+        });
+      } else {
+        throw new Error(`UNKNOWN_IMAGE_EVENT_TYPE:${event.type}`);
       }
-    } finally {
-      this.isPublishing = false;
-    }
+    });
   }
 
-  private async requeueUnconfirmedEvents(): Promise<void> {
-    await this.output
-      .updateMany(
-        {
-          status: EventStatus.SENDED,
-          updatedAt: {
-            $lte: new Date(Date.now() - PUBLISH_CONFIRMATION_TIMEOUT_MS),
-          },
-        },
-        {
-          $set: {
-            status: EventStatus.UNPROCESSED,
-            nextAttemptAt: null,
-            lastError: 'DELIVERY_CONFIRMATION_TIMEOUT',
-          },
-        },
-      )
-      .exec();
+  @Cron('*/10 * * * * *', { waitForCompletion: true })
+  async recover(): Promise<void> {
+    await this.inbox.recover();
+    await this.outbox.recover();
+  }
+
+  @Cron('0 * * * * *', { waitForCompletion: true })
+  async cleanup(): Promise<void> {
+    await this.inbox.cleanup();
+    await this.outbox.cleanup();
   }
 }

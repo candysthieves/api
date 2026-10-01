@@ -1,311 +1,16 @@
-# Upload Post Files
+# Post Images: RabbitMQ
 
-Загрузка файлов для поста.
+Main persists Post and one binary outbox event per image before returning `201 { postId }`. Its scheduler publishes originals with their UUID as messageId. The files consumer validates and stores inbox bytes before ack; persistence failure requeues, invalid input is rejected.
 
-Endpoint принимает массив изображений, проверяет размер каждого файла, обрабатывает изображения, загружает их в S3 и сохраняет информацию о файлах в MongoDB.
+The files inbox scheduler checks cancellation, processes the image and preview for index 0, saves an immutable result outbox with the same UUID, and completes the inbox. An existing outbox (including a cleaned record) skips reprocessing. Both outbox schedulers require publisher confirm. Main stores results before ack and fills only empty Post positions and preview; missing posts are successful skips. Readiness emits the existing SSE notification.
 
-Для первого файла дополнительно создаётся preview.
+Every processing scheduler runs each second, handles up to 10 events sequentially, and prevents local overlap. All four stores allow 3 attempts with a 10-second delay, recover PROCESSING older than a minute every 10 seconds, and clean terminal payloads after an hour while retaining ID/status forever. Exhaustion leaves ERROR without deleting the post or creating FAILED. One instance per service; no transactions or separate jobs.
 
----
+TCP cancellation uses `{ cmd: 'cancel-post-images' }` with `{ postId }`; its existing 24-hour marker remains. Existing TCP operations below remain available.
 
-## TCP Message
-
-### Pattern
-
-```ts
-{ cmd: 'upload-post-files' }
-```
-
-### Request
-
-```ts
-{
-  files: UploadFileContract[]
-}
-```
-
-### `files`
-
-Массив файлов, загружаемых для поста.
-
-| Field   | Type                   | Required | Description   |
-| ------- | ---------------------- | -------: | ------------- |
-| `files` | `UploadFileContract[]` |      Yes | Массив файлов |
-
-Каждый файл содержит:
-
-| Field          | Type     | Required | Description            |
-| -------------- | -------- | -------: | ---------------------- |
-| `targetId`     | `string` |      Yes | ID поста               |
-| `originalName` | `string` |      Yes | Оригинальное имя файла |
-| `mimeType`     | `string` |      Yes | MIME-тип файла         |
-| `size`         | `number` |      Yes | Размер файла в байтах  |
-| `buffer`       | `Buffer` |      Yes | Содержимое файла       |
-
-Максимальный размер одного файла — **5 MB**.
+See [the current design and migration procedure](../../../docs/superpowers/specs/2026-09-19-durable-image-events-design.md).
 
 ---
-
-## Success Response
-
-При успешной загрузке возвращается:
-
-```ts
-ObjectResult<FilesResultType>
-```
-
-Пример:
-
-```json
-{
-  "data": {
-    "targetId": "post-id",
-    "files": [
-      {
-        "id": "file-id-1",
-        "url": "https://s3.example.com/...",
-        "originalName": "photo-1.jpg",
-        "size": 245760,
-        "width": 1920,
-        "height": 1080,
-        "format": "webp"
-      },
-      {
-        "id": "file-id-2",
-        "url": "https://s3.example.com/...",
-        "originalName": "photo-2.jpg",
-        "size": 312000,
-        "width": 1280,
-        "height": 720,
-        "format": "webp"
-      }
-    ],
-    "preview": {
-      "id": "preview-id",
-      "url": "https://s3.example.com/...",
-      "originalName": "photo-1.jpg",
-      "size": 45200,
-      "width": 234,
-      "height": 132,
-      "format": "webp"
-    }
-  },
-  "error": null
-}
-```
-
-> Точный набор полей `files` и `preview` определяется `FileViewType` / `FilesResultType`.
-
----
-
-# Error Responses
-
-Все ошибки возвращаются через `ObjectResult`.
-
-При ошибке `data` имеет значение `null`.
-
-## FILE_SIZE_EXCEEDED
-
-Возвращается, если размер одного из загружаемых файлов превышает **5 MB**.
-
-```json
-{
-  "data": null,
-  "error": {
-    "code": "FILE_SIZE_EXCEEDED",
-    "errors": [
-      {
-        "field": "file[0]",
-        "message": "File size must not exceed 5 MB"
-      }
-    ]
-  }
-}
-```
-
-`file[index]` указывает на файл, который не прошёл проверку.
-
-Например:
-
-```text
-file[0] — первый файл
-file[1] — второй файл
-file[2] — третий файл
-```
-
----
-
-## VALIDATION_ERROR
-
-Возвращается, если входные данные не проходят DTO validation.
-
-```json
-{
-  "data": null,
-  "error": {
-    "code": "VALIDATION_ERROR",
-    "errors": [
-      {
-        "field": "files[0].targetId",
-        "message": "targetId must be a string"
-      }
-    ]
-  }
-}
-```
-
-При нескольких ошибках возвращается несколько элементов в `errors`:
-
-```json
-{
-  "data": null,
-  "error": {
-    "code": "VALIDATION_ERROR",
-    "errors": [
-      {
-        "field": "files[0].targetId",
-        "message": "targetId must be a string"
-      },
-      {
-        "field": "files[0].originalName",
-        "message": "originalName must be a string"
-      },
-      {
-        "field": "files",
-        "message": "files must be an array"
-      }
-    ]
-  }
-}
-```
-
----
-
-# File Processing
-
-После успешной валидации каждый файл проходит обработку.
-
-### Main files
-
-Файлы поста имеют тип:
-
-```ts
-FileType.POST
-```
-
-Изображение конвертируется в WebP:
-
-```ts
-.webp({
-  quality: 80
-})
-```
-
-### Preview
-
-Для первого файла дополнительно создаётся:
-
-```ts
-FileType.POST_PREVIEW
-```
-
-Preview:
-
-* ограничивается размером `234x238`;
-* не увеличивается, если исходное изображение меньше;
-* конвертируется в WebP;
-* сохраняется с quality `80`.
-
-```ts
-.resize(234, 238, {
-  fit: 'inside',
-  withoutEnlargement: true
-})
-.webp({
-  quality: 80
-})
-```
-
----
-
-# Upload Flow
-
-```text
-Client
-  │
-  │ { cmd: 'upload-post-files' }
-  │
-  ▼
-FilesController
-  │
-  │ validation
-  ▼
-UploadFilesUseCase
-  │
-  ├── validate file size
-  │
-  ├── save files
-  │     │
-  │     ├── process image
-  │     ├── upload to S3
-  │     └── save metadata to MongoDB
-  │
-  ├── create preview from first file
-  │
-  └── build response
-  │
-  ▼
-ObjectResult<FilesResultType>
-```
-
----
-
-# Storage
-
-После обработки файл сохраняется в двух местах:
-
-### S3
-
-Хранится непосредственно обработанное изображение.
-
-### MongoDB
-
-Хранятся метаданные файла:
-
-* file ID;
-* file type;
-* original name;
-* size;
-* width;
-* height;
-* format;
-* S3 key;
-* другие поля `File` schema.
-
-URL файла формируется через `S3Adapter`.
-
----
-
-# Important
-
-* Максимальный размер одного исходного файла — **5 MB**.
-* Preview создаётся только для **первого файла**.
-* Основные изображения сохраняются как `WebP`.
-* Preview также сохраняется как `WebP`.
-* Файлы загружаются в **S3**.
-* Метаданные сохраняются в **MongoDB**.
-* При ошибке загрузки результат содержит `data: null`.
-* Ошибки валидации имеют код `VALIDATION_ERROR`.
-* Ошибка превышения размера файла имеет код `FILE_SIZE_EXCEEDED`.
-
-
-
-
-
-
-
-
-
 
 # Upload Avatar File
 
@@ -320,7 +25,9 @@ Endpoint принимает один файл, проверяет его раз�
 ### Pattern
 
 ```ts
-{ cmd: 'upload-avatar-file' }
+{
+  cmd: 'upload-avatar-file';
+}
 ```
 
 ---
@@ -377,13 +84,13 @@ client.send(
 При успешной загрузке возвращается:
 
 ```ts
-ObjectResult<FilesResultType>
+ObjectResult<FilesResultType>;
 ```
 
 Ответ содержит:
 
-* загруженную аватарку;
-* preview аватарки.
+- загруженную аватарку;
+- preview аватарки.
 
 Пример:
 
@@ -428,7 +135,7 @@ ObjectResult<FilesResultType>
 При возникновении ошибки возвращается:
 
 ```ts
-ObjectResult<null>
+ObjectResult<null>;
 ```
 
 `data` при этом имеет значение `null`.
@@ -536,7 +243,7 @@ ObjectResult<null>
 Для основного файла используется:
 
 ```ts
-FileType.AVATAR
+FileType.AVATAR;
 ```
 
 Изображение конвертируется в WebP с quality `80`:
@@ -554,7 +261,7 @@ FileType.AVATAR
 Для каждого загружаемого avatar дополнительно создаётся preview:
 
 ```ts
-FileType.AVATAR_PREVIEW
+FileType.AVATAR_PREVIEW;
 ```
 
 Preview обрабатывается следующим образом:
@@ -629,27 +336,17 @@ ObjectResult<FilesResultType>
 
 # Important
 
-* Принимается **один файл**.
-* Максимальный размер исходного файла — **5 MB**.
-* Основной avatar конвертируется в `WebP`.
-* WebP quality — `80`.
-* Для avatar создаётся preview.
-* Максимальный размер preview — `204 × 204 px`.
-* Основной файл и preview сохраняются в S3.
-* Метаданные обоих файлов сохраняются в MongoDB.
-* При ошибке `data` равен `null`.
-* Ошибка превышения размера имеет код `FILE_SIZE_EXCEEDED`.
-* Ошибки DTO validation имеют код `VALIDATION_ERROR`.
-
-
-
-
-
-
-
-
-
-
+- Принимается **один файл**.
+- Максимальный размер исходного файла — **5 MB**.
+- Основной avatar конвертируется в `WebP`.
+- WebP quality — `80`.
+- Для avatar создаётся preview.
+- Максимальный размер preview — `204 × 204 px`.
+- Основной файл и preview сохраняются в S3.
+- Метаданные обоих файлов сохраняются в MongoDB.
+- При ошибке `data` равен `null`.
+- Ошибка превышения размера имеет код `FILE_SIZE_EXCEEDED`.
+- Ошибки DTO validation имеют код `VALIDATION_ERROR`.
 
 # Soft Delete Files
 
@@ -666,7 +363,9 @@ Endpoint принимает массив ID файлов и помечает у�
 ### Pattern
 
 ```ts
-{ cmd: 'soft-delete-files' }
+{
+  cmd: 'soft-delete-files';
+}
 ```
 
 ---
@@ -687,10 +386,10 @@ Endpoint принимает массив ID файлов и помечает у�
 
 ### Validation
 
-* `fileIds` должен быть массивом.
-* Минимальное количество файлов — `1`.
-* Максимальное количество файлов — `8`.
-* Каждый элемент должен быть UUID версии 4.
+- `fileIds` должен быть массивом.
+- Минимальное количество файлов — `1`.
+- Максимальное количество файлов — `8`.
+- Каждый элемент должен быть UUID версии 4.
 
 ```text
 1 ≤ fileIds.length ≤ 8
@@ -719,7 +418,7 @@ client.send(
 При успешном выполнении возвращается:
 
 ```ts
-ObjectResult<null>
+ObjectResult<null>;
 ```
 
 ```json
@@ -738,7 +437,7 @@ ObjectResult<null>
 При ошибке возвращается:
 
 ```ts
-ObjectResult<null>
+ObjectResult<null>;
 ```
 
 с `data: null` и информацией об ошибке в `error`.
@@ -885,31 +584,21 @@ deleteAt:
 
 После наступления `deleteAt` отдельный процесс очистки может удалить файл из:
 
-* MongoDB;
-* S3.
+- MongoDB;
+- S3.
 
 ---
 
 # Important
 
-* Операция является **soft delete**.
-* Файлы не удаляются физически сразу.
-* Для каждого файла устанавливается `deleteAt` на `24 часа` вперёд.
-* Можно удалить от `1` до `8` файлов за один запрос.
-* Все `fileIds` должны быть UUID v4.
-* Если хотя бы один файл не найден, операция завершается ошибкой `FILE_NOT_FOUND`.
-* При `FILE_NOT_FOUND` частичное удаление не выполняется.
-* Успешный ответ имеет `data: null` и `error: null`.
-
-
-
-
-
-
-
-
-
-
+- Операция является **soft delete**.
+- Файлы не удаляются физически сразу.
+- Для каждого файла устанавливается `deleteAt` на `24 часа` вперёд.
+- Можно удалить от `1` до `8` файлов за один запрос.
+- Все `fileIds` должны быть UUID v4.
+- Если хотя бы один файл не найден, операция завершается ошибкой `FILE_NOT_FOUND`.
+- При `FILE_NOT_FOUND` частичное удаление не выполняется.
+- Успешный ответ имеет `data: null` и `error: null`.
 
 # Delete Files
 
@@ -924,7 +613,9 @@ Endpoint принимает массив ID файлов и физически �
 ### Pattern
 
 ```ts id="f8z5qw"
-{ cmd: 'delete-files' }
+{
+  cmd: 'delete-files';
+}
 ```
 
 ---
@@ -945,10 +636,10 @@ Endpoint принимает массив ID файлов и физически �
 
 ### Validation
 
-* `fileIds` должен быть массивом.
-* Минимальное количество файлов — `1`.
-* Максимальное количество файлов — `8`.
-* Каждый элемент должен быть UUID версии 4.
+- `fileIds` должен быть массивом.
+- Минимальное количество файлов — `1`.
+- Максимальное количество файлов — `8`.
+- Каждый элемент должен быть UUID версии 4.
 
 ```text id="j48x2a"
 1 ≤ fileIds.length ≤ 8
@@ -977,7 +668,7 @@ client.send(
 При успешном удалении возвращается:
 
 ```ts id="j9w2r0"
-ObjectResult<null>
+ObjectResult<null>;
 ```
 
 ```json id="w3x6se"
@@ -996,7 +687,7 @@ ObjectResult<null>
 При ошибке возвращается:
 
 ```ts id="r1f8kc"
-ObjectResult<null>
+ObjectResult<null>;
 ```
 
 с `data: null` и информацией об ошибке в `error`.
@@ -1149,26 +840,15 @@ MongoDB File
 
 # Important
 
-* Операция является **физическим удалением**.
-* Файл удаляется из **S3**.
-* Метаданные файла удаляются из **MongoDB**.
-* Можно удалить от `1` до `8` файлов за один запрос.
-* Все `fileIds` должны быть UUID v4.
-* Если хотя бы один файл не найден, операция завершается `FILE_NOT_FOUND`.
-* Частичное удаление до проверки существования всех файлов не выполняется.
-* Успешный ответ имеет `data: null` и `error: null`.
-* Ошибка превышения/нарушения входных данных возвращается как `VALIDATION_ERROR`.
-
-
-
-
-
-
-
-
-
-
-
+- Операция является **физическим удалением**.
+- Файл удаляется из **S3**.
+- Метаданные файла удаляются из **MongoDB**.
+- Можно удалить от `1` до `8` файлов за один запрос.
+- Все `fileIds` должны быть UUID v4.
+- Если хотя бы один файл не найден, операция завершается `FILE_NOT_FOUND`.
+- Частичное удаление до проверки существования всех файлов не выполняется.
+- Успешный ответ имеет `data: null` и `error: null`.
+- Ошибка превышения/нарушения входных данных возвращается как `VALIDATION_ERROR`.
 
 # Restore Files
 
@@ -1185,7 +865,9 @@ Endpoint принимает массив ID файлов и отменяет з�
 ### Pattern
 
 ```ts
-{ cmd: 'restore-files' }
+{
+  cmd: 'restore-files';
+}
 ```
 
 ---
@@ -1206,10 +888,10 @@ Endpoint принимает массив ID файлов и отменяет з�
 
 ### Validation
 
-* `fileIds` должен быть массивом.
-* Минимальное количество файлов — `1`.
-* Максимальное количество файлов — `8`.
-* Каждый элемент должен быть UUID версии 4.
+- `fileIds` должен быть массивом.
+- Минимальное количество файлов — `1`.
+- Максимальное количество файлов — `8`.
+- Каждый элемент должен быть UUID версии 4.
 
 ```text
 1 ≤ fileIds.length ≤ 8
@@ -1238,7 +920,7 @@ client.send(
 При успешном восстановлении возвращается:
 
 ```ts
-ObjectResult<null>
+ObjectResult<null>;
 ```
 
 ```json
@@ -1257,7 +939,7 @@ ObjectResult<null>
 При ошибке возвращается:
 
 ```ts
-ObjectResult<null>
+ObjectResult<null>;
 ```
 
 с `data: null` и информацией об ошибке в `error`.
@@ -1434,13 +1116,13 @@ deleteAt = null
 
 # Important
 
-* Операция отменяет **soft delete**.
-* Файлы не удаляются из S3.
-* Файлы не создаются заново.
-* Для восстановления устанавливается `deleteAt = null`.
-* Можно восстановить от `1` до `8` файлов за один запрос.
-* Все `fileIds` должны быть UUID v4.
-* Если хотя бы один файл не найден, операция завершается с `FILE_NOT_FOUND`.
-* Частичное восстановление не выполняется.
-* Успешный ответ имеет `data: null` и `error: null`.
-* `restore-files` может восстановить файл только пока он физически существует в системе.
+- Операция отменяет **soft delete**.
+- Файлы не удаляются из S3.
+- Файлы не создаются заново.
+- Для восстановления устанавливается `deleteAt = null`.
+- Можно восстановить от `1` до `8` файлов за один запрос.
+- Все `fileIds` должны быть UUID v4.
+- Если хотя бы один файл не найден, операция завершается с `FILE_NOT_FOUND`.
+- Частичное восстановление не выполняется.
+- Успешный ответ имеет `data: null` и `error: null`.
+- `restore-files` может восстановить файл только пока он физически существует в системе.

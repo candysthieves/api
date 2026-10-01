@@ -24,9 +24,8 @@ export class AppConfig {
   readonly githubClientId: string;
   readonly githubClientSecret: string;
   readonly clientUrl: string;
-  readonly rabbitMqUrl: string;
-  readonly rabbitMqMainToFilesQueue: string;
-  readonly rabbitMqFilesToMainQueue: string;
+  readonly cookieDomain?: string;
+  readonly unusedFilesCleanupEnabled: boolean;
 
   constructor(@Inject(ConfigService) configService: ConfigService) {
     this.port = Number(configService.getOrThrow<string>('PORT'));
@@ -69,13 +68,9 @@ export class AppConfig {
         .filter(Boolean),
     );
     this.clientUrl = configService.getOrThrow<string>('CLIENT_URL');
-    this.rabbitMqUrl = configService.getOrThrow<string>('RABBITMQ_URL');
-    this.rabbitMqMainToFilesQueue = configService.getOrThrow<string>(
-      'RABBITMQ_MAIN_TO_FILES_QUEUE',
-    );
-    this.rabbitMqFilesToMainQueue = configService.getOrThrow<string>(
-      'RABBITMQ_FILES_TO_MAIN_QUEUE',
-    );
+    this.cookieDomain = configService.get<string>('COOKIE_DOMAIN')?.trim() || undefined;
+    this.unusedFilesCleanupEnabled =
+      configService.get<string>('UNUSED_FILES_CLEANUP_ENABLED') === 'true';
   }
 
   get refreshTokenMaxAge(): number {

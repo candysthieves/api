@@ -3,11 +3,12 @@ import { UsersQueryRepository } from '../../../infrastructure/repositories/user-
 import { PostsQueryRepository } from '../../../infrastructure/repositories/post-repositories/posts.query.repository.js';
 import { UsersMapper } from '../../../api/mappers/users.mapper.js';
 import { GetUserProfileType } from '../../../api/view-types/users/get-user-profile.type.js';
+import { getViewerStatus } from '../../../../../core/helpers/get-viewer-status.helper.js';
 
 export class GetUserProfileQuery {
   constructor(
-    public readonly profileUserId: string,
-    public readonly currentUserId: string,
+    public readonly userId: string,
+    public readonly currentUserId?: string | null,
   ) {}
 }
 
@@ -23,17 +24,16 @@ export class GetUserProfileQueryHandler implements IQueryHandler<
 
   async execute({
     currentUserId,
-    profileUserId,
+    userId,
   }: GetUserProfileQuery): Promise<GetUserProfileType> {
-    const user =
-      await this.usersQueryRepository.findByIdOrNotFound(profileUserId);
+    const user = await this.usersQueryRepository.findByIdOrNotFound(userId);
 
-    const isOwner: boolean = profileUserId === currentUserId;
+    const viewerStatus = getViewerStatus(user.id, currentUserId);
 
     const postsCount = await this.postsQueryRepository.countPostsByUserId(
       user.id,
     );
 
-    return UsersMapper.toGetUserProfileView(user, postsCount, isOwner);
+    return UsersMapper.toGetUserProfileView(user, postsCount, viewerStatus);
   }
 }

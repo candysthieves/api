@@ -1,0 +1,2 @@
+# Deployment script is sent to Linux through SSH stdin.
+scripts/*.sh text eol=lf

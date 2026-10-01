@@ -4,6 +4,7 @@ import { ConfigService } from '@nestjs/config';
 @Injectable()
 export class FilesConfig {
   readonly port: number;
+  readonly postImageConcurrency: number;
   readonly tcpHost: string;
   readonly tcpPort: number;
   readonly mongodbUri: string;
@@ -13,11 +14,11 @@ export class FilesConfig {
   readonly s3SecretAccessKey: string;
   readonly s3Endpoint?: string;
   readonly s3ForcePathStyle: boolean;
-  readonly rabbitMqUrl: string;
-  readonly rabbitMqMainToFilesQueue: string;
-  readonly rabbitMqFilesToMainQueue: string;
 
   constructor(configService: ConfigService) {
+    this.postImageConcurrency = configService.getOrThrow<number>(
+      'POST_IMAGE_CONCURRENCY',
+    );
     this.port = configService.getOrThrow<number>('PORT');
     this.tcpHost = configService.getOrThrow<string>('TCP_HOST');
     this.tcpPort = configService.getOrThrow<number>('TCP_PORT');
@@ -31,13 +32,6 @@ export class FilesConfig {
     this.s3Endpoint = configService.get<string>('S3_ENDPOINT');
     this.s3ForcePathStyle = configService.getOrThrow<boolean>(
       'S3_FORCE_PATH_STYLE',
-    );
-    this.rabbitMqUrl = configService.getOrThrow<string>('RABBITMQ_URL');
-    this.rabbitMqMainToFilesQueue = configService.getOrThrow<string>(
-      'RABBITMQ_MAIN_TO_FILES_QUEUE',
-    );
-    this.rabbitMqFilesToMainQueue = configService.getOrThrow<string>(
-      'RABBITMQ_FILES_TO_MAIN_QUEUE',
     );
   }
 }

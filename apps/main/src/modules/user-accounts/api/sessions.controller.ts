@@ -13,7 +13,7 @@ import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { ApiTags } from '@nestjs/swagger';
 import { FindAllSessionsQuery } from '../application/query-handler/sessions/find-sessions-query-handler.js';
 import { SessionView } from './view-types/sessions/session-view.type.js';
-import { DeleteOtherSessionsCommand } from '../application/use-cases/sessions-use-cases/delete-other-sessions-use.case.js';
+import { DeleteOtherSessionsCommand } from '../application/use-cases/sessions-use-cases/delete-other-sessions-usecase.js';
 import { RefreshTokenGuard } from './guards/refresh-token.guard.js';
 import { User } from './decorators/user.decorator.js';
 import type { JwtRefreshPayload } from '../../../core/types/jwt-payload.type.js';

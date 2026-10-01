@@ -7,7 +7,6 @@ import {
   ApiCreatedResponse,
   ApiOperation,
   ApiResponse,
-  ApiServiceUnavailableResponse,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 import { ErrorStatus } from '../../exceptions/domain-exception-code.js';
@@ -16,7 +15,7 @@ export function ApiCreatePost() {
   return applyDecorators(
     ApiBearerAuth('accessToken'),
     ApiOperation({
-      summary: 'Create a post and try to save images',
+      summary: 'Create a post and process images asynchronously',
     }),
     ApiConsumes('multipart/form-data'),
     ApiBody({
@@ -34,7 +33,7 @@ export function ApiCreatePost() {
             minItems: 1,
             maxItems: 8,
             items: { type: 'string', format: 'binary' },
-            description: '1-8 images, up to 5 MB each.',
+            description: '1-8 images, up to 5 MiB each.',
           },
           location: {
             type: 'string',
@@ -49,7 +48,7 @@ export function ApiCreatePost() {
 
     ApiCreatedResponse({
       description:
-        'Post was created and its media was accepted for processing.',
+        'Returns immediately after creating the post, without waiting for image publication or processing. Each image is processed once in the background. Any publication or image processing failure removes the entire post. Subscribe to post-created, post-media-updated and post-deleted; each event contains { postId }.',
       schema: {
         type: 'object',
         required: ['postId'],
@@ -105,9 +104,6 @@ export function ApiCreatePost() {
           },
         },
       },
-    }),
-    ApiServiceUnavailableResponse({
-      description: 'Files service is unavailable.',
     }),
   );
 }

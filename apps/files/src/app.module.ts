@@ -5,17 +5,15 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { FilesModule } from './modules/files/files.module.js';
 import { CqrsModule } from '@nestjs/cqrs';
 import { AppController } from './app.controller.js';
-import { RabbitMqModule } from './rabbitmq/rabbitmq.module.js';
-import { FilesEventsModule } from './events/files-events.module.js';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   controllers: [AppController],
   imports: [
     configModule,
+    ScheduleModule.forRoot(),
     CqrsModule.forRoot(),
     FilesModule,
-    RabbitMqModule,
-    FilesEventsModule,
 
     MongooseModule.forRootAsync({
       inject: [ConfigService],

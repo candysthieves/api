@@ -68,7 +68,7 @@ describe('Auth e2e tests', () => {
   });
 
   beforeEach(async () => {
-    await request(httpServer).delete('/api/v1/testing/all-data').expect(204);
+    await request(httpServer).delete('/testing/all-data').expect(204);
   });
 
   afterAll(async () => {
@@ -77,7 +77,7 @@ describe('Auth e2e tests', () => {
 
   async function registerAndConfirmUser(inputDto: RegistrationDto) {
     await request(httpServer)
-      .post('/api/v1/auth/registration')
+      .post('/auth/registration')
       .send({
         username: inputDto.username,
         email: inputDto.email,
@@ -93,7 +93,7 @@ describe('Auth e2e tests', () => {
     });
 
     await request(httpServer)
-      .post('/api/v1/auth/registration-confirmation')
+      .post('/auth/registration-confirmation')
       .send({ code: user.confirmationCode })
       .expect(204);
 
@@ -104,7 +104,7 @@ describe('Auth e2e tests', () => {
     inputDto: Pick<RegistrationDto, 'email' | 'password'>,
   ) {
     return request(httpServer)
-      .post('/api/v1/auth/login')
+      .post('/auth/login')
       .send({
         email: inputDto.email,
         password: inputDto.password,
@@ -114,7 +114,7 @@ describe('Auth e2e tests', () => {
 
   it('Registration in system', async () => {
     const badRequest = await request(httpServer)
-      .post('/api/v1/auth/registration')
+      .post('/auth/registration')
       .send({
         username: 'john_doe2',
         email: 'john.doe2@example.com',
@@ -136,7 +136,7 @@ describe('Auth e2e tests', () => {
 
     // Регаем юзера
     await request(httpServer)
-      .post('/api/v1/auth/registration')
+      .post('/auth/registration')
       .send({
         username: 'john_doe',
         email: 'john.doe@example.com',
@@ -158,7 +158,7 @@ describe('Auth e2e tests', () => {
   it('Confirm registration', async () => {
     // Регаем юзера
     await request(httpServer)
-      .post('/api/v1/auth/registration')
+      .post('/auth/registration')
       .send({
         username: 'john_doe',
         email: 'john.doe@example.com',
@@ -177,7 +177,7 @@ describe('Auth e2e tests', () => {
 
     // Ломаный код
     const badRequest = await request(httpServer)
-      .post('/api/v1/auth/registration-confirmation')
+      .post('/auth/registration-confirmation')
       .send({
         code: '00000000-0000-4000-8000-000000000001',
       })
@@ -190,7 +190,7 @@ describe('Auth e2e tests', () => {
 
     // Подтверждаем юзера
     await request(httpServer)
-      .post('/api/v1/auth/registration-confirmation')
+      .post('/auth/registration-confirmation')
       .send({
         code: user!.confirmationCode,
       })
@@ -208,7 +208,7 @@ describe('Auth e2e tests', () => {
   it('Try to login to the system', async () => {
     // Регаем юзера
     await request(httpServer)
-      .post('/api/v1/auth/registration')
+      .post('/auth/registration')
       .send({
         username: 'john_doe',
         email: 'john.doe@example.com',
@@ -219,7 +219,7 @@ describe('Auth e2e tests', () => {
       .expect(201);
 
     const badRequest = await request(httpServer)
-      .post('/api/v1/auth/login')
+      .post('/auth/login')
       .send({
         email: 'john.doe@example.com',
         password: 'dasdasdadsasdadadsadasadsdassaddsa!',
@@ -238,7 +238,7 @@ describe('Auth e2e tests', () => {
 
     // Юзер не подтверждён
     await request(httpServer)
-      .post('/api/v1/auth/login')
+      .post('/auth/login')
       .send({
         email: 'john.doe@example.com',
         password: 'SecurePass1!',
@@ -252,12 +252,12 @@ describe('Auth e2e tests', () => {
     });
     // Подтверждаем юзера кодом
     await request(httpServer)
-      .post('/api/v1/auth/registration-confirmation')
+      .post('/auth/registration-confirmation')
       .send({ code: user.confirmationCode })
       .expect(204);
 
     const result = await request(httpServer)
-      .post('/api/v1/auth/login')
+      .post('/auth/login')
       .send({
         email: 'john.doe@example.com',
         password: 'SecurePass1!',
@@ -271,13 +271,13 @@ describe('Auth e2e tests', () => {
 
   it('Generate new pair token', async () => {
     await request(httpServer)
-      .post('/api/v1/auth/refresh-token')
+      .post('/auth/refresh-token')
       .set('Cookie', 'refreshToken=wrong-refresh-token')
       .expect(498);
 
     // Регаем юзера
     await request(httpServer)
-      .post('/api/v1/auth/registration')
+      .post('/auth/registration')
       .send({
         username: 'john_doe',
         email: 'john.doe@example.com',
@@ -296,7 +296,7 @@ describe('Auth e2e tests', () => {
 
     // Подтверждаем юзера
     await request(httpServer)
-      .post('/api/v1/auth/registration-confirmation')
+      .post('/auth/registration-confirmation')
       .send({
         code: user!.confirmationCode,
       })
@@ -304,7 +304,7 @@ describe('Auth e2e tests', () => {
 
     // Логинимся
     const loginedUser = await request(httpServer)
-      .post('/api/v1/auth/login')
+      .post('/auth/login')
       .send({
         email: 'john.doe@example.com',
         password: 'SecurePass1!',
@@ -316,7 +316,7 @@ describe('Auth e2e tests', () => {
     await new Promise((resolve) => setTimeout(resolve, 1_100));
 
     const newPairToken = await request(httpServer)
-      .post('/api/v1/auth/refresh-token')
+      .post('/auth/refresh-token')
       .set('Cookie', oldRefreshCookie)
       .expect(200);
 
@@ -327,19 +327,19 @@ describe('Auth e2e tests', () => {
     expect(newPairToken.headers['set-cookie']).toBeDefined();
 
     await request(httpServer)
-      .post('/api/v1/auth/refresh-token')
+      .post('/auth/refresh-token')
       .set('Cookie', oldRefreshCookie)
       .expect(401);
 
     await request(httpServer)
-      .post('/api/v1/auth/refresh-token')
+      .post('/auth/refresh-token')
       .set('Cookie', newPairToken.headers['set-cookie'])
       .expect(200);
   });
 
   it('Resend confirmation registration Email', async () => {
     const incorrectEmail = await request(httpServer)
-      .post('/api/v1/auth/resend-confirmation-email')
+      .post('/auth/resend-confirmation-email')
       .send({ email: 'incorrect@example.com' })
       .expect(400);
 
@@ -350,7 +350,7 @@ describe('Auth e2e tests', () => {
 
     // Регаем юзера
     await request(httpServer)
-      .post('/api/v1/auth/registration')
+      .post('/auth/registration')
       .send({
         username: 'john_doe',
         email: 'john.doe@example.com',
@@ -368,7 +368,7 @@ describe('Auth e2e tests', () => {
 
     // Запрашиваем повторную отправку email
     await request(httpServer)
-      .post('/api/v1/auth/resend-confirmation-email')
+      .post('/auth/resend-confirmation-email')
       .send({ email: 'john.doe@example.com' })
       .expect(204);
 
@@ -385,14 +385,14 @@ describe('Auth e2e tests', () => {
 
     // Подтверждаем регистрацию новым кодом
     await request(httpServer)
-      .post('/api/v1/auth/registration-confirmation')
+      .post('/auth/registration-confirmation')
       .send({ code: userAfterResend.confirmationCode })
       .expect(204);
 
     // Несуществующий email
     // Уже подтверждённый email
     const confirmedEmail = await request(httpServer)
-      .post('/api/v1/auth/resend-confirmation-email')
+      .post('/auth/resend-confirmation-email')
       .send({ email: 'john.doe@example.com' })
       .expect(400);
 
@@ -404,7 +404,7 @@ describe('Auth e2e tests', () => {
 
   it('Send password recovery code', async () => {
     const incorrectEmail = await request(httpServer)
-      .post('/api/v1/auth/password-recovery')
+      .post('/auth/password-recovery')
       .send({
         email: 'incorrect@example.com',
         recaptchaToken: 'valid-recaptcha-token',
@@ -429,7 +429,7 @@ describe('Auth e2e tests', () => {
 
     // Запрашиваем код для восстановления пароля
     await request(httpServer)
-      .post('/api/v1/auth/password-recovery')
+      .post('/auth/password-recovery')
       .send({
         email: 'john.doe@example.com',
         recaptchaToken: 'valid-recaptcha-token',
@@ -459,7 +459,7 @@ describe('Auth e2e tests', () => {
 
     // Запрашиваем код для восстановления пароля
     await request(httpServer)
-      .post('/api/v1/auth/password-recovery')
+      .post('/auth/password-recovery')
       .send({
         email: 'john.doe@example.com',
         recaptchaToken: 'valid-recaptcha-token',
@@ -474,13 +474,13 @@ describe('Auth e2e tests', () => {
 
     // Валидный код проходит проверку
     await request(httpServer)
-      .get('/api/v1/auth/password-recovery/validate')
+      .get('/auth/password-recovery/validate')
       .query({ recoveryCode: user.passwordRecoveryCode })
       .expect(204);
 
     // Несуществующий код не проходит проверку
     const incorrectRecoveryCode = await request(httpServer)
-      .get('/api/v1/auth/password-recovery/validate')
+      .get('/auth/password-recovery/validate')
       .query({ recoveryCode: '00000000-0000-4000-8000-000000000001' })
       .expect(400);
 
@@ -493,7 +493,7 @@ describe('Auth e2e tests', () => {
 
     // Невалидный UUID
     await request(httpServer)
-      .get('/api/v1/auth/password-recovery/validate')
+      .get('/auth/password-recovery/validate')
       .query({ recoveryCode: 'wrong-recovery-code' })
       .expect(400);
 
@@ -505,7 +505,7 @@ describe('Auth e2e tests', () => {
 
     // Истёкший код не проходит проверку
     const expiredRecoveryCode = await request(httpServer)
-      .get('/api/v1/auth/password-recovery/validate')
+      .get('/auth/password-recovery/validate')
       .query({ recoveryCode: user.passwordRecoveryCode })
       .expect(400);
 
@@ -532,7 +532,7 @@ describe('Auth e2e tests', () => {
 
     // Запрашиваем код для восстановления пароля
     await request(httpServer)
-      .post('/api/v1/auth/password-recovery')
+      .post('/auth/password-recovery')
       .send({
         email: 'john.doe@example.com',
         recaptchaToken: 'valid-recaptcha-token',
@@ -547,7 +547,7 @@ describe('Auth e2e tests', () => {
 
     // Устанавливаем новый пароль
     await request(httpServer)
-      .post('/api/v1/auth/new-password')
+      .post('/auth/new-password')
       .send({
         recoveryCode: user.passwordRecoveryCode,
         newPassword: 'NewSecurePass1!',
@@ -557,26 +557,26 @@ describe('Auth e2e tests', () => {
 
     // Старый пароль больше не работает
     await request(httpServer)
-      .post('/api/v1/auth/login')
+      .post('/auth/login')
       .send({ email: 'john.doe@example.com', password: 'SecurePass1!' })
       .expect(401);
 
     // Входим с новым паролем
     await request(httpServer)
-      .post('/api/v1/auth/login')
+      .post('/auth/login')
       .send({ email: 'john.doe@example.com', password: 'NewSecurePass1!' })
       .expect(200);
 
     // Все старые сессии сброшены
     await request(httpServer)
-      .post('/api/v1/auth/refresh-token')
+      .post('/auth/refresh-token')
       .set('Cookie', secondLogin.headers['set-cookie'])
       .expect(401);
   });
 
   it('Logout from the system', async () => {
     await request(httpServer)
-      .post('/api/v1/auth/logout')
+      .post('/auth/logout')
       .set('Cookie', 'refreshToken=wrong-refresh-token')
       .expect(498);
 
@@ -595,7 +595,7 @@ describe('Auth e2e tests', () => {
     // Ломаный refresh token
     // Выходим из системы с валидным refresh token
     const logoutResponse = await request(httpServer)
-      .post('/api/v1/auth/logout')
+      .post('/auth/logout')
       .set('Cookie', secondLogin.headers['set-cookie'])
       .expect(204);
 
@@ -606,7 +606,7 @@ describe('Auth e2e tests', () => {
 
     // После logout сессия удалена, поэтому старый refresh token не работает
     await request(httpServer)
-      .post('/api/v1/auth/refresh-token')
+      .post('/auth/refresh-token')
       .set('Cookie', secondLogin.headers['set-cookie'])
       .expect(401);
   });
@@ -655,10 +655,10 @@ describe('Auth e2e tests', () => {
   }
 
   it('Sign in a new and existing user with Google OAuth', async () => {
-    await expectOAuthCallback('/api/v1/auth/google/callback', googleProfile);
+    await expectOAuthCallback('/auth/google/callback', googleProfile);
   });
 
   it('Sign in a new and existing user with GitHub OAuth', async () => {
-    await expectOAuthCallback('/api/v1/auth/github/callback', githubProfile);
+    await expectOAuthCallback('/auth/github/callback', githubProfile);
   });
 });

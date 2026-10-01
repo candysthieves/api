@@ -1,8 +1,35 @@
 import { GetUsersCountType } from '../view-types/users/get-users-count.type.js';
-import { User } from '../../../../generated/prisma/client.js';
+import { City, Country, User } from '../../../../generated/prisma/client.js';
 import { GetUserProfileType } from '../view-types/users/get-user-profile.type.js';
+import { DateTime } from 'luxon';
+import { MyProfileType } from '../view-types/users/my-profile.type.js';
+import { UserViewerStatus } from '../../../../core/enums/user-viewer-status.enum.js';
+import {
+  AvatarImage,
+  AvatarPreview,
+} from '../../../../core/types/prisma/json-types.js';
+import { GetMyAvatarType } from '../view-types/users/get-my-avatar.type.js';
+import { LocationsMapper } from './locations.mapper.js';
 
 export class UsersMapper {
+  static getDefaultAvatar(): AvatarImage {
+    return {
+      fileId: '550e8400-e29b-41d4-a716-446655440001',
+      url: 'https://lumusapp-528592447405-eu-north-1-an.s3.eu-north-1.amazonaws.com/files/avatar_close/avavatar.ru-indoor_setting-big_eyes-2272.webp',
+      width: 900,
+      height: 900,
+    };
+  }
+
+  static getDefaultAvatarPreview(): AvatarPreview {
+    return {
+      fileId: '550e8400-e29b-41d4-a716-446655440002',
+      url: 'https://lumusapp-528592447405-eu-north-1-an.s3.eu-north-1.amazonaws.com/files/avatar_close/avavatar.ru-indoor_setting-big_eyes-2272.webp',
+      width: 900,
+      height: 900,
+    };
+  }
+
   static toUsersCountView(count: number): GetUsersCountType {
     return {
       count: count,
@@ -12,23 +39,51 @@ export class UsersMapper {
   static toGetUserProfileView(
     user: User,
     publicationsCount: number,
-    isOwner: boolean,
+    viewerStatus: UserViewerStatus,
   ): GetUserProfileType {
     return {
       id: user.id,
       username: user.username,
-      description:
-        'Превращаю макеты дизайнеров в живой код, воюю с центрированием div и делаю так, чтобы пользователям было красиво и удобно.',
-      avatarUrl:
-        'https://lumusapp-528592447405-eu-north-1-an.s3.eu-north-1.amazonaws.com/files/POST/f5a18989-10d9-4b0b-aac1-2df4430fa43c.webp',
-      avatarPreviewUrl:
-        'https://lumusapp-528592447405-eu-north-1-an.s3.eu-north-1.amazonaws.com/files/POST_PREVIEW/c381f4c9-a077-4e47-93b5-c434156087df.webp',
+      description: user.aboutMe,
+
+      avatarUrl: user.avatar ?? null,
+      avatarPreviewUrl: user.avatarPreview ?? null,
 
       followersCount: 0,
       followingCount: 0,
       publicationsCount,
 
-      isOwner,
+      viewerStatus,
+    };
+  }
+
+  static toMyProfileView(
+    user: User & { country?: Country | null; city?: City | null },
+    locations?: {
+      country?: Country | null;
+      city?: City | null;
+    },
+  ): MyProfileType {
+    const country = locations?.country !== undefined ? locations.country : user.country;
+    const city = locations?.city !== undefined ? locations.city : user.city;
+
+    return {
+      username: user.username,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      dateOfBirth: user.dateOfBirth
+        ? DateTime.fromJSDate(user.dateOfBirth).toFormat('yyyy-MM-dd')
+        : null,
+      country: country ? LocationsMapper.toGetCountryView(country) : null,
+      city: city ? LocationsMapper.toGetCityView(city) : null,
+      aboutMe: user.aboutMe,
+    };
+  }
+
+  static toGetMyAvatarView(user: User): GetMyAvatarType {
+    return {
+      avatarUrl: user.avatar ?? null,
+      avatarPreviewUrl: user.avatarPreview ?? null,
     };
   }
 }

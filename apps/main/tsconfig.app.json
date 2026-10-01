@@ -3,7 +3,6 @@
   "compilerOptions": {
     "declaration": false,
     "incremental": false,
-    "rootDir": "./src",
     "outDir": "../../dist/apps/main"
   },
   //  "files": [

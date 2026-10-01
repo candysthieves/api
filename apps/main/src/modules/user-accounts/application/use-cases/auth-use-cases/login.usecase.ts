@@ -58,7 +58,7 @@ export class LoginUseCase implements ICommandHandler<LoginCommand> {
         'Email is not confirmed',
       );
     }
-    const isPasswordCorrect: boolean = await this.hashAdapter.compare(
+    const isPasswordCorrect = await this.hashAdapter.compare(
       dto.password,
       user.password,
     );
@@ -71,10 +71,11 @@ export class LoginUseCase implements ICommandHandler<LoginCommand> {
       );
     }
 
-    return this.authSessionService.createSessionAndTokens(
+    const tokens = await this.authSessionService.createSessionAndTokens(
       user.id,
       ip,
       userAgent,
     );
+    return tokens;
   }
 }

@@ -4,7 +4,8 @@ import { EventsModule } from '../../core/events/events.module.js';
 import { AuthSessionService } from './application/auth-session.service.js';
 import { PasswordRecoveryService } from './application/password-recovery.service.js';
 import { PostDeletionSchedulerService } from './application/post-deletion-scheduler.service.js';
-import { ProfileQueryHandler } from './application/query-handler/auth/profile-query-handler.js';
+import { UnusedImagesCleanupSchedulerService } from './application/unused-images-cleanup-scheduler.service.js';
+import { ProfileQueryHandler } from './application/query-handler/auth/profile.query-handler.js';
 import { FindAllSessionsQueryHandler } from './application/query-handler/sessions/find-sessions-query-handler.js';
 import { GetUsersCountQueryHandler } from './application/query-handler/users/get-users-count-query-handler.js';
 import { ConfirmEmailUseCase } from './application/use-cases/auth-use-cases/confirm-email.usecase.js';
@@ -25,9 +26,10 @@ import { HardDeletePostUseCase } from './application/use-cases/posts-use-cases/h
 import { RestorePostUseCase } from './application/use-cases/posts-use-cases/restore-post.usecase.js';
 import { SoftDeletePostUseCase } from './application/use-cases/posts-use-cases/soft-delete-post.usecase.js';
 import { DeactivateSessionUseCase } from './application/use-cases/sessions-use-cases/deactivate-session.usecase.js';
-import { DeleteOtherSessionsUseCase } from './application/use-cases/sessions-use-cases/delete-other-sessions-use.case.js';
+import { DeleteOtherSessionsUsecase } from './application/use-cases/sessions-use-cases/delete-other-sessions-usecase.js';
 import { AuthController } from './api/auth.controller.js';
 import { AccessTokenGuard } from './api/guards/access-token.guard.js';
+import { OptionalAccessTokenGuard } from './api/guards/optional-access-token.guard.js';
 import { PostController } from './api/post.controller.js';
 import { SessionsController } from './api/sessions.controller.js';
 import { UsersController } from './api/users.controller.js';
@@ -41,7 +43,21 @@ import { GithubStrategy } from './infrastructure/strategies/github.strategy.js';
 import { GoogleStrategy } from './infrastructure/strategies/google.strategy.js';
 import { GetUserProfileQueryHandler } from './application/query-handler/users/get-user-profile-query-handler.js';
 import { PostsQueryRepository } from './infrastructure/repositories/post-repositories/posts.query.repository.js';
-import { GetPostsQueryHandler } from './application/query-handler/posts/get-posts.query-handler.js';
+import { GetAllPostsQueryHandler } from './application/query-handler/posts/get-all-posts.query-handler.js';
+import { FindPostsByUserIdAndCursorQueryHandler } from './application/query-handler/posts/find-posts-by-user-id-and-cursor.query-handler.js';
+import { GetPostByIdQueryHandler } from './application/query-handler/posts/get-post-by-id.query-handler.js';
+import { GetDeletedPostByIdQueryHandler } from './application/query-handler/posts/get-deleted-post-by-id.query-handler.js';
+import { GetMyDeletedPostsQueryHandler } from './application/query-handler/posts/get-my-deleted-posts.query-handler.js';
+import { UpdateMyProfileUseCase } from './application/use-cases/users-use-cases/update-my-profile.usecase.js';
+import { GetAvatarQueryHandler } from './application/query-handler/users/get-avatar-query-handler.js';
+import { DeleteMyAvatarUseCase } from './application/use-cases/users-use-cases/delete-my-avatar.usecase.js';
+import { AvatarFileDeletionsRepository } from './infrastructure/repositories/user-repositories/avatar-file-deletions.repository.js';
+import { AvatarFileDeletionSchedulerService } from './application/avatar-file-deletion-scheduler.service.js';
+import { UpdateMyAvatarUseCase } from './application/use-cases/users-use-cases/update-my-avatar.usecase.js';
+import { LocationsController } from './api/locations.controller.js';
+import { GetCitiesQueryHandler } from './application/query-handler/locations/get-cities.query-handler.js';
+import { GetCountriesQueryHandler } from './application/query-handler/locations/get-countries.query-handler.js';
+import { LocationsRepository } from './infrastructure/repositories/locations-repositories/locations.repository.js';
 
 @Module({
   imports: [CqrsModule, EventsModule],
@@ -50,13 +66,18 @@ import { GetPostsQueryHandler } from './application/query-handler/posts/get-post
     AuthController,
     SessionsController,
     PostController,
+    LocationsController,
   ],
   providers: [
     RegistrationUseCase,
+    UpdateMyProfileUseCase,
+    UpdateMyAvatarUseCase,
+    UpdateMyAvatarUseCase,
+    DeleteMyAvatarUseCase,
     LoginUseCase,
     LogoutUseCase,
     RefreshTokenUseCase,
-    DeleteOtherSessionsUseCase,
+    DeleteOtherSessionsUsecase,
     DeactivateSessionUseCase,
     ConfirmEmailUseCase,
     ResendEmailUseCase,
@@ -72,10 +93,17 @@ import { GetPostsQueryHandler } from './application/query-handler/posts/get-post
     SoftDeletePostUseCase,
     UpdatePostUseCase,
     FindAllSessionsQueryHandler,
+    GetAvatarQueryHandler,
     ProfileQueryHandler,
     GetUsersCountQueryHandler,
     GetUserProfileQueryHandler,
+    FindPostsByUserIdAndCursorQueryHandler,
+    GetPostByIdQueryHandler,
+    GetDeletedPostByIdQueryHandler,
+    GetMyDeletedPostsQueryHandler,
+
     UsersRepository,
+    AvatarFileDeletionsRepository,
     SessionsRepository,
     OAuthRepository,
     PostsRepository,
@@ -85,10 +113,16 @@ import { GetPostsQueryHandler } from './application/query-handler/posts/get-post
     AuthSessionService,
     PasswordRecoveryService,
     PostDeletionSchedulerService,
-    GetPostsQueryHandler,
+    AvatarFileDeletionSchedulerService,
+    UnusedImagesCleanupSchedulerService,
+    GetAllPostsQueryHandler,
     GoogleStrategy,
     GithubStrategy,
     AccessTokenGuard,
+    OptionalAccessTokenGuard,
+    LocationsRepository,
+    GetCitiesQueryHandler,
+    GetCountriesQueryHandler,
   ],
 })
 export class UserAccountsModule {}

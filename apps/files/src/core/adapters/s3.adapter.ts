@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import {
   DeleteObjectCommand,
+  paginateListObjectsV2,
   PutObjectCommand,
   S3Client,
 } from '@aws-sdk/client-s3';
@@ -41,6 +42,29 @@ export class S3Adapter {
     await this.s3.send(
       new DeleteObjectCommand({ Bucket: this.bucket, Key: key }),
     );
+  }
+
+  async listObjects(
+    prefix: string,
+  ): Promise<Array<{ key: string; lastModified?: Date }>> {
+    const paginator = paginateListObjectsV2(
+      { client: this.s3 },
+      { Bucket: this.bucket, Prefix: prefix },
+    );
+    const objects: Array<{ key: string; lastModified?: Date }> = [];
+    for await (const page of paginator) {
+      if (page.Contents) {
+        for (const item of page.Contents) {
+          if (item.Key) {
+            objects.push({
+              key: item.Key,
+              lastModified: item.LastModified,
+            });
+          }
+        }
+      }
+    }
+    return objects;
   }
 
   getUrl(key: string) {

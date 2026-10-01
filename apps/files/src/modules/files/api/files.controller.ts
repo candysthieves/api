@@ -8,15 +8,22 @@ import { DeleteFilesCommand } from '../application/use-cases/delete-files.usecas
 import { RestoreFilesCommand } from '../application/use-cases/restore-files.usecase.js';
 import { FileType } from '../schemas/files.schema.js';
 import {
+  CleanupUnusedPostFilesContract,
   DeleteFilesContract,
   RestoreFilesContract,
   UploadFileContract,
-  UploadFilesContract,
+  CancelPostImagesContract,
 } from '../../../../../../libs/contracts/index.js';
-import { PostMediaProcessingService } from '../application/post-media-processing.service.js';
+import {
+  CleanupResult,
+  CleanupUnusedPostFilesCommand,
+} from '../application/use-cases/cleanup-unused-post-files.usecase.js';
 import { UploadFileCommand } from '../application/use-cases/upload-file-use.case.js';
 import { RpcValidationPipe } from '../../../core/pipes/rpc-validation.pipe.js';
 import { ValidationRpcExceptionFilter } from '../../../core/filters/validation-rpc-exception.filter.js';
+import { CancelledPostRepository } from '../application/cancelled-post.repository.js';
+import { CleanupUnusedAvatarFilesCommand } from '../application/use-cases/cleanup-unused-avatar-files.usecase.js';
+import type { CleanupUnusedAvatarFilesContract } from '../../../../../../libs/contracts/index.js';
 
 @UsePipes(RpcValidationPipe())
 @UseFilters(ValidationRpcExceptionFilter)
@@ -24,12 +31,13 @@ import { ValidationRpcExceptionFilter } from '../../../core/filters/validation-r
 export class FilesController {
   constructor(
     private readonly commandBus: CommandBus,
-    private readonly postMediaProcessing: PostMediaProcessingService,
+    private readonly cancelledPosts: CancelledPostRepository,
   ) {}
 
-  @MessagePattern({ cmd: 'upload-post-files' })
-  uploadPostFiles(@Payload() dto: UploadFilesContract) {
-    return this.postMediaProcessing.accept(dto.files);
+  @MessagePattern({ cmd: 'cancel-post-images' })
+  async cancelPostImages(@Payload() dto: CancelPostImagesContract) {
+    await this.cancelledPosts.cancel(dto.postId);
+    return ObjectResult.success(null);
   }
 
   @MessagePattern({ cmd: 'upload-avatar-file' })
@@ -61,6 +69,26 @@ export class FilesController {
   async restoreFiles(@Payload() dto: RestoreFilesContract) {
     return this.commandBus.execute<RestoreFilesCommand, ObjectResult<null>>(
       new RestoreFilesCommand(dto.fileIds),
+    );
+  }
+
+  @MessagePattern({ cmd: 'cleanup-unused-post-files' })
+  async cleanupUnusedPostFiles(@Payload() dto: CleanupUnusedPostFilesContract) {
+    return this.commandBus.execute<
+      CleanupUnusedPostFilesCommand,
+      ObjectResult<CleanupResult>
+    >(new CleanupUnusedPostFilesCommand(dto.activeFileIds, dto.olderThanHours));
+  }
+
+  @MessagePattern({ cmd: 'cleanup-unused-avatar-files' })
+  async cleanupUnusedAvatarFiles(
+    @Payload() dto: CleanupUnusedAvatarFilesContract,
+  ) {
+    return this.commandBus.execute(
+      new CleanupUnusedAvatarFilesCommand(
+        dto.activeFileIds,
+        dto.olderThanHours,
+      ),
     );
   }
 }

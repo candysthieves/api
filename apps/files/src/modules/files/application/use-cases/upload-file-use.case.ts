@@ -28,15 +28,51 @@ export class UploadFileUseCase implements ICommandHandler<
     file,
     type,
   }: UploadFileCommand): Promise<ObjectResult<FilesResultType | null>> {
-    const isValid = this.fileService.validateFileSize(file.size);
+    const isSizeValid = this.fileService.validateFileSize(file.size);
 
-    if (!isValid) {
+    if (!isSizeValid) {
       return ObjectResult.failure({
         code: 'FILE_SIZE_EXCEEDED',
         errors: [
           {
             field: 'file',
-            message: 'File size must not exceed 5 MB',
+            message:
+              'The photo must be less than 5 Mb and have JPEG, JPG or PNG format',
+          },
+        ],
+      });
+    }
+
+    const isFormatValid = this.fileService.validateFormat(
+      file.mimeType,
+      file.originalName,
+    );
+
+    if (!isFormatValid) {
+      return ObjectResult.failure({
+        code: 'INVALID_FILE',
+        errors: [
+          {
+            field: 'file',
+            message:
+              'The photo must be less than 5 Mb and have JPEG, JPG or PNG format',
+          },
+        ],
+      });
+    }
+
+    const isBufferValid = await this.fileService.validateImageBuffer(
+      file.buffer,
+    );
+
+    if (!isBufferValid) {
+      return ObjectResult.failure({
+        code: 'INVALID_FILE',
+        errors: [
+          {
+            field: 'file',
+            message:
+              'The photo must be less than 5 Mb and have JPEG, JPG or PNG format',
           },
         ],
       });

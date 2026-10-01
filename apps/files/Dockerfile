@@ -1,7 +1,7 @@
 FROM node:24.18-alpine
 
-ARG port
-ARG service
+ARG port=3002
+ARG service=files
 
 ENV SERVICE=$service
 ENV PORT=$port
@@ -23,4 +23,4 @@ RUN pnpm run build:${SERVICE}
 
 EXPOSE ${PORT}
 
-CMD npm run start:${SERVICE}
+CMD ["pnpm", "run", "files:start:prod"]

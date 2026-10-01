@@ -1,13 +1,15 @@
 import {
+  IsBoolean,
   IsInt,
   IsNotEmpty,
+  IsOptional,
   IsString,
   IsUrl,
   Max,
   Matches,
   Min,
 } from 'class-validator';
-import { Type } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 
 export enum Environment {
   Production = 'production',
@@ -100,6 +102,12 @@ export class EnvironmentVariables {
   @IsNotEmpty()
   RABBITMQ_URL!: string;
 
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(65535)
+  RABBITMQ_PREFETCH_COUNT = 20;
+
   @IsString()
   @IsNotEmpty()
   RABBITMQ_MAIN_TO_FILES_QUEUE!: string;
@@ -117,6 +125,11 @@ export class EnvironmentVariables {
   @Min(1)
   @Max(65535)
   FILES_TCP_PORT!: number;
+
+  @IsOptional()
+  @Transform(({ value }) => value === 'true' || value === true)
+  @IsBoolean()
+  UNUSED_FILES_CLEANUP_ENABLED?: boolean;
 
   @IsString()
   @IsNotEmpty()

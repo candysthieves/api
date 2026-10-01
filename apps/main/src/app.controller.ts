@@ -12,6 +12,6 @@ export class AppController {
   //   schema: { types: 'string', example: 'Main!' },
   // })
   getHello(): string {
-    return 'Main!';
+    return 'Сори, это main page. Мур-мяу!';
   }
 }

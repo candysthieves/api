@@ -2,11 +2,23 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../../../infrastructure/prisma/prisma.service.js';
 import { DomainExceptions } from '../../../../../core/exceptions/domain-exceptions.js';
 import { ErrorStatus } from '../../../../../core/exceptions/domain-exception-code.js';
-import { User } from '../../../../../generated/prisma/client.js';
+import {
+  City,
+  Country,
+  Prisma,
+  User,
+} from '../../../../../generated/prisma/client.js';
+import { getFileIds } from '../../../../../core/events/files-tcp.client.js';
 import {
   UserCreateInput,
+  UserUncheckedUpdateInput,
   UserUpdateInput,
 } from '../../../../../generated/prisma/models/User.js';
+
+export type UserWithLocations = User & {
+  country: Country | null;
+  city: City | null;
+};
 
 @Injectable()
 export class UsersRepository {
@@ -15,11 +27,17 @@ export class UsersRepository {
     this.prismaUser = prisma.user;
   }
 
-  async create(data: UserCreateInput): Promise<User> {
-    return this.prismaUser.create({ data });
+  async create(
+    data: UserCreateInput,
+    client: Prisma.TransactionClient = this.prisma,
+  ): Promise<User> {
+    return client.user.create({ data });
   }
 
-  async update(userId: string, data: UserUpdateInput): Promise<User> {
+  async update(
+    userId: string,
+    data: UserUpdateInput | UserUncheckedUpdateInput,
+  ): Promise<User> {
     return this.prismaUser.update({
       where: {
         id: userId,
@@ -28,8 +46,11 @@ export class UsersRepository {
     });
   }
 
-  async findByUsername(username: string): Promise<User | null> {
-    return this.prismaUser.findUnique({ where: { username } });
+  async findByUsername(
+    username: string,
+    client: Prisma.TransactionClient = this.prisma,
+  ): Promise<User | null> {
+    return client.user.findUnique({ where: { username } });
   }
 
   async findByEmail(email: string): Promise<User | null> {
@@ -48,6 +69,42 @@ export class UsersRepository {
     }
 
     return user;
+  }
+
+  async findByIdWithLocationsOrNotFound(
+    id: string,
+  ): Promise<UserWithLocations> {
+    const user = await this.prismaUser.findFirst({
+      where: { id },
+      include: {
+        country: true,
+        city: true,
+      },
+    });
+
+    if (!user) {
+      DomainExceptions.notFound(
+        ErrorStatus.USER_NOT_FOUND,
+        'userId',
+        'User not found',
+      );
+    }
+
+    return user;
+  }
+
+  async getAllActiveAvatarFileIds(): Promise<string[]> {
+    const users = await this.prismaUser.findMany({
+      select: { avatar: true, avatarPreview: true },
+    });
+    const ids = new Set<string>();
+    for (const user of users)
+      for (const id of [
+        ...getFileIds(user.avatar),
+        ...getFileIds(user.avatarPreview),
+      ])
+        ids.add(id);
+    return [...ids];
   }
 
   async findByConfirmationCode(code: string): Promise<User | null> {
