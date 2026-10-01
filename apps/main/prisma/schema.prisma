@@ -36,8 +36,6 @@ model Country {
   countryNameEn String @map("country_name_en") @db.VarChar(150)
 
   cities City[]
-
-  @@map("_countries")
 }
 
 model City {
@@ -51,7 +49,6 @@ model City {
   @@index([countryId])
   @@index([cityNameRu])
   @@index([cityNameEn])
-  @@map("_cities")
 }
 
 model User {
