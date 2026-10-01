@@ -16,6 +16,8 @@ export class FilesInboxRepository extends MongoEventRepository {
   }
 
   async accept(event: ImageInputEvent | AvatarImageInputEvent): Promise<void> {
+    if (await this.exists(event.eventId)) return;
+
     const { eventId, body, ...data } = event;
     await this.insert({
       _id: eventId,
