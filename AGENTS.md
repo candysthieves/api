@@ -83,7 +83,7 @@ RabbitMQ обслуживается только `@golevelup/nestjs-rabbitmq`. T
 | ---------------------- | --------------------------------- | ------------------------------------------------------- |
 | Use case               | `create-post.usecase.ts`          | `CreatePostUseCase`                                     |
 | Команда этого сценария | В том же `create-post.usecase.ts` | `CreatePostCommand`                                     |
-| Query handler          | `profile-query-handler.ts`        | Следуй именованию query/handler в соседних обработчиках |
+| Query handler          | `profile.query-handler.ts`        | Следуй именованию query/handler в соседних обработчиках |
 | Контроллер             | `auth.controller.ts`              | `AuthController`                                        |
 | Сервис                 | `auth-session.service.ts`         | `AuthSessionService`                                    |
 | Repository             | `posts.repository.ts`             | `PostsRepository`                                       |
