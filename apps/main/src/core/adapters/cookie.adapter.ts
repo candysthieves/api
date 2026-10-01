@@ -13,6 +13,7 @@ export class CookieAdapter {
       secure: isProdHelper(),
       sameSite: 'strict',
       path: '/',
+      ...(this.config.cookieDomain ? { domain: this.config.cookieDomain } : {}),
     };
   }
   setRefreshCookie(res: Response, token: string) {
