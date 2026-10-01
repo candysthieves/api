@@ -1,5 +1,5 @@
 import { GetUsersCountType } from '../view-types/users/get-users-count.type.js';
-import { User } from '../../../../generated/prisma/client.js';
+import { City, Country, User } from '../../../../generated/prisma/client.js';
 import { GetUserProfileType } from '../view-types/users/get-user-profile.type.js';
 import { DateTime } from 'luxon';
 import { MyProfileType } from '../view-types/users/my-profile.type.js';
@@ -9,6 +9,7 @@ import {
   AvatarPreview,
 } from '../../../../core/types/prisma/json-types.js';
 import { GetMyAvatarType } from '../view-types/users/get-my-avatar.type.js';
+import { LocationsMapper } from './locations.mapper.js';
 
 export class UsersMapper {
   static getDefaultAvatar(): AvatarImage {
@@ -45,8 +46,8 @@ export class UsersMapper {
       username: user.username,
       description: user.aboutMe,
 
-      avatarUrl: (user.avatar as AvatarImage) ?? null,
-      avatarPreviewUrl: (user.avatarPreview as AvatarPreview) ?? null,
+      avatarUrl: user.avatar ?? null,
+      avatarPreviewUrl: user.avatarPreview ?? null,
 
       followersCount: 0,
       followingCount: 0,
@@ -56,7 +57,16 @@ export class UsersMapper {
     };
   }
 
-  static toMyProfileView(user: User): MyProfileType {
+  static toMyProfileView(
+    user: User & { country?: Country | null; city?: City | null },
+    locations?: {
+      country?: Country | null;
+      city?: City | null;
+    },
+  ): MyProfileType {
+    const country = locations?.country !== undefined ? locations.country : user.country;
+    const city = locations?.city !== undefined ? locations.city : user.city;
+
     return {
       username: user.username,
       firstName: user.firstName,
@@ -64,16 +74,16 @@ export class UsersMapper {
       dateOfBirth: user.dateOfBirth
         ? DateTime.fromJSDate(user.dateOfBirth).toFormat('yyyy-MM-dd')
         : null,
-      country: null,
-      city: null,
+      country: country ? LocationsMapper.toGetCountryView(country) : null,
+      city: city ? LocationsMapper.toGetCityView(city) : null,
       aboutMe: user.aboutMe,
     };
   }
 
   static toGetMyAvatarView(user: User): GetMyAvatarType {
     return {
-      avatarUrl: (user.avatar as AvatarImage) ?? null,
-      avatarPreviewUrl: (user.avatarPreview as AvatarPreview) ?? null,
+      avatarUrl: user.avatar ?? null,
+      avatarPreviewUrl: user.avatarPreview ?? null,
     };
   }
 }

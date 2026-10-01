@@ -5,7 +5,7 @@ import { AuthSessionService } from './application/auth-session.service.js';
 import { PasswordRecoveryService } from './application/password-recovery.service.js';
 import { PostDeletionSchedulerService } from './application/post-deletion-scheduler.service.js';
 import { UnusedImagesCleanupSchedulerService } from './application/unused-images-cleanup-scheduler.service.js';
-import { ProfileQueryHandler } from './application/query-handler/auth/profile-query-handler.js';
+import { ProfileQueryHandler } from './application/query-handler/auth/profile.query-handler.js';
 import { FindAllSessionsQueryHandler } from './application/query-handler/sessions/find-sessions-query-handler.js';
 import { GetUsersCountQueryHandler } from './application/query-handler/users/get-users-count-query-handler.js';
 import { ConfirmEmailUseCase } from './application/use-cases/auth-use-cases/confirm-email.usecase.js';
@@ -54,6 +54,10 @@ import { DeleteMyAvatarUseCase } from './application/use-cases/users-use-cases/d
 import { AvatarFileDeletionsRepository } from './infrastructure/repositories/user-repositories/avatar-file-deletions.repository.js';
 import { AvatarFileDeletionSchedulerService } from './application/avatar-file-deletion-scheduler.service.js';
 import { UpdateMyAvatarUseCase } from './application/use-cases/users-use-cases/update-my-avatar.usecase.js';
+import { LocationsController } from './api/locations.controller.js';
+import { GetCitiesQueryHandler } from './application/query-handler/locations/get-cities.query-handler.js';
+import { GetCountriesQueryHandler } from './application/query-handler/locations/get-countries.query-handler.js';
+import { LocationsRepository } from './infrastructure/repositories/locations-repositories/locations.repository.js';
 
 @Module({
   imports: [CqrsModule, EventsModule],
@@ -62,6 +66,7 @@ import { UpdateMyAvatarUseCase } from './application/use-cases/users-use-cases/u
     AuthController,
     SessionsController,
     PostController,
+    LocationsController,
   ],
   providers: [
     RegistrationUseCase,
@@ -115,6 +120,9 @@ import { UpdateMyAvatarUseCase } from './application/use-cases/users-use-cases/u
     GithubStrategy,
     AccessTokenGuard,
     OptionalAccessTokenGuard,
+    LocationsRepository,
+    GetCitiesQueryHandler,
+    GetCountriesQueryHandler,
   ],
 })
 export class UserAccountsModule {}

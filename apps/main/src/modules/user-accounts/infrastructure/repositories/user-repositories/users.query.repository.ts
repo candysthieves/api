@@ -38,8 +38,6 @@ export class UsersQueryRepository {
   }
 
   async getUsersCount(): Promise<number> {
-    return this.prismaUser.count({
-      where: { isEmailConfirmed: true },
-    });
+    return this.prismaUser.count();
   }
 }
