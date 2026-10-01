@@ -1,5 +1,6 @@
 import {
   IsDateString,
+  IsInt,
   IsOptional,
   IsString,
   Length,
@@ -52,22 +53,22 @@ export class UpdateProfileDto {
   dateOfBirth?: string | null;
 
   @ApiPropertyOptional({
-    description: 'Country of residence',
-    example: 'United States',
+    description: 'Country ID',
+    example: 3,
     nullable: true,
   })
   @IsOptional()
-  @IsString()
-  country?: string | null;
+  @IsInt()
+  countryId?: number | null;
 
   @ApiPropertyOptional({
-    description: 'City of residence',
-    example: 'New York',
+    description: 'City ID',
+    example: 625144,
     nullable: true,
   })
   @IsOptional()
-  @IsString()
-  city?: string | null;
+  @IsInt()
+  cityId?: number | null;
 
   @ApiPropertyOptional({
     description: 'About me bio',

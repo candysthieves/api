@@ -1,46 +1,15 @@
-/*
-  Warnings:
+-- Rename Tables
+ALTER TABLE "_countries" RENAME TO "Country";
+ALTER TABLE "_cities" RENAME TO "City";
 
-  - You are about to drop the `_cities` table. If the table is not empty, all the data it contains will be lost.
-  - You are about to drop the `_countries` table. If the table is not empty, all the data it contains will be lost.
+-- Rename Primary Key Constraints
+ALTER TABLE "Country" RENAME CONSTRAINT "_countries_pkey" TO "Country_pkey";
+ALTER TABLE "City" RENAME CONSTRAINT "_cities_pkey" TO "City_pkey";
 
-*/
--- DropForeignKey
-ALTER TABLE "_cities" DROP CONSTRAINT "_cities_country_id_fkey";
+-- Rename Indexes
+ALTER INDEX "_cities_country_id_idx" RENAME TO "City_country_id_idx";
+ALTER INDEX "_cities_city_name_ru_idx" RENAME TO "City_city_name_ru_idx";
+ALTER INDEX "_cities_city_name_en_idx" RENAME TO "City_city_name_en_idx";
 
--- DropTable
-DROP TABLE "_cities";
-
--- DropTable
-DROP TABLE "_countries";
-
--- CreateTable
-CREATE TABLE "Country" (
-    "country_id" INTEGER NOT NULL,
-    "country_name_ru" VARCHAR(150) NOT NULL,
-    "country_name_en" VARCHAR(150) NOT NULL,
-
-    CONSTRAINT "Country_pkey" PRIMARY KEY ("country_id")
-);
-
--- CreateTable
-CREATE TABLE "City" (
-    "city_id" INTEGER NOT NULL,
-    "country_id" INTEGER NOT NULL,
-    "city_name_ru" VARCHAR(150) NOT NULL,
-    "city_name_en" VARCHAR(150) NOT NULL,
-
-    CONSTRAINT "City_pkey" PRIMARY KEY ("city_id")
-);
-
--- CreateIndex
-CREATE INDEX "City_country_id_idx" ON "City"("country_id");
-
--- CreateIndex
-CREATE INDEX "City_city_name_ru_idx" ON "City"("city_name_ru");
-
--- CreateIndex
-CREATE INDEX "City_city_name_en_idx" ON "City"("city_name_en");
-
--- AddForeignKey
-ALTER TABLE "City" ADD CONSTRAINT "City_country_id_fkey" FOREIGN KEY ("country_id") REFERENCES "Country"("country_id") ON DELETE CASCADE ON UPDATE CASCADE;
+-- Rename Foreign Key Constraint between City and Country
+ALTER TABLE "City" RENAME CONSTRAINT "_cities_country_id_fkey" TO "City_country_id_fkey";

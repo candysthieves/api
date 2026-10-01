@@ -18,7 +18,7 @@ export function ApiGetCountries() {
             countryId: {
               type: 'integer',
               description: 'Unique identifier of the country',
-              example: 1,
+              example: 3,
             },
             countryNameRu: {
               type: 'string',

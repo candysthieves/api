@@ -51,8 +51,6 @@ export class UsersController {
     );
   }
 
-  //'owner' | 'user' | 'friend'
-  //"viewerStatus": "user"
   @Get('profile/:userId')
   @UseGuards(OptionalAccessTokenGuard)
   @ApiGetUserProfile()
@@ -90,7 +88,9 @@ export class UsersController {
   @HttpCode(HttpStatus.CREATED)
   @UseGuards(AccessTokenGuard)
   @UseInterceptors(
-    FileInterceptor('file', { limits: { fileSize: 10 * 1024 * 1024, files: 1 } }),
+    FileInterceptor('file', {
+      limits: { fileSize: 10 * 1024 * 1024, files: 1 },
+    }),
   )
   @ApiUpdateMyAvatar()
   async updateMyAvatar(

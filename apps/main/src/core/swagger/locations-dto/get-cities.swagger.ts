@@ -11,7 +11,7 @@ export function ApiGetCities() {
       name: 'countryId',
       type: Number,
       description: 'ID of the country to get cities for',
-      example: 1,
+      example: 3,
     }),
     ApiOkResponse({
       description: 'List of cities successfully retrieved.',
@@ -24,12 +24,12 @@ export function ApiGetCities() {
             cityId: {
               type: 'integer',
               description: 'Unique identifier of the city',
-              example: 1,
+              example: 625144,
             },
             countryId: {
               type: 'integer',
               description: 'Identifier of the country this city belongs to',
-              example: 1,
+              example: 3,
             },
             cityNameRu: {
               type: 'string',

@@ -36,6 +36,7 @@ model Country {
   countryNameEn String @map("country_name_en") @db.VarChar(150)
 
   cities City[]
+  users  User[]
 }
 
 model City {
@@ -45,6 +46,7 @@ model City {
   cityNameEn String @map("city_name_en") @db.VarChar(150)
 
   country Country @relation(fields: [countryId], references: [countryId], onDelete: Cascade)
+  users   User[]
 
   @@index([countryId])
   @@index([cityNameRu])
@@ -63,8 +65,13 @@ model User {
 
   firstName   String?   @map("first_name")
   lastName    String?   @map("last_name")
+  countryId   Int?      @map("country_id")
+  cityId      Int?      @map("city_id")
   aboutMe     String?   @map("about_me")
   dateOfBirth DateTime? @map("date_of_birth")
+
+  country Country? @relation(fields: [countryId], references: [countryId], onDelete: SetNull)
+  city    City?    @relation(fields: [cityId], references: [cityId], onDelete: SetNull)
 
   isEmailConfirmed          Boolean   @default(false) @map("is_email_confirmed")
   confirmationCode          String?   @unique @map("confirmation_code")

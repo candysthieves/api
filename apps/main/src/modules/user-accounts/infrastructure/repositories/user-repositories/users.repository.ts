@@ -2,12 +2,23 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../../../infrastructure/prisma/prisma.service.js';
 import { DomainExceptions } from '../../../../../core/exceptions/domain-exceptions.js';
 import { ErrorStatus } from '../../../../../core/exceptions/domain-exception-code.js';
-import { Prisma, User } from '../../../../../generated/prisma/client.js';
+import {
+  City,
+  Country,
+  Prisma,
+  User,
+} from '../../../../../generated/prisma/client.js';
 import { getFileIds } from '../../../../../core/events/files-tcp.client.js';
 import {
   UserCreateInput,
+  UserUncheckedUpdateInput,
   UserUpdateInput,
 } from '../../../../../generated/prisma/models/User.js';
+
+export type UserWithLocations = User & {
+  country: Country | null;
+  city: City | null;
+};
 
 @Injectable()
 export class UsersRepository {
@@ -23,7 +34,10 @@ export class UsersRepository {
     return client.user.create({ data });
   }
 
-  async update(userId: string, data: UserUpdateInput): Promise<User> {
+  async update(
+    userId: string,
+    data: UserUpdateInput | UserUncheckedUpdateInput,
+  ): Promise<User> {
     return this.prismaUser.update({
       where: {
         id: userId,
@@ -45,6 +59,28 @@ export class UsersRepository {
 
   async findByIdOrNotFound(id: string): Promise<User> {
     const user = await this.prismaUser.findFirst({ where: { id } });
+
+    if (!user) {
+      DomainExceptions.notFound(
+        ErrorStatus.USER_NOT_FOUND,
+        'userId',
+        'User not found',
+      );
+    }
+
+    return user;
+  }
+
+  async findByIdWithLocationsOrNotFound(
+    id: string,
+  ): Promise<UserWithLocations> {
+    const user = await this.prismaUser.findFirst({
+      where: { id },
+      include: {
+        country: true,
+        city: true,
+      },
+    });
 
     if (!user) {
       DomainExceptions.notFound(

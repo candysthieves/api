@@ -18,7 +18,7 @@ export class LocationsMapper {
   static toGetCityView(city: City): GetCityViewType {
     return {
       countryId: city.countryId,
-      cityId: city.countryId,
+      cityId: city.cityId,
       cityNameRu: city.cityNameRu,
       cityNameEn: city.cityNameEn,
     };
