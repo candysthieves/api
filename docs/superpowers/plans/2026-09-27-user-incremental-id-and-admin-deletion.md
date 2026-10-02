@@ -1,6 +1,6 @@
 # User Auto-Increment ID and Admin Deletion Implementation Plan
 
-> **For agentic workers:** Use the `executing-plans` skill to implement this plan task-by-task. Steps use checkbox syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use `executing-plans` to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Change user IDs to database-generated integers and add administrator-only endpoints that remove one user or all users together with their related database rows and media.
 
@@ -16,7 +16,8 @@
 - All user IDs are numbers through main, JWT, HTTP, and inter-service contracts; unrelated IDs retain their existing formats.
 - Add `DELETE /users` and `DELETE /users/:userId`; both require HTTP Basic authentication for an administrator.
 - Deletion removes relational dependants and the user's currently stored avatar/post media through existing files-service methods.
-- Apply the migration only after current user data and dependent rows have been cleared; do not map or cast prior UUID IDs.
+- Preserve user and dependent rows with an explicit UUID-to-integer mapping; never cast UUID text to an integer.
+- Rewrite persisted event JSON `userId` references in `InputEvent` and `OutputEvent`, preserving unrelated event fields.
 - Do not edit generated Prisma Client files by hand or test simple inter-service delegation; stub the service boundary in business-logic tests.
 - Do not commit, deploy, or run a migration against a production database without an explicit request.
 
@@ -71,11 +72,11 @@ Run: `pnpm test -- --runInBand apps/main/src/modules/user-accounts/api/guards/ad
 
 Expected: all credential parsing and access cases pass; the command reports at least one executed test.
 
-## Task 2: Change Prisma user IDs and create the empty-database migration
+## Task 2: Change Prisma user IDs and create a data-preserving migration
 
 **Files:**
 - Modify: `apps/main/prisma/schema.prisma`
-- Create: `apps/main/prisma/migrations/20260927120000_user_id_autoincrement/migration.sql`
+- Modify: `apps/main/prisma/migrations/20260927120000_user_id_autoincrement/migration.sql`
 - Regenerate: `apps/main/src/generated/prisma/` using the repository Prisma script
 
 **Interfaces:**
@@ -86,9 +87,9 @@ Expected: all credential parsing and access cases pass; the command reports at l
 
 Set `User.id` to `Int @id @default(autoincrement())`. Change the three direct foreign-key scalar fields to `Int` and add `onDelete: Cascade` to the Post relation. Leave OAuth and Session UUID primary keys unchanged.
 
-- [ ] **Step 2: Create and review the migration SQL**
+- [ ] **Step 2: Replace the empty-database migration with an atomic data migration**
 
-Read the relevant Prisma migration scripts before running them to confirm their database target. Create a forward-only migration after the current latest migration. Since PostgreSQL cannot cast UUID IDs to integers and existing rows are not preserved, make the migration replace the empty user ID and foreign-key columns/constraints with integer columns and an auto-increment sequence. Recreate the primary key, foreign keys, and existing `userId` indexes. Do not include a UUID-to-integer cast or a production database command.
+Preserve this migration path/name because the branch's migration has not been applied as a release. In one transaction, create a temporary mapping with `row_number()` ordered by `created_at, id`, add integer replacement columns for the user ID and each FK, and populate them by joining the mapping. Rewrite matching JSONB event `userId` strings in `InputEvent` and `OutputEvent` through the same mapping. Drop only old FK constraints, indexes, PK, and UUID columns after replacement values are populated. Rename replacement columns, restore the PK/FKs and existing user ID indexes, and attach an integer sequence whose next value is greater than every assigned ID. Keep OAuthAccount/Post/Session rows and event IDs, statuses, bodies, and unrelated event data unchanged. Check for unmapped references and fail instead of silently orphaning them. Do not include a UUID-to-integer cast or a production database command.
 
 - [ ] **Step 3: Regenerate Prisma Client**
 
@@ -96,9 +97,9 @@ Run: `pnpm run prisma:generate:local`
 
 Expected: Prisma Client exposes integer user and foreign-key fields. Review generated output as generated files; make no manual edits.
 
-- [ ] **Step 4: Validate the schema and migration preconditions**
+- [ ] **Step 4: Validate the schema and data-preservation invariants**
 
-Review the migration SQL to confirm it assumes empty `User`, `OAuthAccount`, `Post`, and `Session` tables, creates the integer sequence/default, and restores all three cascading relations. Keep actual production cleanup and migration execution operator-owned.
+Review the migration SQL to confirm the mapping is one-to-one, all dependent FK and event JSON references are updated before old IDs are dropped, no rows are deleted, the sequence advances beyond assigned IDs, and all cascading relations/indexes are restored. Keep actual production migration execution operator-owned.
 
 ## Task 3: Convert user IDs to numbers across the application and contracts
 
@@ -209,5 +210,5 @@ Run focused unit/e2e tests, `pnpm run build:main`, and `pnpm run build:files`. C
 - Unrelated UUID identifiers remain strings and retain UUID parsing/validation.
 - Both delete routes require configured HTTP Basic admin credentials, and Swagger documents the same scheme.
 - Database cascades remove posts, OAuth accounts, and sessions; currently stored avatar and post media are deleted before success is returned.
-- Migration SQL contains no UUID-to-integer cast and is explicitly conditioned on cleared user/dependent tables.
+- Migration SQL contains no UUID-to-integer cast, preserves existing user/dependent/event rows, maps every stored user reference, and initializes the user sequence above the assigned IDs.
 - Focused checks pass and report non-zero executed test counts.

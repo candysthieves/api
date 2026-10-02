@@ -12,7 +12,7 @@ Change user IDs from UUID strings to database-generated integer IDs, and provide
 - Add `DELETE /users` to delete all users and `DELETE /users/:userId` to delete one user.
 - Both routes require HTTP Basic authentication for an administrator. Swagger exposes a Basic Auth `Authorize` scheme so an operator can enter the configured admin username and password.
 - Deleting users removes relational dependants through database cascade and removes the users' currently stored avatar and post media through the existing files service.
-- The schema migration is applied after the existing data has been cleared. It does not preserve or translate UUID user IDs.
+- The schema migration preserves existing users and related data while assigning each user a new integer ID.
 
 ## Current project context
 
@@ -26,7 +26,7 @@ The main app already validates environment variables in `apps/main/src/env/envir
 
 Use Prisma `Int @id @default(autoincrement())` for `User.id`, and change all relational `userId` fields and their TypeScript consumers to `number`. Keep unrelated entity IDs in their current formats. Add `onDelete: Cascade` to the Post-to-User relation and retain cascade behavior for OAuth accounts and sessions.
 
-Create a forward-only migration that updates the user primary key and dependent FK columns after the operator has cleared the existing data. The migration must not rely on casting UUID values to integers. Update generated Prisma Client from the schema; never edit generated files directly.
+Create a forward-only PostgreSQL migration that preserves existing rows. Build a temporary UUID-to-integer mapping for every user, copy the mapped integer into a replacement primary-key column, and update `OAuthAccount.user_id`, `Post.user_id`, and `Session.user_id` through that mapping before replacing their UUID columns. Preserve each row and restore primary/foreign-key constraints and indexes. Assign IDs deterministically by `created_at`, then old UUID, and set the owned sequence above the largest assigned ID so later registrations continue without collisions. Do not cast UUID values to integers. Also rewrite matching string `userId` values in JSONB `data` in `InputEvent` and `OutputEvent`, so durable avatar events remain associated with the same user. Preserve unrelated event data and all event IDs/status/body fields. Run the migration atomically; fail rather than silently orphan a relation or event. Update generated Prisma Client from the schema; never edit generated files directly.
 
 Update user ID parsing, JWT payload types, API view types and Swagger schemas/examples, and the avatar event contract/validator to accept integer user IDs. Keep post, session, event, and file identifiers in their existing UUID/string formats.
 
@@ -55,6 +55,6 @@ The use cases must account for partial failure across PostgreSQL and the files s
 
 - Production database cleanup, migration execution, deployment sequencing, and rollout are operator-owned.
 - Cancelling or redesigning in-flight image processing and outbox events is outside this task.
-- Preserving existing user accounts or mapping old UUIDs to new integers.
+- Keeping previously issued JWTs valid after the user ID changes; clients and users must use newly issued tokens after rollout.
 - Changing IDs for posts, sessions, files, events, or other non-user entities.
 - Creating an administrator database table, role system, or separate admin login endpoint.
