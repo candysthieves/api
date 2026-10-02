@@ -24,6 +24,7 @@ export class AppConfig {
   readonly githubClientId: string;
   readonly githubClientSecret: string;
   readonly clientUrl: string;
+  readonly cookieDomain?: string;
   readonly unusedFilesCleanupEnabled: boolean;
   readonly adminUsername: string;
   readonly adminPassword: string;
@@ -71,6 +72,7 @@ export class AppConfig {
         .filter(Boolean),
     );
     this.clientUrl = configService.getOrThrow<string>('CLIENT_URL');
+    this.cookieDomain = configService.get<string>('COOKIE_DOMAIN')?.trim() || undefined;
     this.unusedFilesCleanupEnabled =
       configService.get<string>('UNUSED_FILES_CLEANUP_ENABLED') === 'true';
   }

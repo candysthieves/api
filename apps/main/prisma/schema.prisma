@@ -30,20 +30,48 @@ enum MediaStatus {
   FAILED
 }
 
+model Country {
+  countryId     Int    @id @map("country_id")
+  countryNameRu String @map("country_name_ru") @db.VarChar(150)
+  countryNameEn String @map("country_name_en") @db.VarChar(150)
+
+  cities City[]
+  users  User[]
+}
+
+model City {
+  cityId     Int    @id @map("city_id")
+  countryId  Int    @map("country_id")
+  cityNameRu String @map("city_name_ru") @db.VarChar(150)
+  cityNameEn String @map("city_name_en") @db.VarChar(150)
+
+  country Country @relation(fields: [countryId], references: [countryId], onDelete: Cascade)
+  users   User[]
+
+  @@index([countryId])
+  @@index([cityNameRu])
+  @@index([cityNameEn])
+}
+
 model User {
   /// [AvatarImage]
-  avatar Json? @db.JsonB
+  avatar        Json?  @db.JsonB
   /// [AvatarPreview]
-  avatarPreview Json? @map("avatar_preview") @db.JsonB
-  id       Int    @id @default(autoincrement())
-  email    String @unique
-  password String
-  username String @unique
+  avatarPreview Json?  @map("avatar_preview") @db.JsonB
+  id            Int    @id @default(autoincrement())
+  email         String @unique
+  password      String
+  username      String @unique
 
   firstName   String?   @map("first_name")
   lastName    String?   @map("last_name")
+  countryId   Int?      @map("country_id")
+  cityId      Int?      @map("city_id")
   aboutMe     String?   @map("about_me")
   dateOfBirth DateTime? @map("date_of_birth")
+
+  country Country? @relation(fields: [countryId], references: [countryId], onDelete: SetNull)
+  city    City?    @relation(fields: [cityId], references: [cityId], onDelete: SetNull)
 
   isEmailConfirmed          Boolean   @default(false) @map("is_email_confirmed")
   confirmationCode          String?   @unique @map("confirmation_code")

@@ -30,14 +30,90 @@ export function ApiUpdateMyProfile() {
     ApiOkResponse({
       description: 'Profile successfully retrieved or updated',
       schema: {
-        example: {
-          username: 'john_doe',
-          firstName: 'John',
-          lastName: 'Doe',
-          dateOfBirth: '1995-05-15',
-          country: null,
-          city: null,
-          aboutMe: 'Software developer and open source enthusiast.',
+        type: 'object',
+        required: [
+          'username',
+          'firstName',
+          'lastName',
+          'dateOfBirth',
+          'country',
+          'city',
+          'aboutMe',
+        ],
+        properties: {
+          username: {
+            type: 'string',
+            example: 'john_doe',
+          },
+          firstName: {
+            type: 'string',
+            nullable: true,
+            example: 'John',
+          },
+          lastName: {
+            type: 'string',
+            nullable: true,
+            example: 'Doe',
+          },
+          dateOfBirth: {
+            type: 'string',
+            nullable: true,
+            example: '1995-05-15',
+          },
+          country: {
+            nullable: true,
+            type: 'object',
+            required: ['countryId', 'countryNameRu', 'countryNameEn'],
+            properties: {
+              countryId: {
+                type: 'integer',
+                description: 'Unique identifier of the country',
+                example: 3,
+              },
+              countryNameRu: {
+                type: 'string',
+                description: 'Country name in Russian',
+                example: 'Беларусь',
+              },
+              countryNameEn: {
+                type: 'string',
+                description: 'Country name in English',
+                example: 'Belarus',
+              },
+            },
+          },
+          city: {
+            nullable: true,
+            type: 'object',
+            required: ['cityId', 'countryId', 'cityNameRu', 'cityNameEn'],
+            properties: {
+              cityId: {
+                type: 'integer',
+                description: 'Unique identifier of the city',
+                example: 625144,
+              },
+              countryId: {
+                type: 'integer',
+                description: 'Identifier of the country this city belongs to',
+                example: 3,
+              },
+              cityNameRu: {
+                type: 'string',
+                description: 'City name in Russian',
+                example: 'Минск',
+              },
+              cityNameEn: {
+                type: 'string',
+                description: 'City name in English',
+                example: 'Minsk',
+              },
+            },
+          },
+          aboutMe: {
+            type: 'string',
+            nullable: true,
+            example: 'Software developer and open source enthusiast.',
+          },
         },
       },
     }),

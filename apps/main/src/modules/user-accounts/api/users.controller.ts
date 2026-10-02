@@ -59,8 +59,6 @@ export class UsersController {
     );
   }
 
-  //'owner' | 'user' | 'friend'
-  //"viewerStatus": "user"
   @Get('profile/:userId')
   @UseGuards(OptionalAccessTokenGuard)
   @ApiGetUserProfile()

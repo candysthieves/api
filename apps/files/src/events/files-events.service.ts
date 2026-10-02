@@ -1,5 +1,7 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
+import { InjectModel } from '@nestjs/mongoose';
+import type { Model } from 'mongoose';
 import type {
   AvatarImageEvent,
   ImageEvent,
@@ -7,14 +9,28 @@ import type {
 import { FilesRabbitMqProducerService } from '../rabbitmq/files-rabbitmq-producer.service.js';
 import { FilesOutboxRepository } from './files-outbox.repository.js';
 import { FilesInboxRepository } from './files-inbox.repository.js';
+import { InputEvent } from './schemas/input-event.schema.js';
 
 @Injectable()
-export class FilesEventsService {
+export class FilesEventsService implements OnModuleInit {
+  private readonly logger = new Logger(FilesEventsService.name);
+
   constructor(
     private readonly outbox: FilesOutboxRepository,
     private readonly producer: FilesRabbitMqProducerService,
     private readonly inbox: FilesInboxRepository,
+    @InjectModel(InputEvent.name)
+    private readonly inputEventModel: Model<InputEvent>,
   ) {}
+
+  async onModuleInit(): Promise<void> {
+    const droppedIndexes = await this.inputEventModel.syncIndexes();
+    if (droppedIndexes.length) {
+      this.logger.warn(
+        `Removed obsolete MongoDB input event indexes: ${droppedIndexes.join(', ')}`,
+      );
+    }
+  }
 
   @Cron('* * * * * *', { waitForCompletion: true })
   async processPending(): Promise<void> {

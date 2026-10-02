@@ -1,7 +1,11 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { UpdateProfileDto } from '../../../api/dto/update-profile.dto.js';
 import { UserDataFactory } from '../../factories/user-data.factory.js';
-import { UsersRepository } from '../../../infrastructure/repositories/user-repositories/users.repository.js';
+import {
+  UsersRepository,
+  UserWithLocations,
+} from '../../../infrastructure/repositories/user-repositories/users.repository.js';
+import { LocationsRepository } from '../../../infrastructure/repositories/locations-repositories/locations.repository.js';
 import { UsersMapper } from '../../../api/mappers/users.mapper.js';
 import { MyProfileType } from '../../../api/view-types/users/my-profile.type.js';
 import { User } from '../../../../../generated/prisma/client.js';
@@ -20,14 +24,15 @@ export class UpdateMyProfileUseCase implements ICommandHandler<
   UpdateMyProfileCommand,
   MyProfileType
 > {
-  constructor(private readonly usersRepository: UsersRepository) {}
+  constructor(
+    private readonly usersRepository: UsersRepository,
+    private readonly locationsRepository: LocationsRepository,
+  ) {}
 
   async execute({
     userId,
     dto,
   }: UpdateMyProfileCommand): Promise<MyProfileType> {
-    const data = UserDataFactory.prepareUpdateProfileData(dto);
-
     if (dto.username) {
       const userByUsername: User | null =
         await this.usersRepository.findByUsername(dto.username);
@@ -41,13 +46,48 @@ export class UpdateMyProfileUseCase implements ICommandHandler<
       }
     }
 
+    const country = dto.countryId
+      ? await this.locationsRepository.findCountryById(dto.countryId)
+      : null;
+    if (dto.countryId && !country) {
+      DomainExceptions.badRequest(
+        ErrorStatus.VALIDATION_ERROR,
+        'countryId',
+        'Country not found',
+      );
+    }
+
+    const city = dto.cityId
+      ? await this.locationsRepository.findCityById(dto.cityId)
+      : null;
+    if (dto.cityId && !city) {
+      DomainExceptions.badRequest(
+        ErrorStatus.VALIDATION_ERROR,
+        'cityId',
+        'City not found',
+      );
+    }
+
+    if (country && city && city.countryId !== country.countryId) {
+      DomainExceptions.badRequest(
+        ErrorStatus.VALIDATION_ERROR,
+        'cityId',
+        'City does not belong to the selected country',
+      );
+    }
+
+    const data = UserDataFactory.prepareUpdateProfileData(dto);
+
     const hasFieldsToUpdate = Object.values(data).some(
       (val) => val !== undefined,
     );
 
-    const user = hasFieldsToUpdate
-      ? await this.usersRepository.update(userId, data)
-      : await this.usersRepository.findByIdOrNotFound(userId);
+    if (hasFieldsToUpdate) {
+      await this.usersRepository.update(userId, data);
+    }
+
+    const user: UserWithLocations =
+      await this.usersRepository.findByIdWithLocationsOrNotFound(userId);
 
     return UsersMapper.toMyProfileView(user);
   }

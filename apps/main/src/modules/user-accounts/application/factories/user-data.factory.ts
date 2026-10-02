@@ -1,7 +1,7 @@
 import { Prisma } from '../../../../generated/prisma/client.js';
 import { UpdateProfileDto } from '../../api/dto/update-profile.dto.js';
 import { DateTime } from 'luxon';
-import { UserUpdateInput } from '../../../../generated/prisma/models/User.js';
+import { UserUncheckedUpdateInput } from '../../../../generated/prisma/models/User.js';
 
 export class UserDataFactory {
   static prepareCreateData(
@@ -25,13 +25,15 @@ export class UserDataFactory {
     };
   }
 
-  static prepareUpdateProfileData(dto: UpdateProfileDto): UserUpdateInput {
+  static prepareUpdateProfileData(
+    dto: UpdateProfileDto,
+  ): UserUncheckedUpdateInput {
     return {
       username: dto.username,
       firstName: dto.firstName,
       lastName: dto.lastName,
-      // country: dto.country,
-      // city: dto.city,
+      countryId: dto.countryId,
+      cityId: dto.cityId,
       aboutMe: dto.aboutMe,
 
       dateOfBirth: dto.dateOfBirth
