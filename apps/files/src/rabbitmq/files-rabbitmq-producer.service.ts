@@ -27,7 +27,7 @@ export class FilesRabbitMqProducerService {
     };
     await this.connection.publish(
       '',
-      `${this.config.getOrThrow<string>('RABBITMQ_FILES_TO_MAIN_QUEUE')}.${event.type.startsWith('avatar.') ? 'avatar-images' : 'post-images'}.results.v1`,
+      `${this.config.getOrThrow<string>('RABBITMQ_FILES_TO_MAIN_QUEUE')}.${event.type.startsWith('avatar.') ? 'avatar-images' : 'post-images'}.results`,
       Buffer.from(JSON.stringify(event)),
       options,
     );

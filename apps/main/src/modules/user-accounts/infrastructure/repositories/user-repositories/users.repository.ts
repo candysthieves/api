@@ -8,12 +8,13 @@ import {
   Prisma,
   User,
 } from '../../../../../generated/prisma/client.js';
-import { getFileIds } from '../../../../../core/events/files-tcp.client.js';
+import { getFileIds } from '../../../../../core/events/files-tcp.service.js';
 import {
   UserCreateInput,
   UserUncheckedUpdateInput,
   UserUpdateInput,
 } from '../../../../../generated/prisma/models/User.js';
+import type { MediaFile } from '../../../../../../../../libs/contracts/index.js';
 
 export type UserWithLocations = User & {
   country: Country | null;
@@ -44,6 +45,24 @@ export class UsersRepository {
       },
       data,
     });
+  }
+
+  async updateAvatar(
+    userId: number,
+    image: MediaFile,
+    preview: MediaFile,
+  ): Promise<boolean> {
+    const imageJson = JSON.stringify(image);
+    const previewJson = JSON.stringify(preview);
+    const count = await this.prisma.$executeRaw`
+      UPDATE "User"
+      SET avatar = ${imageJson}::jsonb,
+          avatar_preview = ${previewJson}::jsonb,
+          updated_at = NOW()
+      WHERE id = ${userId}
+        AND (avatar IS DISTINCT FROM ${imageJson}::jsonb OR avatar_preview IS DISTINCT FROM ${previewJson}::jsonb)
+    `;
+    return count === 1;
   }
 
   async findByUsername(

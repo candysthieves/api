@@ -1,6 +1,5 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { SseService } from '../../../../../core/sse/sse.service.js';
-import { SseEventEnum } from '../../../../../core/sse/types/sse-event.type.js';
 import { AvatarFileDeletionsRepository } from '../../../infrastructure/repositories/user-repositories/avatar-file-deletions.repository.js';
 
 export class DeleteMyAvatarCommand {
@@ -21,6 +20,6 @@ export class DeleteMyAvatarUseCase implements ICommandHandler<
     await this.avatarFileDeletions.scheduleCurrentAvatarForDeletion(
       command.userId,
     );
-    this.sse.emit(SseEventEnum.AVATAR_UPDATED, { userId: command.userId });
+    this.sse.emitAvatarUpdated(command.userId);
   }
 }

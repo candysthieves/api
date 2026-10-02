@@ -3,7 +3,7 @@ import sharp from 'sharp';
 import { MAX_AVATAR_IMAGE_SIZE } from '../../../../../../../../libs/contracts/avatar-image.contract.js';
 import { DomainExceptions } from '../../../../../core/exceptions/domain-exceptions.js';
 import { ErrorStatus } from '../../../../../core/exceptions/domain-exception-code.js';
-import { ImageOutboxService } from '../../../../../core/events/image-outbox.service.js';
+import { OutboxService } from '../../../../../core/events/outbox/outbox.service.js';
 import { UsersRepository } from '../../../infrastructure/repositories/user-repositories/users.repository.js';
 
 export class UpdateMyAvatarCommand {
@@ -20,7 +20,7 @@ export class UpdateMyAvatarUseCase implements ICommandHandler<
 > {
   constructor(
     private readonly users: UsersRepository,
-    private readonly outbox: ImageOutboxService,
+    private readonly outbox: OutboxService,
   ) {}
   async execute({
     userId,

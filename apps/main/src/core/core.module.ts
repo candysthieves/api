@@ -5,7 +5,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { CookieAdapter } from './adapters/cookie.adapter.js';
 import { AppConfig } from '../app.config.js';
 import { EmailAdapter } from './adapters/email/email.adapter.js';
-import { RecaptchaService } from './services/recaptcha.service.js';
+import { RecaptchaAdapter } from './adapters/recaptcha.adapter.js';
 import { RabbitMqModule } from './rabbitmq/rabbitmq.module.js';
 import { SseController } from './sse/sse.controller.js';
 import { SseService } from './sse/sse.service.js';
@@ -21,7 +21,7 @@ import { SseService } from './sse/sse.service.js';
     JwtAdapter,
     CookieAdapter,
     EmailAdapter,
-    RecaptchaService,
+    RecaptchaAdapter,
     SseService,
   ],
   exports: [
@@ -31,7 +31,7 @@ import { SseService } from './sse/sse.service.js';
     JwtAdapter,
     CookieAdapter,
     EmailAdapter,
-    RecaptchaService,
+    RecaptchaAdapter,
     SseService,
   ],
 })

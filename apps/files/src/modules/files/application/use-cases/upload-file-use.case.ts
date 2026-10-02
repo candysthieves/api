@@ -1,6 +1,6 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { FileType } from '../../schemas/files.schema.js';
-import { FilesService } from '../files.service.js';
+import { FilesService } from '../services/files.service.js';
 import { ObjectResult } from '../../../../core/object-result.js';
 import { FileMapper } from '../../api/mappers/file.mapper.js';
 import { S3Adapter } from '../../../../core/adapters/s3.adapter.js';

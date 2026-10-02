@@ -6,10 +6,10 @@ import {
   OutputEvent,
   OutputEventSchema,
 } from './schemas/output-event.schema.js';
-import { FilesInboxRepository } from './files-inbox.repository.js';
-import { FilesOutboxRepository } from './files-outbox.repository.js';
-import { FilesEventsService } from './files-events.service.js';
-import { AvatarImageQueueService } from '../modules/files/application/avatar-image-queue.service.js';
+import { InboxRepository } from './inbox/inbox.repository.js';
+import { OutboxRepository } from './outbox/outbox.repository.js';
+import { FilesEventsScheduler } from './files-events.scheduler.js';
+import { AvatarImageQueueService } from '../modules/files/application/services/avatar-image-queue.service.js';
 
 @Module({
   imports: [
@@ -20,11 +20,11 @@ import { AvatarImageQueueService } from '../modules/files/application/avatar-ima
     ]),
   ],
   providers: [
-    FilesInboxRepository,
-    FilesOutboxRepository,
-    FilesEventsService,
+    InboxRepository,
+    OutboxRepository,
+    FilesEventsScheduler,
     AvatarImageQueueService,
   ],
-  exports: [FilesInboxRepository, FilesOutboxRepository],
+  exports: [InboxRepository, OutboxRepository],
 })
 export class FilesEventsModule {}

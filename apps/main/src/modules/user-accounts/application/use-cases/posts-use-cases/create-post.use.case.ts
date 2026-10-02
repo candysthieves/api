@@ -4,7 +4,7 @@ import { CreatePostLocationDto } from '../../../api/dto/create-post.dto.js';
 import { MediaStatus, Prisma } from '../../../../../generated/prisma/client.js';
 import { DomainExceptions } from '../../../../../core/exceptions/domain-exceptions.js';
 import { Logger } from '@nestjs/common';
-import { ImageOutboxService } from '../../../../../core/events/image-outbox.service.js';
+import { OutboxService } from '../../../../../core/events/outbox/outbox.service.js';
 import {
   MAX_POST_IMAGE_SIZE,
   MAX_POST_IMAGES,
@@ -24,7 +24,7 @@ export class CreatePostUseCase implements ICommandHandler<CreatePostCommand> {
   private readonly logger = new Logger(CreatePostUseCase.name);
   constructor(
     private readonly postRepository: PostsRepository,
-    private readonly outbox: ImageOutboxService,
+    private readonly outbox: OutboxService,
   ) {}
 
   async execute(command: CreatePostCommand): Promise<{ postId: string }> {

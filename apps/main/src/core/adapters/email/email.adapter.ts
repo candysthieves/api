@@ -14,6 +14,10 @@ export class EmailAdapter {
   }
 
   async sendEmail(email: string, message: EmailTemplateType) {
+    if (!this.config.emailSendingEnabled) {
+      return;
+    }
+
     const transporter = nodemailer.createTransport({
       service: 'gmail',
       auth: { user: this.smtpUser, pass: this.smtpPassword },
