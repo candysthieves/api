@@ -2,7 +2,7 @@ import { Prisma } from '../../../../generated/prisma/client.js';
 
 export class SessionDataFactory {
   static prepareCreateData(
-    userId: string,
+    userId: number,
     deviceName: string,
     ip: string,
     lifetimeMs: number,

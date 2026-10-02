@@ -29,6 +29,7 @@ import { DeactivateSessionUseCase } from './application/use-cases/sessions-use-c
 import { DeleteOtherSessionsUsecase } from './application/use-cases/sessions-use-cases/delete-other-sessions-usecase.js';
 import { AuthController } from './api/auth.controller.js';
 import { AccessTokenGuard } from './api/guards/access-token.guard.js';
+import { AdminGuard } from './api/guards/admin.guard.js';
 import { OptionalAccessTokenGuard } from './api/guards/optional-access-token.guard.js';
 import { PostController } from './api/post.controller.js';
 import { SessionsController } from './api/sessions.controller.js';
@@ -54,6 +55,8 @@ import { DeleteMyAvatarUseCase } from './application/use-cases/users-use-cases/d
 import { AvatarFileDeletionsRepository } from './infrastructure/repositories/user-repositories/avatar-file-deletions.repository.js';
 import { AvatarFileDeletionSchedulerService } from './application/avatar-file-deletion-scheduler.service.js';
 import { UpdateMyAvatarUseCase } from './application/use-cases/users-use-cases/update-my-avatar.usecase.js';
+import { DeleteUserUseCase } from './application/use-cases/users-use-cases/delete-user.usecase.js';
+import { DeleteAllUsersUseCase } from './application/use-cases/users-use-cases/delete-all-users.usecase.js';
 import { LocationsController } from './api/locations.controller.js';
 import { GetCitiesQueryHandler } from './application/query-handler/locations/get-cities.query-handler.js';
 import { GetCountriesQueryHandler } from './application/query-handler/locations/get-countries.query-handler.js';
@@ -74,6 +77,8 @@ import { LocationsRepository } from './infrastructure/repositories/locations-rep
     UpdateMyAvatarUseCase,
     UpdateMyAvatarUseCase,
     DeleteMyAvatarUseCase,
+    DeleteUserUseCase,
+    DeleteAllUsersUseCase,
     LoginUseCase,
     LogoutUseCase,
     RefreshTokenUseCase,
@@ -119,6 +124,7 @@ import { LocationsRepository } from './infrastructure/repositories/locations-rep
     GoogleStrategy,
     GithubStrategy,
     AccessTokenGuard,
+    AdminGuard,
     OptionalAccessTokenGuard,
     LocationsRepository,
     GetCitiesQueryHandler,

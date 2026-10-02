@@ -8,7 +8,7 @@ import { UsersRepository } from '../../../infrastructure/repositories/user-repos
 
 export class UpdateMyAvatarCommand {
   constructor(
-    public readonly userId: string,
+    public readonly userId: number,
     public readonly file?: Express.Multer.File,
   ) {}
 }
@@ -16,7 +16,7 @@ export class UpdateMyAvatarCommand {
 @CommandHandler(UpdateMyAvatarCommand)
 export class UpdateMyAvatarUseCase implements ICommandHandler<
   UpdateMyAvatarCommand,
-  { userId: string }
+  { userId: number }
 > {
   constructor(
     private readonly users: UsersRepository,
@@ -25,7 +25,7 @@ export class UpdateMyAvatarUseCase implements ICommandHandler<
   async execute({
     userId,
     file,
-  }: UpdateMyAvatarCommand): Promise<{ userId: string }> {
+  }: UpdateMyAvatarCommand): Promise<{ userId: number }> {
     if (
       !file ||
       !Buffer.isBuffer(file.buffer) ||

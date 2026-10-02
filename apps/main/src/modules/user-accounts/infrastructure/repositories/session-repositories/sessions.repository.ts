@@ -24,7 +24,7 @@ export class SessionsRepository {
     });
   }
 
-  async deleteById(sessionId: string, userId: string): Promise<void> {
+  async deleteById(sessionId: string, userId: number): Promise<void> {
     await this.prismaSession.update({
       where: { id: sessionId, userId, deletedAt: null },
       data: { deletedAt: new Date() },
@@ -32,7 +32,7 @@ export class SessionsRepository {
   }
 
   async deleteOtherSessions(
-    userId: string,
+    userId: number,
     currentSessionId: string,
   ): Promise<void> {
     await this.prismaSession.updateMany({
@@ -45,7 +45,7 @@ export class SessionsRepository {
     });
   }
 
-  async deleteAllActiveByUserId(userId: string): Promise<void> {
+  async deleteAllActiveByUserId(userId: number): Promise<void> {
     await this.prismaSession.updateMany({
       where: { userId, deletedAt: null },
       data: { deletedAt: new Date() },

@@ -5,7 +5,7 @@ import {
 } from '../../../../../core/types/prisma/json-types.js';
 
 export type GetUserProfileType = {
-  id: string;
+  id: number;
   username: string;
   description: string | null;
 

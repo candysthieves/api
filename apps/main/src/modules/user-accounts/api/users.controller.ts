@@ -35,6 +35,14 @@ import { UpdateMyAvatarCommand } from '../application/use-cases/users-use-cases/
 import { OptionalAccessTokenGuard } from './guards/optional-access-token.guard.js';
 import { DeleteMyAvatarCommand } from '../application/use-cases/users-use-cases/delete-my-avatar.usecase.js';
 import { ApiDeleteMyAvatar } from '../../../core/swagger/user-dto/delete-my-avatar.swagger.js';
+import { AdminGuard } from './guards/admin.guard.js';
+import { PositiveIntPipe } from './pipes/positive-int.pipe.js';
+import { DeleteUserCommand } from '../application/use-cases/users-use-cases/delete-user.usecase.js';
+import { DeleteAllUsersCommand } from '../application/use-cases/users-use-cases/delete-all-users.usecase.js';
+import {
+  ApiDeleteAllUsers,
+  ApiDeleteUser,
+} from '../../../core/swagger/user-dto/delete-users.swagger.js';
 
 @Controller('users')
 export class UsersController {
@@ -55,7 +63,7 @@ export class UsersController {
   @UseGuards(OptionalAccessTokenGuard)
   @ApiGetUserProfile()
   async getUserProfile(
-    @Param('userId') userId: string,
+    @Param('userId', PositiveIntPipe) userId: number,
     @User() user: JwtAccessPayload | null,
   ): Promise<GetUserProfileType> {
     return this.queryBus.execute<GetUserProfileQuery, GetUserProfileType>(
@@ -96,7 +104,7 @@ export class UsersController {
   async updateMyAvatar(
     @UploadedFile() file: Express.Multer.File | undefined,
     @User() user: JwtAccessPayload,
-  ): Promise<{ userId: string }> {
+  ): Promise<{ userId: number }> {
     return this.commandBus.execute(
       new UpdateMyAvatarCommand(user.userId, file),
     );
@@ -109,6 +117,28 @@ export class UsersController {
   async deleteMyAvatar(@User() user: JwtAccessPayload): Promise<void> {
     await this.commandBus.execute<DeleteMyAvatarCommand, void>(
       new DeleteMyAvatarCommand(user.userId),
+    );
+  }
+
+  @Delete(':userId')
+  @UseGuards(AdminGuard)
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiDeleteUser()
+  async deleteUser(
+    @Param('userId', PositiveIntPipe) userId: number,
+  ): Promise<void> {
+    await this.commandBus.execute<DeleteUserCommand, void>(
+      new DeleteUserCommand(userId),
+    );
+  }
+
+  @Delete()
+  @UseGuards(AdminGuard)
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiDeleteAllUsers()
+  async deleteAllUsers(): Promise<void> {
+    await this.commandBus.execute<DeleteAllUsersCommand, void>(
+      new DeleteAllUsersCommand(),
     );
   }
 }

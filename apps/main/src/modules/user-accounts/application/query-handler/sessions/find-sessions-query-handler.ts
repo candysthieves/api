@@ -6,7 +6,7 @@ import { SessionMapper } from '../../../api/mappers/sessions.mapper.js';
 import { SessionView } from '../../../api/view-types/sessions/session-view.type.js';
 
 export class FindAllSessionsQuery {
-  constructor(public userId: string) {}
+  constructor(public userId: number) {}
 }
 
 @QueryHandler(FindAllSessionsQuery)

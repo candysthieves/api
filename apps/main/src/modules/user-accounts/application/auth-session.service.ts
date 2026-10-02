@@ -16,7 +16,7 @@ export class AuthSessionService {
   ) {}
 
   async createSessionAndTokens(
-    userId: string,
+    userId: number,
     ip: string,
     userAgent: string,
   ): Promise<AccessAndRefreshTokensType> {

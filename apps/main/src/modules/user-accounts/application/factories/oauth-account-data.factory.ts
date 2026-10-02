@@ -3,7 +3,7 @@ import { Prisma } from '../../../../generated/prisma/client.js';
 
 export class OAuthAccountDataFactory {
   static prepareCreateData(
-    userId: string,
+    userId: number,
     provider: OAuthProvider,
     providerId: string,
     email: string,

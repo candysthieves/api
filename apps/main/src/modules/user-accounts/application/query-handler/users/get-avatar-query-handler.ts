@@ -4,7 +4,7 @@ import { GetMyAvatarType } from '../../../api/view-types/users/get-my-avatar.typ
 import { UsersQueryRepository } from '../../../infrastructure/repositories/user-repositories/users.query.repository.js';
 
 export class GetAvatarQuery {
-  constructor(public readonly userId: string) {}
+  constructor(public readonly userId: number) {}
 }
 
 @QueryHandler(GetAvatarQuery)

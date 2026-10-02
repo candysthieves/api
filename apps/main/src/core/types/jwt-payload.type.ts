@@ -1,12 +1,12 @@
 export type JwtRefreshPayload = {
-  userId: string;
+  userId: number;
   sessionId: string;
   iat: number;
   exp: number;
 };
 
 export type JwtAccessPayload = {
-  userId: string;
+  userId: number;
   iat: number;
   exp: number;
 };

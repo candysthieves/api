@@ -6,7 +6,7 @@ import { paginateByCursor } from '../../../../../core/helpers/cursor-pagination.
 
 export class GetMyDeletedPostsQuery {
   constructor(
-    public readonly userId: string,
+    public readonly userId: number,
     public readonly cursor: string | undefined,
     public readonly limit: number,
   ) {}

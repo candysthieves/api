@@ -37,7 +37,7 @@ export class ImageOutboxService {
     }
   }
 
-  async saveAvatar(userId: string, file: Express.Multer.File): Promise<void> {
+  async saveAvatar(userId: number, file: Express.Multer.File): Promise<void> {
     await this.prisma.outputEvent.create({
       data: {
         eventId: randomUUID(),

@@ -24,8 +24,9 @@ export class AvatarImageQueueService {
     if (
       typeof eventId !== 'string' ||
       !/^[0-9a-f-]{36}$/i.test(eventId) ||
-      typeof h['userId'] !== 'string' ||
-      !/^[0-9a-f-]{36}$/i.test(h['userId']) ||
+      typeof h['userId'] !== 'number' ||
+      !Number.isSafeInteger(h['userId']) ||
+      h['userId'] < 1 ||
       typeof mimeType !== 'string' ||
       !['image/jpeg', 'image/png'].includes(mimeType) ||
       !Buffer.isBuffer(body) ||

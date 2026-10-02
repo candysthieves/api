@@ -37,6 +37,7 @@ export function setupApp(app: NestExpressApplication): void {
     .setTitle('Lumosapp API')
     .setDescription('Documentation for the Lumosapp API.')
     .setVersion('1.0')
+    .addBasicAuth({ type: 'http', scheme: 'basic' }, 'adminBasic')
     .addBearerAuth(
       {
         type: 'http',

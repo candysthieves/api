@@ -5,7 +5,7 @@ import { ErrorStatus } from '../../../../../core/exceptions/domain-exception-cod
 
 export class DeactivateSessionCommand {
   constructor(
-    public readonly userId: string,
+    public readonly userId: number,
     public readonly sessionIdFromToken: string,
     public readonly sessionIdFromQuery: string,
   ) {}
