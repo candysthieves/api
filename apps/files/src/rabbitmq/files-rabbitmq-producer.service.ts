@@ -1,10 +1,7 @@
 import { AmqpConnection } from '@golevelup/nestjs-rabbitmq';
 import { ConfigService } from '@nestjs/config';
 import type { ChannelWrapper } from 'amqp-connection-manager';
-import type {
-  AvatarImageEvent,
-  ImageEvent,
-} from '../../../../libs/contracts/index.js';
+import type { AvatarImageEvent, ImageEvent } from '@libs/contracts';
 import { Injectable } from '@nestjs/common';
 
 @Injectable()

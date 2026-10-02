@@ -5,8 +5,8 @@ import {
   validateImageEvent,
   type AvatarImageEvent,
   type ImageEvent,
-} from '../../../../../../libs/contracts/index.js';
-import { InboxService } from '././inbox.service.js';
+} from '@libs/contracts';
+import { InboxService } from '@main/core/events/inbox/inbox.service.js';
 
 @Injectable()
 export class InboxController {

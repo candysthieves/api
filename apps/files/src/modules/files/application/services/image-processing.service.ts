@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import sharp, { Sharp } from 'sharp';
-import { UploadFileContract } from '../../../../../../../libs/contracts/index.js';
+import { UploadFileContract } from '@libs/contracts';
 import { FileType } from '../../schemas/files.schema.js';
 
 @Injectable()

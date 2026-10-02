@@ -5,7 +5,7 @@ import sharp from 'sharp';
 import { S3Adapter } from '../../../../core/adapters/s3.adapter.js';
 import { File, FileDocument, FileType } from '../../schemas/files.schema.js';
 import { ImageProcessingService } from './image-processing.service.js';
-import { UploadFileContract } from '../../../../../../../libs/contracts/index.js';
+import { UploadFileContract } from '@libs/contracts';
 import { randomUUID } from 'node:crypto';
 
 @Injectable()

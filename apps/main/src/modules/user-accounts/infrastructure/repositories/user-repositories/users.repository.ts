@@ -14,7 +14,7 @@ import {
   UserUncheckedUpdateInput,
   UserUpdateInput,
 } from '../../../../../generated/prisma/models/User.js';
-import type { MediaFile } from '../../../../../../../../libs/contracts/index.js';
+import type { MediaFile } from '@libs/contracts';
 
 export type UserWithLocations = User & {
   country: Country | null;

@@ -13,7 +13,7 @@ import {
   RestoreFilesContract,
   UploadFileContract,
   CancelPostImagesContract,
-} from '../../../../../../libs/contracts/index.js';
+} from '@libs/contracts';
 import {
   CleanupResult,
   CleanupUnusedPostFilesCommand,
@@ -23,7 +23,7 @@ import { RpcRequestValidationPipe } from '../../../core/pipes/rpc-request-valida
 import { RpcErrorToResponseFilter } from '../../../core/filters/rpc-error-to-response.filter.js';
 import { CancelledPostRepository } from '../application/cancelled-post.repository.js';
 import { CleanupUnusedAvatarFilesCommand } from '../application/use-cases/cleanup-unused-avatar-files.usecase.js';
-import type { CleanupUnusedAvatarFilesContract } from '../../../../../../libs/contracts/index.js';
+import type { CleanupUnusedAvatarFilesContract } from '@libs/contracts';
 
 @UsePipes(RpcRequestValidationPipe())
 @UseFilters(RpcErrorToResponseFilter)

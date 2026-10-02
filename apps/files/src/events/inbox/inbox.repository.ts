@@ -4,7 +4,7 @@ import { Model } from 'mongoose';
 import type {
   AvatarImageInputEvent,
   ImageInputEvent,
-} from '../../../../../libs/contracts/index.js';
+} from '@libs/contracts';
 import { InputEvent } from '../schemas/input-event.schema.js';
 import { StoredEvent } from '../schemas/stored-event.schema.js';
 import { MongoEventRepository } from '../mongo-event.repository.js';

@@ -3,7 +3,7 @@ import { PrismaService } from '../../../../../infrastructure/prisma/prisma.servi
 import { Post } from '../../../../../generated/prisma/client.js';
 import { PostUncheckedCreateInput } from '../../../../../generated/prisma/models/Post.js';
 import { getFileIds } from '../../../../../core/events/files-tcp.service.js';
-import type { MediaFile } from '../../../../../../../../libs/contracts/index.js';
+import type { MediaFile } from '@libs/contracts';
 
 @Injectable()
 export class PostsRepository {

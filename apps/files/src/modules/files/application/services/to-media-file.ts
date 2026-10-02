@@ -1,4 +1,4 @@
-import type { MediaFile } from '../../../../../../../libs/contracts/index.js';
+import type { MediaFile } from '@libs/contracts';
 
 type FileDetails = {
   fileId: string;
