@@ -4,7 +4,7 @@ import { Nack, RabbitSubscribe } from '@golevelup/nestjs-rabbitmq';
 import {
   MAX_AVATAR_IMAGE_SIZE,
   type AvatarImageInputEvent,
-} from '../../../../../../../libs/contracts/index.js';
+} from '@libs/contracts';
 import { InboxRepository } from '../../../../events/inbox/inbox.repository.js';
 
 @Injectable()

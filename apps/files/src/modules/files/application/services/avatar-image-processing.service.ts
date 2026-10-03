@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import type { AvatarImageEvent } from '../../../../../../../libs/contracts/index.js';
+import type { AvatarImageEvent } from '@libs/contracts';
 import { InboxRepository } from '../../../../events/inbox/inbox.repository.js';
 import { OutboxRepository } from '../../../../events/outbox/outbox.repository.js';
 import type { StoredEvent } from '../../../../events/schemas/stored-event.schema.js';

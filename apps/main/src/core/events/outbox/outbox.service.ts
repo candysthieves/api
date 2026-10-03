@@ -4,7 +4,7 @@ import { Cron } from '@nestjs/schedule';
 import type {
   AvatarImageInputEvent,
   ImageInputEvent,
-} from '../../../../../../libs/contracts/index.js';
+} from '@libs/contracts';
 import { PrismaService } from '../../../infrastructure/prisma/prisma.service.js';
 import { MainRabbitMqProducerService } from '../../rabbitmq/main-rabbitmq-producer.service.js';
 import { EventStoreService } from '../event-store.service.js';

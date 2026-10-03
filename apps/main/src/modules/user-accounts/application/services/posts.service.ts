@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import type { MediaFile } from '../../../../../../../libs/contracts/index.js';
+import type { MediaFile } from '@libs/contracts';
 import { PostsRepository } from '../../infrastructure/repositories/post-repositories/posts.repository.js';
 
 @Injectable()

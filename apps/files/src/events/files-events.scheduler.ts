@@ -3,7 +3,7 @@ import { Cron } from '@nestjs/schedule';
 import type {
   AvatarImageEvent,
   ImageEvent,
-} from '../../../../libs/contracts/index.js';
+} from '@libs/contracts';
 import { FilesRabbitMqProducerService } from '../rabbitmq/files-rabbitmq-producer.service.js';
 import { OutboxRepository } from './outbox/outbox.repository.js';
 import { InboxRepository } from './inbox/inbox.repository.js';
