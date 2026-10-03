@@ -4,7 +4,8 @@
   "sourceRoot": "apps/main/src",
   "compilerOptions": {
     "deleteOutDir": true,
-    "webpack": false,
+    "webpack": true,
+    "webpackConfigPath": "webpack.config.cjs",
     "tsConfigPath": "apps/main/tsconfig.app.json",
     "assets": [
       {

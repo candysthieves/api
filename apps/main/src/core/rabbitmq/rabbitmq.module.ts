@@ -10,10 +10,10 @@ import { MainRabbitMqProducerService } from './main-rabbitmq-producer.service.js
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (config: ConfigService) => {
-        const inputEvents = `${config.getOrThrow<string>('RABBITMQ_MAIN_TO_FILES_QUEUE')}.post-images.v1`;
-        const results = `${config.getOrThrow<string>('RABBITMQ_FILES_TO_MAIN_QUEUE')}.post-images.results.v1`;
-        const avatarInput = `${config.getOrThrow<string>('RABBITMQ_MAIN_TO_FILES_QUEUE')}.avatar-images.v1`;
-        const avatarResults = `${config.getOrThrow<string>('RABBITMQ_FILES_TO_MAIN_QUEUE')}.avatar-images.results.v1`;
+        const inputEvents = `${config.getOrThrow<string>('RABBITMQ_MAIN_TO_FILES_QUEUE')}.post-images`;
+        const results = `${config.getOrThrow<string>('RABBITMQ_FILES_TO_MAIN_QUEUE')}.post-images.results`;
+        const avatarInput = `${config.getOrThrow<string>('RABBITMQ_MAIN_TO_FILES_QUEUE')}.avatar-images`;
+        const avatarResults = `${config.getOrThrow<string>('RABBITMQ_FILES_TO_MAIN_QUEUE')}.avatar-images.results`;
         const imageQueueOptions = {
           durable: true,
           arguments: { 'x-single-active-consumer': true },

@@ -21,7 +21,7 @@ export type ImageInputEvent = {
 export type ImageEvent = {
   eventId: string;
   consumer: 'MAIN';
-  type: 'post.image.updated.v1';
+  type: 'post.image.updated';
   data: {
     postId: string;
     index: number;
@@ -38,7 +38,7 @@ export function validateImageEvent(
     !isRecord(event) ||
     !isUuid(event.eventId) ||
     event.consumer !== 'MAIN' ||
-    event.type !== 'post.image.updated.v1' ||
+    event.type !== 'post.image.updated' ||
     !isRecord(event.data)
   )
     throw new Error('INVALID_IMAGE_EVENT');

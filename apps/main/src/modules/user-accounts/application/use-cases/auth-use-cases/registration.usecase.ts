@@ -72,11 +72,12 @@ export class RegistrationUseCase implements ICommandHandler<RegistrationCommand>
       dto.username,
       hash,
       confirmationExpiresAt,
+      this.config.autoConfirmEmail,
     );
 
     const user: User = await this.usersRepository.create(userData);
 
-    if (user.confirmationCode) {
+    if (!user.isEmailConfirmed && user.confirmationCode) {
       const emailTemplate = emailTemplates.registration(
         user.confirmationCode,
         this.config.clientUrl,

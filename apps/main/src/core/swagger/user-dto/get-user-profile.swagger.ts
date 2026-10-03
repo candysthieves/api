@@ -40,8 +40,8 @@ export function ApiGetUserProfile() {
         ],
         properties: {
           id: {
-            type: 'integer',
-            example: 42,
+            type: 'string',
+            example: '42',
           },
           username: {
             type: 'string',
@@ -109,7 +109,7 @@ export function ApiGetUserProfile() {
           },
         },
         example: {
-          id: 42,
+          id: '42',
           username: 'john_doe',
           description:
             'Превращаю макеты дизайнеров в живой код, воюю с центрированием div и делаю так, чтобы пользователям было красиво и удобно.',

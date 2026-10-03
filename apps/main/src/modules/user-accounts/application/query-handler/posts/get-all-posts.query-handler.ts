@@ -1,7 +1,7 @@
 import { IQueryHandler, QueryHandler } from '@nestjs/cqrs';
 import { PostsQueryRepository } from '../../../infrastructure/repositories/post-repositories/posts.query.repository.js';
 import { PostsMapper } from '../../../api/mappers/posts.mapper.js';
-import { PostWithAuthor } from '../../../infrastructure/types/post-with-author.type.js';
+import { PostWithAuthor } from '../../../../../core/types/post-with-author.type.js';
 import { paginateByCursor } from '../../../../../core/helpers/cursor-pagination.helper.js';
 
 export class GetAllPostsQuery {

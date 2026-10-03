@@ -2,7 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../../../infrastructure/prisma/prisma.service.js';
 import { Post } from '../../../../../generated/prisma/client.js';
 import { PostUncheckedCreateInput } from '../../../../../generated/prisma/models/Post.js';
-import { getFileIds } from '../../../../../core/events/files-tcp.client.js';
+import { getFileIds } from '../../../../../core/events/files-tcp.service.js';
+import type { MediaFile } from '@libs/contracts';
 
 @Injectable()
 export class PostsRepository {
@@ -22,6 +23,41 @@ export class PostsRepository {
 
   async updateDescription(id: string, description: string): Promise<void> {
     await this.prisma.post.update({ where: { id }, data: { description } });
+  }
+
+  async updateImage(
+    postId: string,
+    index: number,
+    image: MediaFile,
+  ): Promise<void> {
+    await this.prisma.$executeRaw`
+      UPDATE "Post"
+      SET images = jsonb_set(images, ARRAY[${String(index)}]::text[], ${JSON.stringify(image)}::jsonb, false),
+          updated_at = NOW()
+      WHERE id = ${postId}::uuid
+        AND images -> ${index}::int = 'null'::jsonb
+    `;
+  }
+
+  async updatePreview(postId: string, preview: MediaFile): Promise<void> {
+    await this.prisma.$executeRaw`
+      UPDATE "Post" SET preview = ${JSON.stringify(preview)}::jsonb, updated_at = NOW()
+      WHERE id = ${postId}::uuid AND (preview IS NULL OR preview = 'null'::jsonb)
+    `;
+  }
+
+  async markReadyIfComplete(postId: string): Promise<boolean> {
+    const affectedRows = await this.prisma.$executeRaw`
+      UPDATE "Post"
+      SET media_status = 'READY'::"MediaStatus", updated_at = NOW()
+      WHERE id = ${postId}::uuid
+        AND media_status = 'PROCESSING'::"MediaStatus"
+        AND jsonb_typeof(images) = 'array'
+        AND images <> '[]'::jsonb
+        AND NOT (images @> '[null]'::jsonb)
+        AND jsonb_typeof(preview) = 'object'
+    `;
+    return affectedRows === 1;
   }
 
   async markForDeletion(id: string, willBeDeleted: Date): Promise<void> {

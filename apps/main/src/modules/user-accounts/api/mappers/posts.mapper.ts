@@ -2,7 +2,7 @@ import { PostAuthorViewType } from '../view-types/posts/post-author-view.type.js
 import {
   PostAuthor,
   PostWithAuthor,
-} from '../../infrastructure/types/post-with-author.type.js';
+} from '../../../../core/types/post-with-author.type.js';
 import { UsersMapper } from './users.mapper.js';
 import { PostViewType } from '../view-types/posts/post-view.type.js';
 import { PostByIdViewType } from '../view-types/posts/post-by-id-view.type.js';
@@ -14,7 +14,7 @@ import { UserViewerStatus } from '../../../../core/enums/user-viewer-status.enum
 export class PostsMapper {
   static toAuthorView(author: PostAuthor): PostAuthorViewType {
     return {
-      id: author.id,
+      id: String(author.id),
       username: author.username,
       avatarPreviewUrl: author.avatarPreview ?? null,
     };

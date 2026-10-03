@@ -30,7 +30,7 @@ export class JwtAdapter {
   }
 
   async createAccessToken(userId: number) {
-    const payload = { userId };
+    const payload = { userId: String(userId) };
 
     return this.jwtService.signAsync(payload, {
       secret: this.jwt_secret_key,
@@ -39,7 +39,7 @@ export class JwtAdapter {
   }
 
   async createRefreshToken(userId: number, sessionId: string) {
-    const payload = { userId, sessionId };
+    const payload = { userId: String(userId), sessionId };
 
     return this.jwtService.signAsync(payload, {
       secret: this.jwt_secret_refresh_key,
@@ -49,9 +49,11 @@ export class JwtAdapter {
 
   async verifyAccessToken(accessToken: string): Promise<JwtAccessPayload> {
     try {
-      return await this.jwtService.verifyAsync(accessToken, {
-        secret: this.jwt_secret_key,
-      });
+      const payload = await this.jwtService.verifyAsync<JwtAccessPayload>(
+        accessToken,
+        { secret: this.jwt_secret_key },
+      );
+      return { ...payload, userId: Number(payload.userId) };
     } catch (error) {
       if (error instanceof Error && error.name === 'TokenExpiredError') {
         DomainExceptions.unauthorized(
@@ -74,14 +76,17 @@ export class JwtAdapter {
   }
 
   decodeRefreshToken(refreshToken: string): JwtRefreshPayload {
-    return this.jwtService.decode(refreshToken);
+    const payload = this.jwtService.decode<JwtRefreshPayload>(refreshToken);
+    return { ...payload, userId: Number(payload.userId) };
   }
 
   async verifyRefreshToken(refreshToken: string): Promise<JwtRefreshPayload> {
     try {
-      return await this.jwtService.verifyAsync(refreshToken, {
-        secret: this.jwt_secret_refresh_key,
-      });
+      const payload = await this.jwtService.verifyAsync<JwtRefreshPayload>(
+        refreshToken,
+        { secret: this.jwt_secret_refresh_key },
+      );
+      return { ...payload, userId: Number(payload.userId) };
     } catch (error) {
       if (error instanceof Error && error.name === 'TokenExpiredError') {
         DomainExceptions.unauthorized(

@@ -13,20 +13,20 @@ import {
   RestoreFilesContract,
   UploadFileContract,
   CancelPostImagesContract,
-} from '../../../../../../libs/contracts/index.js';
+} from '@libs/contracts';
 import {
   CleanupResult,
   CleanupUnusedPostFilesCommand,
 } from '../application/use-cases/cleanup-unused-post-files.usecase.js';
 import { UploadFileCommand } from '../application/use-cases/upload-file-use.case.js';
-import { RpcValidationPipe } from '../../../core/pipes/rpc-validation.pipe.js';
-import { ValidationRpcExceptionFilter } from '../../../core/filters/validation-rpc-exception.filter.js';
+import { RpcRequestValidationPipe } from '../../../core/pipes/rpc-request-validation.pipe.js';
+import { RpcErrorToResponseFilter } from '../../../core/filters/rpc-error-to-response.filter.js';
 import { CancelledPostRepository } from '../application/cancelled-post.repository.js';
 import { CleanupUnusedAvatarFilesCommand } from '../application/use-cases/cleanup-unused-avatar-files.usecase.js';
-import type { CleanupUnusedAvatarFilesContract } from '../../../../../../libs/contracts/index.js';
+import type { CleanupUnusedAvatarFilesContract } from '@libs/contracts';
 
-@UsePipes(RpcValidationPipe())
-@UseFilters(ValidationRpcExceptionFilter)
+@UsePipes(RpcRequestValidationPipe())
+@UseFilters(RpcErrorToResponseFilter)
 @Controller('upload')
 export class FilesController {
   constructor(

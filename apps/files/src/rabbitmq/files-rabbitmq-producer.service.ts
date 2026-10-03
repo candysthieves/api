@@ -1,10 +1,7 @@
 import { AmqpConnection } from '@golevelup/nestjs-rabbitmq';
 import { ConfigService } from '@nestjs/config';
 import type { ChannelWrapper } from 'amqp-connection-manager';
-import type {
-  AvatarImageEvent,
-  ImageEvent,
-} from '../../../../libs/contracts/index.js';
+import type { AvatarImageEvent, ImageEvent } from '@libs/contracts';
 import { Injectable } from '@nestjs/common';
 
 @Injectable()
@@ -27,7 +24,7 @@ export class FilesRabbitMqProducerService {
     };
     await this.connection.publish(
       '',
-      `${this.config.getOrThrow<string>('RABBITMQ_FILES_TO_MAIN_QUEUE')}.${event.type.startsWith('avatar.') ? 'avatar-images' : 'post-images'}.results.v1`,
+      `${this.config.getOrThrow<string>('RABBITMQ_FILES_TO_MAIN_QUEUE')}.${event.type.startsWith('avatar.') ? 'avatar-images' : 'post-images'}.results`,
       Buffer.from(JSON.stringify(event)),
       options,
     );

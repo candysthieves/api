@@ -45,7 +45,7 @@ ALTER TABLE "User" ADD COLUMN "avatar" JSONB,
 
 ## 2. Контракты аватара и общий маршрут событий
 
-**Files:** create `libs/contracts/avatar-image.contract.ts`; modify `libs/contracts/index.ts`, `apps/main/src/core/events/image-outbox.service.ts`, `apps/main/src/core/events/image-result-inbox.service.ts`, `apps/files/src/events/files-inbox.repository.ts`, `apps/files/src/events/files-outbox.repository.ts`, `apps/files/src/modules/files/application/post-image-worker.service.ts`.
+**Files:** create `libs/contracts/avatar-image.contract.ts`; modify `libs/contracts/index.ts`, `apps/main/src/core/events/outbox.service.ts`, `apps/main/src/core/events/inbox.service.ts`, `apps/files/src/events/inbox.repository.ts`, `apps/files/src/events/outbox.repository.ts`, `apps/files/src/modules/files/application/post-image-worker.service.ts`.
 
 **Interfaces:**
 
@@ -69,9 +69,9 @@ export type AvatarImageEvent = {
 
 ## 3. Приём PUT и сохранение исходника
 
-**Files:** modify `apps/main/src/modules/user-accounts/api/users.controller.ts`, `apps/main/src/modules/user-accounts/user-accounts.module.ts`, `apps/main/src/core/events/image-outbox.service.ts`; create `apps/main/src/modules/user-accounts/application/use-cases/users-use-cases/update-my-avatar.usecase.ts`, `apps/main/src/core/swagger/user-dto/update-my-avatar.swagger.ts`, `apps/main/src/modules/user-accounts/application/use-cases/users-use-cases/update-my-avatar.usecase.spec.ts`.
+**Files:** modify `apps/main/src/modules/user-accounts/api/users.controller.ts`, `apps/main/src/modules/user-accounts/user-accounts.module.ts`, `apps/main/src/core/events/outbox.service.ts`; create `apps/main/src/modules/user-accounts/application/use-cases/users-use-cases/update-my-avatar.usecase.ts`, `apps/main/src/core/swagger/user-dto/update-my-avatar.swagger.ts`, `apps/main/src/modules/user-accounts/application/use-cases/users-use-cases/update-my-avatar.usecase.spec.ts`.
 
-**Interfaces:** `UpdateMyAvatarCommand(userId: string, file: Express.Multer.File | undefined)`; `execute(): Promise<{ userId: string }>`; `ImageOutboxService.saveAvatar(userId: string, file: Express.Multer.File): Promise<void>`.
+**Interfaces:** `UpdateMyAvatarCommand(userId: string, file: Express.Multer.File | undefined)`; `execute(): Promise<{ userId: string }>`; `OutboxService.saveAvatar(userId: string, file: Express.Multer.File): Promise<void>`.
 
 - [ ] Сначала добавить проверки use case: отсутствие файла, пустой buffer, неверный формат, ровно 10 МиБ, превышение на один байт, отсутствующий пользователь, сбой сохранения outbox.
 - [ ] Проверить пользователя через существующий UsersRepository. Использовать Sharp metadata для фактического JPEG/PNG и читаемости изображения; ограничение HTTP interceptor не заменяет бизнес-валидацию.
@@ -85,7 +85,7 @@ export type AvatarImageEvent = {
 
 **Files:** modify оба `rabbitmq.module.ts`, оба producer service, `apps/files/src/modules/files/files.module.ts`; create `apps/files/src/modules/files/api/dto/avatar-image-input-event.dto.ts`, `apps/files/src/modules/files/application/avatar-image-queue.service.ts`, `apps/files/src/modules/files/application/avatar-image-processing.service.ts`, `apps/files/src/modules/files/application/avatar-image-processing.service.spec.ts`.
 
-**Interfaces:** main producer `publishAvatarImage(event: AvatarImageInputEvent): Promise<void>`; files processor `processImage(record: StoredEvent): Promise<void>`; очередь вызывает сохранение через существующий FilesInboxRepository.
+**Interfaces:** main producer `publishAvatarImage(event: AvatarImageInputEvent): Promise<void>`; files processor `processImage(record: StoredEvent): Promise<void>`; очередь вызывает сохранение через существующий InboxRepository.
 
 - [ ] Добавить очереди из текущих базовых env-переменных: `.avatar-images.v1` и `.avatar-images.results.v1`; durable настройки и raw Buffer аналогичны действующему post-потоку. RabbitMQ обслуживается только существующей библиотекой.
 - [ ] Input publish использует UUID в messageId, type avatar.image.process.v1, headers userId/originalName/size, contentType, бинарное body. Результат JSON с тем же eventId; publisher confirm обязателен для OK.
@@ -96,7 +96,7 @@ export type AvatarImageEvent = {
 
 ## 5. Сохранение результата, SSE и чтение
 
-**Files:** create `apps/main/src/core/events/avatar-images.repository.ts`, `apps/main/src/core/events/avatar-image-result-inbox.consumer.ts`, `apps/main/src/core/events/avatar-image-result-handler.service.ts`, `apps/main/src/core/events/avatar-image-result-handler.service.spec.ts`; modify `events.module.ts`, `image-result-inbox.service.ts`, `users.mapper.ts`, `get-avatar-query-handler.ts`, `users.query.repository.ts`, `posts.query.repository.ts`, `infrastructure/types/post-with-author.type.ts`, `api/mappers/posts.mapper.ts` и Swagger профиля/автора/GET аватара в существующих каталогах.
+**Files:** create `apps/main/src/core/events/avatar-images.repository.ts`, `apps/main/src/core/events/avatar-image-result-inbox.consumer.ts`, `apps/main/src/core/events/avatar-image-result-handler.service.ts`, `apps/main/src/core/events/avatar-image-result-handler.service.spec.ts`; modify `events.module.ts`, `inbox.service.ts`, `users.mapper.ts`, `get-avatar-query-handler.ts`, `users.query.repository.ts`, `posts.query.repository.ts`, `infrastructure/types/post-with-author.type.ts`, `api/mappers/posts.mapper.ts` и Swagger профиля/автора/GET аватара в существующих каталогах.
 
 **Interfaces:** `AvatarImageResultHandlerService.apply(event: AvatarImageEvent): Promise<void>`; repository `applyAvatar(userId: string, image: MediaFile, preview: MediaFile): Promise<boolean>` возвращает true только при фактической замене пары.
 

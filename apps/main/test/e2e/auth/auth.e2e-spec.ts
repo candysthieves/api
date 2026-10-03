@@ -9,8 +9,8 @@ import { EmailAdapter } from '../../../src/core/adapters/email/email.adapter.js'
 import request from 'supertest';
 import { RegistrationDto } from '../../../src/modules/user-accounts/api/dto/registration.dto.js';
 import { RecaptchaService } from '../../../src/core/services/recaptcha.service.js';
-import { GoogleAuthGuard } from '../../../src/modules/user-accounts/api/guards/google-auth.guard.js';
-import { GithubAuthGuard } from '../../../src/modules/user-accounts/api/guards/github-auth.guard.js';
+import { GoogleAuthGuard } from '../../../src/modules/user-accounts/api/guards/oAuth/google-auth.guard.js';
+import { GithubAuthGuard } from '../../../src/modules/user-accounts/api/guards/oAuth/github-auth.guard.js';
 import { OAuthProfileDto } from '../../../src/modules/user-accounts/api/dto/oauth-profile.dto.js';
 
 const googleProfile: OAuthProfileDto = {
