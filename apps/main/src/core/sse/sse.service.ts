@@ -23,7 +23,7 @@ export class SseService {
 
   // Отправляет событие об изменении аватара.
   emitAvatarUpdated(userId: number): void {
-    this.emit(SseEventEnum.AVATAR_UPDATED, { userId });
+    this.emit(SseEventEnum.AVATAR_UPDATED, { userId: String(userId) });
     this.logger.log(
       `SSE emitted: event=${SseEventEnum.AVATAR_UPDATED} userId=${userId}`,
     );
