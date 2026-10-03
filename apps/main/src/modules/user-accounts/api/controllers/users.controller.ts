@@ -104,7 +104,7 @@ export class UsersController {
   async updateMyAvatar(
     @UploadedFile() file: Express.Multer.File | undefined,
     @User() user: JwtAccessPayload,
-  ): Promise<{ userId: number }> {
+  ): Promise<{ userId: string }> {
     return this.commandBus.execute(
       new UpdateMyAvatarCommand(user.userId, file),
     );

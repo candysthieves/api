@@ -1,5 +1,5 @@
 export type ProfileViewType = {
-  id: number;
+  id: string;
   email: string;
   username: string;
   firstName: string | null;

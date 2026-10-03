@@ -42,7 +42,7 @@ export class UsersMapper {
     viewerStatus: UserViewerStatus,
   ): GetUserProfileType {
     return {
-      id: user.id,
+      id: String(user.id),
       username: user.username,
       description: user.aboutMe,
 

@@ -14,7 +14,7 @@ import { UserViewerStatus } from '../../../../core/enums/user-viewer-status.enum
 export class PostsMapper {
   static toAuthorView(author: PostAuthor): PostAuthorViewType {
     return {
-      id: author.id,
+      id: String(author.id),
       username: author.username,
       avatarPreviewUrl: author.avatarPreview ?? null,
     };

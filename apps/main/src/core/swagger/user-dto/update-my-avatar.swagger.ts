@@ -31,9 +31,9 @@ export function ApiUpdateMyAvatar() {
         type: 'object',
         properties: {
           userId: {
-            type: 'integer',
+            type: 'string',
             description: 'Identifier of the current user',
-            example: 42,
+            example: '42',
           },
         },
         required: ['userId'],
