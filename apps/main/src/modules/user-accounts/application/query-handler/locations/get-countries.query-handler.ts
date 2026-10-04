@@ -4,7 +4,10 @@ import { LocationsMapper } from '../../../api/mappers/locations.mapper.js';
 import { GetCountryViewType } from '../../../api/view-types/locations/get-country-view.type.js';
 
 export class GetCountriesQuery {
-  constructor() {}
+  constructor(
+    public readonly sortBy?: 'countryId' | 'countryNameRu' | 'countryNameEn',
+    public readonly sortDirection?: 'ASC' | 'DESC',
+  ) {}
 }
 
 @QueryHandler(GetCountriesQuery)
@@ -14,8 +17,14 @@ export class GetCountriesQueryHandler implements IQueryHandler<
 > {
   constructor(private readonly locationsRepository: LocationsRepository) {}
 
-  async execute(): Promise<GetCountryViewType[]> {
-    const countries = await this.locationsRepository.getCountries();
+  async execute({
+    sortBy,
+    sortDirection,
+  }: GetCountriesQuery): Promise<GetCountryViewType[]> {
+    const countries = await this.locationsRepository.getCountries(
+      sortBy,
+      sortDirection?.toLowerCase() as 'asc' | 'desc' | undefined,
+    );
 
     return LocationsMapper.toGetCountriesView(countries);
   }

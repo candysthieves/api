@@ -5,12 +5,28 @@ import { PrismaService } from '../../../../../infrastructure/prisma/prisma.servi
 export class LocationsRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  async getCountries() {
-    return this.prisma.country.findMany();
+  async getCountries(
+    sortBy?: 'countryId' | 'countryNameRu' | 'countryNameEn',
+    sortDirection?: 'asc' | 'desc',
+  ) {
+    return this.prisma.country.findMany({
+      ...(sortBy && sortDirection
+        ? { orderBy: { [sortBy]: sortDirection } }
+        : {}),
+    });
   }
 
-  async getCities(countryId: number) {
-    return this.prisma.city.findMany({ where: { countryId } });
+  async getCities(
+    countryId: number,
+    sortBy?: 'cityId' | 'cityNameRu' | 'cityNameEn',
+    sortDirection?: 'asc' | 'desc',
+  ) {
+    return this.prisma.city.findMany({
+      where: { countryId },
+      ...(sortBy && sortDirection
+        ? { orderBy: { [sortBy]: sortDirection } }
+        : {}),
+    });
   }
 
   async findCountryById(countryId: number) {
