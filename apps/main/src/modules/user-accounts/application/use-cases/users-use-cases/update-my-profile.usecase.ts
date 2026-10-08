@@ -1,5 +1,5 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { UpdateProfileDto } from '../../../api/dto/update-profile.dto.js';
+import { UpdateProfileDto } from '../../../api/dto/users/update-profile.dto.js';
 import { UserDataFactory } from '../../factories/user-data.factory.js';
 import {
   UsersRepository,

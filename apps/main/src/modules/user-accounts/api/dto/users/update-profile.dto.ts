@@ -8,7 +8,7 @@ import {
   MaxLength,
 } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { Trim } from '../../../../core/decorators/trim.decorator.js';
+import { Trim } from '../../../../../core/decorators/trim.decorator.js';
 
 export class UpdateProfileDto {
   @ApiPropertyOptional({

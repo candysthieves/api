@@ -1,4 +1,4 @@
-import { RegistrationDto } from '../../../api/dto/registration.dto.js';
+import { RegistrationDto } from '../../../api/dto/auth/registration.dto.js';
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { HashAdapter } from '../../../../../core/adapters/hash.adapter.js';
 import { UsersRepository } from '../../../infrastructure/repositories/user-repositories/users.repository.js';

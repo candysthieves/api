@@ -25,7 +25,7 @@ import { AccessTokenGuard } from '../guards/access-token.guard.js';
 import { ApiGetUserProfile } from '../../../../core/swagger/user-dto/get-user-profile.swagger.js';
 import { ApiUpdateMyProfile } from '../../../../core/swagger/user-dto/update-my-profile.swagger.js';
 import { UpdateMyProfileCommand } from '../../application/use-cases/users-use-cases/update-my-profile.usecase.js';
-import { UpdateProfileDto } from '../dto/update-profile.dto.js';
+import { UpdateProfileDto } from '../dto/users/update-profile.dto.js';
 import { MyProfileType } from '../view-types/users/my-profile.type.js';
 import { GetAvatarQuery } from '../../application/query-handler/users/get-avatar-query-handler.js';
 import { GetMyAvatarType } from '../view-types/users/get-my-avatar.type.js';

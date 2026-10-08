@@ -1,5 +1,5 @@
 import { Prisma } from '../../../../generated/prisma/client.js';
-import { UpdateProfileDto } from '../../api/dto/update-profile.dto.js';
+import { UpdateProfileDto } from '../../api/dto/users/update-profile.dto.js';
 import { DateTime } from 'luxon';
 import { UserUncheckedUpdateInput } from '../../../../generated/prisma/models/User.js';
 
