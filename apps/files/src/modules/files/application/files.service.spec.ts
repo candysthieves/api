@@ -1,4 +1,4 @@
-import { FilesService } from './files.service.js';
+import { FilesService } from './services/files.service.js';
 import { FileType } from '../schemas/files.schema.js';
 import type { UploadFileContract } from '../../../../../../libs/contracts/index.js';
 

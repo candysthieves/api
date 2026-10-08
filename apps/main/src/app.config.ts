@@ -17,6 +17,8 @@ export class AppConfig {
   readonly passwordRecoveryExpiresIn: string;
   readonly smtpUser: string;
   readonly smtpPassword: string;
+  readonly emailSendingEnabled: boolean;
+  readonly autoConfirmEmail: boolean;
   readonly recaptchaSecretKey: string;
   readonly recaptchaAllowedHostnames: ReadonlySet<string>;
   readonly googleClientId: string;
@@ -51,8 +53,16 @@ export class AppConfig {
     this.passwordRecoveryExpiresIn = configService.getOrThrow<string>(
       'PASSWORD_RECOVERY_EXPIRES_IN',
     );
-    this.smtpUser = configService.getOrThrow<string>('SMTP_USER');
-    this.smtpPassword = configService.getOrThrow<string>('SMTP_PASSWORD');
+    this.emailSendingEnabled =
+      configService.get<string>('EMAIL_SENDING_ENABLED') !== 'false';
+    this.autoConfirmEmail =
+      configService.get<string>('AUTO_CONFIRM_EMAIL') === 'true';
+    this.smtpUser = this.emailSendingEnabled
+      ? configService.getOrThrow<string>('SMTP_USER')
+      : (configService.get<string>('SMTP_USER') ?? '');
+    this.smtpPassword = this.emailSendingEnabled
+      ? configService.getOrThrow<string>('SMTP_PASSWORD')
+      : (configService.get<string>('SMTP_PASSWORD') ?? '');
     this.googleClientId = configService.getOrThrow<string>('GOOGLE_CLIENT_ID');
     this.googleClientSecret = configService.getOrThrow<string>(
       'GOOGLE_CLIENT_SECRET',

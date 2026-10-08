@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../../../infrastructure/prisma/prisma.service.js';
 import { DomainExceptions } from '../../../../../core/exceptions/domain-exceptions.js';
 import { ErrorStatus } from '../../../../../core/exceptions/domain-exception-code.js';
-import { getFileIds } from '../../../../../core/events/files-tcp.client.js';
+import { getFileIds } from '../../../../../core/events/files-tcp.service.js';
 
 @Injectable()
 export class AvatarFileDeletionsRepository {

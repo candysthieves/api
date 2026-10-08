@@ -58,7 +58,7 @@ docker compose -f docker-compose.vps.yml -f docker-compose.release.yml up -d mai
 
 В текущем Compose нет healthcheck приложений. Deploy проверяет running/healthy через Compose и через 15 секунд — running без перезапусков. Это проверка запуска контейнеров, а не доступности всех HTTP-методов, RabbitMQ, MongoDB или S3. При пересоздании контейнеров возможен короткий простой.
 
-Перед включением CI локальная сборка main/files прошла. Выполненный до просьбы отключить тесты прогон: 69 passed, 5 failed (устаревший mock/ожидания ImageResultInboxService). Тесты не изменены и не являются условием деплоя.
+Перед включением CI локальная сборка main/files прошла. Выполненный до просьбы отключить тесты прогон: 69 passed, 5 failed (устаревший mock/ожидания InboxService). Тесты не изменены и не являются условием деплоя.
 
 ## Документация
 

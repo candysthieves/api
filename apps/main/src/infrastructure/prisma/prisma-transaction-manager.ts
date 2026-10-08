@@ -1,9 +1,10 @@
 import { Injectable } from '@nestjs/common';
+
+import { PrismaService } from './prisma.service.js';
 import {
   TransactionClient,
   TransactionManager,
-} from '../../core/database/transaction-manager.js';
-import { PrismaService } from './prisma.service.js';
+} from './transaction-manager.js';
 
 @Injectable()
 export class PrismaTransactionManager implements TransactionManager {

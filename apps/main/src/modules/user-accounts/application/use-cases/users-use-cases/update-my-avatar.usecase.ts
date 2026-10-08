@@ -3,7 +3,7 @@ import sharp from 'sharp';
 import { MAX_AVATAR_IMAGE_SIZE } from '../../../../../../../../libs/contracts/avatar-image.contract.js';
 import { DomainExceptions } from '../../../../../core/exceptions/domain-exceptions.js';
 import { ErrorStatus } from '../../../../../core/exceptions/domain-exception-code.js';
-import { ImageOutboxService } from '../../../../../core/events/image-outbox.service.js';
+import { OutboxService } from '../../../../../core/events/outbox/outbox.service.js';
 import { UsersRepository } from '../../../infrastructure/repositories/user-repositories/users.repository.js';
 
 export class UpdateMyAvatarCommand {
@@ -16,16 +16,16 @@ export class UpdateMyAvatarCommand {
 @CommandHandler(UpdateMyAvatarCommand)
 export class UpdateMyAvatarUseCase implements ICommandHandler<
   UpdateMyAvatarCommand,
-  { userId: number }
+  { userId: string }
 > {
   constructor(
     private readonly users: UsersRepository,
-    private readonly outbox: ImageOutboxService,
+    private readonly outbox: OutboxService,
   ) {}
   async execute({
     userId,
     file,
-  }: UpdateMyAvatarCommand): Promise<{ userId: number }> {
+  }: UpdateMyAvatarCommand): Promise<{ userId: string }> {
     if (
       !file ||
       !Buffer.isBuffer(file.buffer) ||
@@ -56,6 +56,6 @@ export class UpdateMyAvatarUseCase implements ICommandHandler<
     }
     await this.users.findByIdOrNotFound(userId);
     await this.outbox.saveAvatar(userId, file);
-    return { userId };
+    return { userId: String(userId) };
   }
 }

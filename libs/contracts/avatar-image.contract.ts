@@ -12,7 +12,7 @@ export type AvatarImageInputEvent = {
 export type AvatarImageEvent = {
   eventId: string;
   consumer: 'MAIN';
-  type: 'avatar.image.updated.v1';
+  type: 'avatar.image.updated';
   data: { userId: number; image: MediaFile; preview: MediaFile };
 };
 
@@ -23,7 +23,7 @@ export function validateAvatarImageEvent(
     !record(value) ||
     !uuid(value.eventId) ||
     value.consumer !== 'MAIN' ||
-    value.type !== 'avatar.image.updated.v1' ||
+    value.type !== 'avatar.image.updated' ||
     !record(value.data) ||
     !positiveInteger(value.data.userId) ||
     !media(value.data.image) ||

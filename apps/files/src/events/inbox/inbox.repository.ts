@@ -1,0 +1,32 @@
+import { Injectable } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
+import type {
+  AvatarImageInputEvent,
+  ImageInputEvent,
+} from '@libs/contracts';
+import { InputEvent } from '../schemas/input-event.schema.js';
+import { StoredEvent } from '../schemas/stored-event.schema.js';
+import { MongoEventRepository } from '../mongo-event.repository.js';
+
+@Injectable()
+export class InboxRepository extends MongoEventRepository {
+  constructor(@InjectModel(InputEvent.name) model: Model<StoredEvent>) {
+    super(model);
+  }
+
+  async accept(
+    event: ImageInputEvent | AvatarImageInputEvent,
+    type: 'post.image.process' | 'avatar.image.process',
+  ): Promise<void> {
+    const { eventId, body, ...data } = event;
+    await this.insert({
+      _id: eventId,
+      data,
+      body,
+      type,
+      status: 'UNPROCESSED',
+      attempts: 0,
+    });
+  }
+}

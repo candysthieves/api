@@ -1,5 +1,5 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { PasswordRecoveryService } from '../../password-recovery.service.js';
+import { PasswordRecoveryService } from '../../services/password-recovery.service.js';
 
 export class ValidatePasswordRecoveryCodeCommand {
   constructor(public readonly recoveryCode: string) {}

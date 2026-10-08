@@ -82,14 +82,14 @@ export class CancelPostImageJobsContract {
 ```ts
 CancelledPostImageJobRepository.cancel(postId: string): Promise<void>;
 FilesTcpClient.cancelPostImageJobs(payload: CancelPostImageJobsContract): Promise<void>;
-ImageResultInboxService.cancelPost(postId: string): Promise<void>;
+InboxService.cancelPost(postId: string): Promise<void>;
 ```
 
 В маркере отмены оставить postId, expiresAt и timestamps. TTL — 24 часа; проверка expiresAt > now сохраняется. reason и traceId удалить из DTO, схемы, аргументов, генерации и тестов. Ошибки логировать с postId, в worker также с индексом.
 
 ### Минимальный учёт задания в files
 
-Сохранить FilesInboxRepository, InputEvent и коллекцию input_events:
+Сохранить InboxRepository, InputEvent и коллекцию input_events:
 
 ```ts
 {
@@ -172,7 +172,7 @@ enqueue делает upsert по (postId, index, status) через $setOnInsert
 
 ### Задача 2. Сократить отмену
 
-Файлы: контракт отмены, CancelledPostImageJob schema/repository, FilesController, FilesTcpClient, ImageResultInboxService, worker и тесты.
+Файлы: контракт отмены, CancelledPostImageJob schema/repository, FilesController, FilesTcpClient, InboxService, worker и тесты.
 
 - Удалить reason/traceId по интерфейсам раздела 2.
 - Сохранить upsert отмены, продление TTL и проверку срока действия.
@@ -184,11 +184,11 @@ enqueue делает upsert по (postId, index, status) через $setOnInsert
 
 Одновременно изменить обе Mongo-схемы, repositories, worker, FilesEventsService и wiring модуля.
 
-- Реализовать минимальный FilesInboxRepository и новые операции outbox.
+- Реализовать минимальный InboxRepository и новые операции outbox.
 - Удалить из inbox finish, fail, saveResult, findPendingResults, markTransferred; результат перенести в worker/outbox.
-- Внедрить FilesOutboxRepository в worker. Использовать обычный FilesService.saveFile; удалить saveFileIdempotent целиком.
+- Внедрить OutboxRepository в worker. Использовать обычный FilesService.saveFile; удалить saveFileIdempotent целиком.
 - Удалить transferPendingResults и зависимость от inbox в FilesEventsService.
-- FilesEventsModule экспортирует FilesInboxRepository и FilesOutboxRepository; RabbitMqModule больше не экспортируется.
+- FilesEventsModule экспортирует InboxRepository и OutboxRepository; RabbitMqModule больше не экспортируется.
 
 Точный алгоритм worker:
 
@@ -210,7 +210,7 @@ Scheduler files: интервал 1 секунда, существующий run
 
 ### Задача 4. Сохранить стандартный inbox main и исправить фоновые ошибки
 
-Файлы: ImageResultInboxService, CreatePostUseCase и specs. ImageResultInboxConsumer сохраняет роль записи в inbox.
+Файлы: InboxService, CreatePostUseCase и specs. ImageResultInboxConsumer сохраняет роль записи в inbox.
 
 - accept выполняет только idempotent upsert по eventId. Удалить setImmediate запуска processPending: единственный источник — scheduler.
 - Сохранить интервал 1 секунда, guard, claim, повтор через 10 секунд и восстановление PROCESSING через 10 минут.

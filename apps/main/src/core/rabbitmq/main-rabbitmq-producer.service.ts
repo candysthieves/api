@@ -22,7 +22,7 @@ export class MainRabbitMqProducerService {
           (async () => {
             await channel.waitForConnect();
             await channel.checkQueue(
-              `${this.config.getOrThrow<string>('RABBITMQ_FILES_TO_MAIN_QUEUE')}.post-images.results.v1`,
+              `${this.config.getOrThrow<string>('RABBITMQ_FILES_TO_MAIN_QUEUE')}.post-images.results`,
             );
           })(),
         ).pipe(timeout(5_000)),
@@ -42,7 +42,7 @@ export class MainRabbitMqProducerService {
       timeout: 5_000,
       messageId: event.eventId,
       contentType: event.mimeType,
-      type: 'post.image.process.v1',
+      type: 'post.image.process',
       headers: {
         postId: event.postId,
         index: event.index,
@@ -52,7 +52,7 @@ export class MainRabbitMqProducerService {
     };
     await this.connection.publish(
       '',
-      `${this.config.getOrThrow<string>('RABBITMQ_MAIN_TO_FILES_QUEUE')}.post-images.v1`,
+      `${this.config.getOrThrow<string>('RABBITMQ_MAIN_TO_FILES_QUEUE')}.post-images`,
       event.body,
       options,
     );
@@ -62,13 +62,13 @@ export class MainRabbitMqProducerService {
     if (!this.connection.connected) throw new Error('TRANSPORT_UNAVAILABLE');
     await this.connection.publish(
       '',
-      `${this.config.getOrThrow<string>('RABBITMQ_MAIN_TO_FILES_QUEUE')}.avatar-images.v1`,
+      `${this.config.getOrThrow<string>('RABBITMQ_MAIN_TO_FILES_QUEUE')}.avatar-images`,
       event.body,
       {
         persistent: true,
         messageId: event.eventId,
         contentType: event.mimeType,
-        type: 'avatar.image.process.v1',
+        type: 'avatar.image.process',
         headers: {
           userId: event.userId,
           originalName: event.originalName,

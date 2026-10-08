@@ -4,7 +4,7 @@ import { OAuthProfileDto } from '../../../api/dto/oauth-profile.dto.js';
 import { OAuthRepository } from '../../../infrastructure/repositories/oauth-repositories/oauth.repository.js';
 import { UsersRepository } from '../../../infrastructure/repositories/user-repositories/users.repository.js';
 import { AccessAndRefreshTokensType } from '../../../../../core/types/access-and-refresh-tokens.type.js';
-import { AuthSessionService } from '../../auth-session.service.js';
+import { AuthSessionService } from '../../services/auth-session.service.js';
 import { OAuthAccount, User } from '../../../../../generated/prisma/client.js';
 import { UserCreateInput } from '../../../../../generated/prisma/models/User.js';
 import { UserDataFactory } from '../../factories/user-data.factory.js';
@@ -13,8 +13,7 @@ import {
   TRANSACTION_MANAGER,
   TransactionClient,
   type TransactionManager,
-} from '../../../../../core/database/transaction-manager.js';
-
+} from '../../../../../infrastructure/prisma/transaction-manager.js';
 export class OAuthLoginCommand {
   constructor(
     public readonly profile: OAuthProfileDto,

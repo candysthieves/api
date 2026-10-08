@@ -1,8 +1,8 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import {
-  FilesTcpClient,
+  FilesTcpService,
   getFileIds,
-} from '../../../../../core/events/files-tcp.client.js';
+} from '../../../../../core/events/files-tcp.service.js';
 import { DomainExceptions } from '../../../../../core/exceptions/domain-exceptions.js';
 import { ErrorStatus } from '../../../../../core/exceptions/domain-exception-code.js';
 import { UsersRepository } from '../../../infrastructure/repositories/user-repositories/users.repository.js';
@@ -15,7 +15,7 @@ export class DeleteUserCommand {
 export class DeleteUserUseCase implements ICommandHandler<DeleteUserCommand> {
   constructor(
     private readonly users: UsersRepository,
-    private readonly files: FilesTcpClient,
+    private readonly files: FilesTcpService,
   ) {}
 
   async execute({ userId }: DeleteUserCommand): Promise<void> {

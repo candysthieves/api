@@ -3,7 +3,7 @@ import { HashAdapter } from '../../../../../core/adapters/hash.adapter.js';
 import { NewPasswordDto } from '../../../api/dto/new-password.dto.js';
 import { SessionsRepository } from '../../../infrastructure/repositories/session-repositories/sessions.repository.js';
 import { UsersRepository } from '../../../infrastructure/repositories/user-repositories/users.repository.js';
-import { PasswordRecoveryService } from '../../password-recovery.service.js';
+import { PasswordRecoveryService } from '../../services/password-recovery.service.js';
 import { DomainExceptions } from '../../../../../core/exceptions/domain-exceptions.js';
 import { ErrorStatus } from '../../../../../core/exceptions/domain-exception-code.js';
 import { UserDataFactory } from '../../factories/user-data.factory.js';
