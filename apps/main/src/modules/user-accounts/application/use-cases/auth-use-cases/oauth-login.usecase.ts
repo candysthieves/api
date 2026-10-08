@@ -1,6 +1,6 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { Inject } from '@nestjs/common';
-import { OAuthProfileDto } from '../../../api/dto/oauth-profile.dto.js';
+import { OAuthProfileDto } from '../../../api/dto/auth/oauth-profile.dto.js';
 import { OAuthRepository } from '../../../infrastructure/repositories/oauth-repositories/oauth.repository.js';
 import { UsersRepository } from '../../../infrastructure/repositories/user-repositories/users.repository.js';
 import { AccessAndRefreshTokensType } from '../../../../../core/types/access-and-refresh-tokens.type.js';

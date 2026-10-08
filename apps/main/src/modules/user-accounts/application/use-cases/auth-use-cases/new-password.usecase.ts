@@ -1,6 +1,6 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { HashAdapter } from '../../../../../core/adapters/hash.adapter.js';
-import { NewPasswordDto } from '../../../api/dto/new-password.dto.js';
+import { NewPasswordDto } from '../../../api/dto/auth/new-password.dto.js';
 import { SessionsRepository } from '../../../infrastructure/repositories/session-repositories/sessions.repository.js';
 import { UsersRepository } from '../../../infrastructure/repositories/user-repositories/users.repository.js';
 import { PasswordRecoveryService } from '../../services/password-recovery.service.js';

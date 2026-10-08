@@ -1,6 +1,6 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { PostsRepository } from '../../../infrastructure/repositories/post-repositories/posts.repository.js';
-import { CreatePostLocationDto } from '../../../api/dto/create-post.dto.js';
+import { CreatePostLocationDto } from '../../../api/dto/posts/create-post.dto.js';
 import { MediaStatus, Prisma } from '../../../../../generated/prisma/client.js';
 import { DomainExceptions } from '../../../../../core/exceptions/domain-exceptions.js';
 import { Logger } from '@nestjs/common';

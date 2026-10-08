@@ -1,4 +1,4 @@
-import { OAuthProfileDto } from '../../../api/dto/oauth-profile.dto.js';
+import { OAuthProfileDto } from '../../../api/dto/auth/oauth-profile.dto.js';
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { OAuthLoginCommand, OAuthLoginUseCase } from './oauth-login.usecase.js';
 

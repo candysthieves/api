@@ -7,11 +7,11 @@ import { setupApp } from '../../../src/setup/app-setup.js';
 import { expect, jest } from '@jest/globals';
 import { EmailAdapter } from '../../../src/core/adapters/email/email.adapter.js';
 import request from 'supertest';
-import { RegistrationDto } from '../../../src/modules/user-accounts/api/dto/registration.dto.js';
+import { RegistrationDto } from '../../../src/modules/user-accounts/api/dto/auth/registration.dto.js';
 import { RecaptchaService } from '../../../src/core/services/recaptcha.service.js';
 import { GoogleAuthGuard } from '../../../src/modules/user-accounts/api/guards/oAuth/google-auth.guard.js';
 import { GithubAuthGuard } from '../../../src/modules/user-accounts/api/guards/oAuth/github-auth.guard.js';
-import { OAuthProfileDto } from '../../../src/modules/user-accounts/api/dto/oauth-profile.dto.js';
+import { OAuthProfileDto } from '../../../src/modules/user-accounts/api/dto/auth/oauth-profile.dto.js';
 
 const googleProfile: OAuthProfileDto = {
   provider: 'google',

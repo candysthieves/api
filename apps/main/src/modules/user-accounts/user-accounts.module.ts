@@ -60,7 +60,7 @@ import { AvatarFileDeletionSchedulerService } from './application/services/avata
 import { UpdateMyAvatarUseCase } from './application/use-cases/users-use-cases/update-my-avatar.usecase.js';
 import { DeleteUserUseCase } from './application/use-cases/users-use-cases/delete-user.usecase.js';
 import { DeleteAllUsersUseCase } from './application/use-cases/users-use-cases/delete-all-users.usecase.js';
-import { LocationsController } from './api/locations.controller.js';
+import { LocationsController } from './api/controllers/locations.controller.js';
 import { GetCitiesQueryHandler } from './application/query-handler/locations/get-cities.query-handler.js';
 import { GetCountriesQueryHandler } from './application/query-handler/locations/get-countries.query-handler.js';
 import { LocationsRepository } from './infrastructure/repositories/locations-repositories/locations.repository.js';

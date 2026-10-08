@@ -2,7 +2,7 @@ import { PassportStrategy } from '@nestjs/passport';
 import { type Profile, Strategy } from 'passport-google-oauth20';
 import { Injectable } from '@nestjs/common';
 import { AppConfig } from '../../../../../../app.config.js';
-import { OAuthProfileDto } from '../../../dto/oauth-profile.dto.js';
+import { OAuthProfileDto } from '../../../dto/auth/oauth-profile.dto.js';
 import { DomainExceptions } from '../../../../../../core/exceptions/domain-exceptions.js';
 import { ErrorStatus } from '../../../../../../core/exceptions/domain-exception-code.js';
 

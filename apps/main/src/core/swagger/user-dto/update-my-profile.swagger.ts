@@ -8,7 +8,7 @@ import {
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 import { ErrorStatus } from '../../exceptions/domain-exception-code.js';
-import { UpdateProfileDto } from '../../../modules/user-accounts/api/dto/update-profile.dto.js';
+import { UpdateProfileDto } from '../../../modules/user-accounts/api/dto/users/update-profile.dto.js';
 
 export function ApiUpdateMyProfile() {
   return applyDecorators(
