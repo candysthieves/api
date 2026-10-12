@@ -22,7 +22,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        service: [main, files]
+        service: [main, files, payments]
     steps:
       - uses: actions/checkout@v6
         with:

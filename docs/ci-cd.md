@@ -2,13 +2,13 @@
 
 ## Что настроено
 
-- `.github/workflows/ci.yml`: сборка main и files на push в developer/main и на PR.
-- `.github/workflows/deploy.yml`: ручной запуск только с ref `developer`, повторная сборка через CI, публикация двух образов, SSH-деплой.
+- `.github/workflows/ci.yml`: сборка main, files и payments на push в developer/main и на PR.
+- `.github/workflows/deploy.yml`: ручной запуск только с ref `developer`, повторная сборка через CI, публикация трёх образов, SSH-деплой.
 - Тесты не запускаются по решению пользователя.
-- Docker Hub: `chites/lumos-main` и `chites/lumos-files`.
+- Docker Hub: `chites/lumos-main`, `chites/lumos-files` и `chites/lumos-payments`.
 - Тег: полный SHA коммита, run ID и номер попытки. `latest` не перезаписывается.
 - VPS: `root@159.194.226.200:22`, каталог `/home/api`.
-- `scripts/deploy-vps.sh`: pull обоих образов, Prisma migrations, обновление main/files, проверка состояния контейнеров.
+- `scripts/deploy-vps.sh`: pull трёх образов, Prisma migrations, обновление main/files/payments, проверка состояния контейнеров.
 - Параллельные деплои ограничены concurrency в Actions и flock на VPS.
 
 ## Первое включение
@@ -24,7 +24,7 @@
    | DOCKERHUB_USERNAME | `chites`                                             |
    | DOCKERHUB_TOKEN    | Docker Hub token с правом публикации этих образов    |
 
-4. На VPS уже должны находиться `/home/api/docker-compose.vps.yml`, `.main.env` и `.files.env`. Сервисы называются main и files; Compose передаёт `NODE_ENV=production`. Docker Compose должен поддерживать `up --wait --wait-timeout`; ориентир проекта — версия 2.30 или новее. Bash и flock должны быть установлены.
+4. На VPS уже должны находиться `/home/api/docker-compose.vps.yml`, `.main.env` и `.files.env`. Payments не требует отдельного env-файла: Compose задаёт `NODE_ENV=production` и `PORT=3003`. Настройте reverse proxy на порт `3003`; свободен ли порт, проверяется при запуске контейнера. Docker Compose должен поддерживать `up --wait --wait-timeout`; ориентир проекта — версия 2.30 или новее. Bash и flock должны быть установлены.
 5. Открыть Actions → Deploy → Run workflow → выбрать **developer** → Run workflow.
 6. Проверить jobs CI, images и deploy. Итоговый тег записывается в Summary.
 
@@ -32,7 +32,7 @@
 
 ## Что происходит на сервере
 
-Исходный `docker-compose.vps.yml` не перезаписывается. Скрипт создаёт дополнительный Compose-файл с двумя image, скачивает образы и запускает:
+Исходный `docker-compose.vps.yml` не перезаписывается. Скрипт создаёт дополнительный Compose-файл с тремя image, скачивает образы и запускает:
 
 ```bash
 pnpm exec prisma migrate deploy --config apps/main/prisma.config.ts
@@ -42,14 +42,14 @@ pnpm exec prisma migrate deploy --config apps/main/prisma.config.ts
 
 При ошибке миграции обновление контейнеров не начинается. Успешные миграции не откатываются автоматически. Изменения схемы должны быть совместимы со старой версией приложения, которая работает во время миграции. Если существующая БД создана через db push без истории migrations, сначала нужна отдельная настройка baseline.
 
-После миграции выбранные образы сохраняются в `docker-compose.release.yml`, а предыдущий такой файл — в `docker-compose.release.previous.yml`, если он существовал. Затем выполняется up для main/files. При ошибке запуска автоматического отката нет; release-файл отражает запрошенную версию, а реальные контейнеры нужно проверить через ps.
+После миграции выбранные образы сохраняются в `docker-compose.release.yml`, а предыдущий такой файл — в `docker-compose.release.previous.yml`, если он существовал. Затем выполняется up для main/files/payments. При ошибке запуска автоматического отката нет; release-файл отражает запрошенную версию, а реальные контейнеры нужно проверить через ps.
 
 Для последующих ручных команд обязательно указывать оба файла:
 
 ```bash
 cd /home/api
 docker compose -f docker-compose.vps.yml -f docker-compose.release.yml ps
-docker compose -f docker-compose.vps.yml -f docker-compose.release.yml up -d main files
+docker compose -f docker-compose.vps.yml -f docker-compose.release.yml up -d main files payments
 ```
 
 Запуск только базового Compose использует прежние теги latest.

@@ -24,11 +24,13 @@ services:
     image: chites/lumos-main:${image_tag}
   files:
     image: chites/lumos-files:${image_tag}
+  payments:
+    image: chites/lumos-payments:${image_tag}
 YAML
 
 compose=(docker compose -f docker-compose.vps.yml -f "$candidate")
 "${compose[@]}" config --quiet
-"${compose[@]}" pull main files
+"${compose[@]}" pull main files payments
 
 # Use production environment from Compose, not the development.local npm script.
 # Failure here leaves the existing application containers running.
@@ -41,11 +43,11 @@ if [[ -f docker-compose.release.yml ]]; then
 fi
 mv "$candidate" docker-compose.release.yml
 compose=(docker compose -f docker-compose.vps.yml -f docker-compose.release.yml)
-"${compose[@]}" up -d --no-deps --wait --wait-timeout 120 main files
+"${compose[@]}" up -d --no-deps --wait --wait-timeout 120 main files payments
 
 # Without application healthchecks this catches only immediate crash loops.
 sleep 15
-for service in main files; do
+for service in main files payments; do
   container_id=$("${compose[@]}" ps -q "$service")
   test -n "$container_id"
   state=$(docker inspect --format '{{.State.Status}} {{.RestartCount}}' "$container_id")

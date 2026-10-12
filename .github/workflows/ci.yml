@@ -30,3 +30,4 @@ jobs:
           DATABASE_URL: postgresql://ci:ci@localhost:5432/ci
       - run: pnpm run build:main
       - run: pnpm run build:files
+      - run: pnpm run build:payments
