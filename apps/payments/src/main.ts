@@ -1,9 +1,9 @@
 import { NestFactory } from '@nestjs/core';
-import { PaymentsModule } from './payments.module.js';
+import { AppModule } from './app.module.js';
 import { PaymentsConfig } from './payments.config.js';
 
 async function bootstrap() {
-  const app = await NestFactory.create(PaymentsModule);
+  const app = await NestFactory.create(AppModule);
   const port = app.get(PaymentsConfig).port;
   await app.listen(port);
 
