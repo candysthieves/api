@@ -9,21 +9,29 @@
   "packageManager": "pnpm@11.21.0",
   "scripts": {
     "build": "nest build",
-    "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
+    "format": "prettier --write \"apps/**/*.ts\" \"libs/**/*.ts\"",
     "start": "nest start",
     "start:dev": "cross-env NODE_ENV=development nest start main --watch",
     "start:main": "cross-env NODE_ENV=development node dist/apps/main/main.js",
     "start:files": "cross-env NODE_ENV=development node dist/apps/files/main.js",
+    "start:payments": "cross-env NODE_ENV=development node dist/apps/payments/main.js",
     "start:dev:main": "cross-env NODE_ENV=development nest start main --watch",
     "start:dev:files": "cross-env NODE_ENV=development nest start files --watch",
+    "start:dev:payments": "cross-env NODE_ENV=development nest start payments --watch",
     "build:main": "cross-env NODE_ENV=production nest build main",
     "build:files": "cross-env NODE_ENV=production nest build files",
+    "build:payments": "cross-env NODE_ENV=production nest build payments",
     "main:start:dev": "cross-env NODE_ENV=development nest start main --watch",
     "main:start:dev:local": "cross-env NODE_ENV=development.local nest start main --watch",
     "files:start:dev": "cross-env NODE_ENV=development nest start files --watch",
     "files:start:dev:local": "cross-env NODE_ENV=development.local nest start files --watch",
     "files:build": "cross-env NODE_ENV=production nest build files",
     "files:start:prod": "cross-env NODE_ENV=production node dist/apps/files/main.js",
+    "payments:start:dev": "cross-env NODE_ENV=development nest start payments --watch",
+    "payments:start:dev:local": "cross-env NODE_ENV=development.local nest start payments --watch",
+    "payments:build": "cross-env NODE_ENV=production nest build payments",
+    "payments:start:prod": "cross-env NODE_ENV=production node dist/apps/payments/main.js",
+    "paymants:start:dev:local": "cross-env NODE_ENV=development.local nest start payments --watch",
     "prisma:generate": "cross-env NODE_ENV=development prisma generate --config apps/main/prisma.config.ts",
     "prisma:migrate": "cross-env NODE_ENV=development prisma migrate dev --name add sessions schema --config apps/main/prisma.config.ts",
     "prisma:generate:local": "cross-env NODE_ENV=development.local prisma generate --config apps/main/prisma.config.ts",
@@ -147,6 +155,9 @@
       "**/*.(t|j)s"
     ],
     "coverageDirectory": "coverage",
-    "testEnvironment": "node"
+    "testEnvironment": "node",
+    "roots": [
+      "<rootDir>/apps/"
+    ]
   }
 }
