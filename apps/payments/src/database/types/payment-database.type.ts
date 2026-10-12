@@ -13,7 +13,18 @@ export interface SubscriptionTable {
   created_at: Generated<string>;
 }
 
+export interface TariffTable {
+  id: Generated<string>;
+  name: string;
+  duration_days: number;
+  price: string;
+  created_at: Generated<string>;
+}
+
 export interface PaymentDatabase {
   payments: PaymentsTable;
-  Subscription: SubscriptionTable;
+  subscriptions: SubscriptionTable;
+  tariffs: TariffTable;
+  Tariff?: TariffTable;
+  Subscription?: SubscriptionTable;
 }
