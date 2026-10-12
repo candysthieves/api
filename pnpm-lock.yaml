@@ -14,6 +14,12 @@ importers:
       '@aws-sdk/s3-request-presigner':
         specifier: ^3.1116.0
         version: 3.1116.0
+      '@clickhouse/client':
+        specifier: ^1.24.1
+        version: 1.24.1
+      '@founderpath/kysely-clickhouse':
+        specifier: ^1.7.0
+        version: 1.7.0(@clickhouse/client@1.24.1)(kysely@0.29.6)
       '@golevelup/nestjs-rabbitmq':
         specifier: 9.0.2
         version: 9.0.2(@nestjs/common@11.2.3(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1))(@nestjs/core@11.2.3)(reflect-metadata@0.2.2)(rxjs@7.8.2)
@@ -89,6 +95,9 @@ importers:
       jwt-decode:
         specifier: ^4.0.0
         version: 4.0.0
+      kysely:
+        specifier: ^0.29.6
+        version: 0.29.6
       luxon:
         specifier: ^3.7.2
         version: 3.7.2
@@ -503,6 +512,10 @@ packages:
   '@borewit/text-codec@0.2.2':
     resolution: {integrity: sha512-DDaRehssg1aNrH4+2hnj1B7vnUGEjU6OIlyRdkMd0aUdIUvKXrJfXsy8LVtXAy7DRvYVluWbMspsRhz2lcW0mQ==}
 
+  '@clickhouse/client@1.24.1':
+    resolution: {integrity: sha512-1kjKJ4uuD4J9JlRU4CpwEGfecstvtoGreBorhh7CxgB7r7PL54DCLD6gajKZhLCri84XlyD3CUxEm6rYkKC+dA==}
+    engines: {node: '>=20'}
+
   '@colors/colors@1.5.0':
     resolution: {integrity: sha512-ooWCrlZP11i8GImSjTHYHLkvFDP48nS4+204nGb1RiX/WXYHmJA2III9/e2DWVabCESdW7hBAEzHRqUn9OUVvQ==}
     engines: {node: '>=0.1.90'}
@@ -733,6 +746,12 @@ packages:
   '@eslint/plugin-kit@0.4.1':
     resolution: {integrity: sha512-43/qtrDUokr7LJqoF2c3+RInu/t4zfrpYdoSDfYyhg52rwLV6TnOvdG4fXm7IkSB3wErkcmJS9iEhjVtOSEjjA==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
+
+  '@founderpath/kysely-clickhouse@1.7.0':
+    resolution: {integrity: sha512-sy6ZiyE8BuUQnhgMpBHhiDBqT1q3C5pfU2l8a5E0cJPLNvaH8y7phoNo9CE0qgCIv6OVIvUfOe/CFJAbQk4Z9A==}
+    peerDependencies:
+      '@clickhouse/client': '*'
+      kysely: '*'
 
   '@golevelup/nestjs-discovery@7.0.3':
     resolution: {integrity: sha512-wBlSxU1wgBS+x4adwgp2qklXKCC9sufn8zrrSJ1WSCEHb48OBMrn0FskU862CFPwyotJaElRrirHTICAOsl1Mg==}
@@ -3321,6 +3340,10 @@ packages:
   keyv@4.5.4:
     resolution: {integrity: sha512-oxVHkHR/EJf2CNXnWxRLW6mg7JyCCUcG0DtEGmL2ctUo1PNTin1PUil+r/+4r5MpVgC/fn1kjsx7mjSujKqIpw==}
 
+  kysely@0.29.6:
+    resolution: {integrity: sha512-hHaB8C/rfzDDtr/t8YZwxAuPJTT0zHyaPoVzcXwDYhYNAgH/4sIfVhi/XLLIY+bL/FqaIJnjATDbi8ObSELmxg==}
+    engines: {node: '>=22.0.0'}
+
   leven@3.1.0:
     resolution: {integrity: sha512-qsda+H8jTaUaN/x5vzW2rzc+8Rw4TAQ/4KjB46IwK5VH+IlVeeeje/EoZRpiXvIqjFgK84QffqPztGI3VBLG1A==}
     engines: {node: '>=6'}
@@ -4950,6 +4973,8 @@ snapshots:
 
   '@borewit/text-codec@0.2.2': {}
 
+  '@clickhouse/client@1.24.1': {}
+
   '@colors/colors@1.5.0':
     optional: true
 
@@ -5113,6 +5138,11 @@ snapshots:
     dependencies:
       '@eslint/core': 0.17.0
       levn: 0.4.1
+
+  '@founderpath/kysely-clickhouse@1.7.0(@clickhouse/client@1.24.1)(kysely@0.29.6)':
+    dependencies:
+      '@clickhouse/client': 1.24.1
+      kysely: 0.29.6
 
   '@golevelup/nestjs-discovery@7.0.3(@nestjs/common@11.2.3(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1))(@nestjs/core@11.2.3)':
     dependencies:
@@ -7988,6 +8018,8 @@ snapshots:
   keyv@4.5.4:
     dependencies:
       json-buffer: 3.0.1
+
+  kysely@0.29.6: {}
 
   leven@3.1.0: {}
 

@@ -1,0 +1,1 @@
+export const KYSELY_CLICKHOUSE = Symbol('KYSELY_CLICKHOUSE');
