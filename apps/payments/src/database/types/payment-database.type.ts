@@ -25,6 +25,4 @@ export interface PaymentDatabase {
   payments: PaymentsTable;
   subscriptions: SubscriptionTable;
   tariffs: TariffTable;
-  Tariff?: TariffTable;
-  Subscription?: SubscriptionTable;
 }
