@@ -11,4 +11,3 @@ import { SubscriptionsModule } from './subscriptions/subscriptions.module.js';
   exports: [PaymentsConfig],
 })
 export class AppModule {}
-

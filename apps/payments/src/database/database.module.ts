@@ -9,4 +9,3 @@ import { databaseProvider } from './database.provider.js';
   exports: [PaymentsConfig, KYSELY_CLICKHOUSE],
 })
 export class DatabaseModule {}
-

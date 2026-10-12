@@ -22,7 +22,6 @@ if (!migrationNameInput) {
   process.exit(1);
 }
 
-
 // Форматируем имя миграции (только маленькие буквы, цифры и подчеркивания)
 const sanitizedName = migrationNameInput
   .trim()
