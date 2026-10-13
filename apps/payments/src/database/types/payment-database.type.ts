@@ -1,6 +1,15 @@
 import { Generated } from 'kysely';
 
 export type PaymentProvider = 'STRIPE' | 'YOOKASSA';
+export type SubscriptionTypeName = 'Personal' | 'Business';
+
+export interface SubscriptionTypeTable {
+  id: number;
+  name_payment_status: SubscriptionTypeName;
+  created_at: Generated<string>;
+  updated_at: Generated<string>;
+  deleted_at: string | null;
+}
 
 export type PaymentStatus = 'pending' | 'succeeded' | 'failed' | 'refunded';
 
@@ -40,6 +49,7 @@ export interface TariffTable {
 export interface PaymentDatabase {
   payments: PaymentsTable;
   subscriptions: SubscriptionTable;
+  subscription_types: SubscriptionTypeTable;
   tariffs: TariffTable;
   bonuses: BonusesTable;
 }
