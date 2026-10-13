@@ -2,29 +2,44 @@ import { Generated } from 'kysely';
 
 export type PaymentProvider = 'STRIPE' | 'YOOKASSA';
 
+export type PaymentStatus = 'pending' | 'succeeded' | 'failed' | 'refunded';
+
 export interface PaymentsTable {
   id: Generated<string>;
   provider: PaymentProvider;
-  created_at: Generated<string>;
+  userExternalPaymentId: string;
+  tariffId: string;
+  paymentDate: Date | null;
+  status: PaymentStatus;
+  createdAt: Generated<Date>;
 }
 
 export interface SubscriptionTable {
   id: Generated<string>;
-  created_at: Generated<string>;
+  userId: string;
+  lastPaymentId: string;
+  expirationDate: Date;
+  createdAt: Generated<Date>;
+}
+
+export interface BonusesTable {
+  userId: string;
+  bonusHours: number;
 }
 
 export interface TariffTable {
   id: Generated<string>;
   name: string;
-  duration_days: number;
+  durationDays: number;
   price: string;
-  created_at: Generated<string>;
-  updated_at: string | null;
-  deleted_at: string | null;
+  createdAt: Generated<Date>;
+  updatedAt: Date | null;
+  deletedAt: Date | null;
 }
 
 export interface PaymentDatabase {
   payments: PaymentsTable;
   subscriptions: SubscriptionTable;
   tariffs: TariffTable;
+  bonuses: BonusesTable;
 }
