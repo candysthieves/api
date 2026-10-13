@@ -40,7 +40,7 @@ export interface TariffTable {
   id: Generated<string>;
   name: string;
   durationDays: number;
-  price: string;
+  priceInMinorUnits: string;
   createdAt: Generated<Date>;
   updatedAt: Date | null;
   deletedAt: Date | null;

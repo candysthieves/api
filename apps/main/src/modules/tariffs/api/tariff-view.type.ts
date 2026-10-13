@@ -14,7 +14,7 @@ export class TariffViewType {
     example: 100,
     description: 'Price in the unit specified by priceUnit.',
   })
-  price!: number;
+  priceInMinorUnits!: number;
 
   @ApiProperty({ example: 'USD' })
   currency!: string;

@@ -6,7 +6,7 @@ export type PaymentTariff = {
   id: string;
   name: string;
   durationDays: number;
-  price: string;
+  priceInMinorUnits: string;
 };
 
 export const PAYMENTS_TCP_SERVICE = 'PAYMENTS_TCP_SERVICE';

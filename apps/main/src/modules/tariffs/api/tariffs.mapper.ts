@@ -7,7 +7,7 @@ export class TariffsMapper {
       id: tariff.id,
       name: tariff.name,
       durationDays: tariff.durationDays,
-      price: Number(tariff.price),
+      priceInMinorUnits: Number(tariff.priceInMinorUnits),
       currency: 'USD',
       priceUnit: 'CENT',
     };

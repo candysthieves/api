@@ -13,7 +13,7 @@ export class PaymentsRepository {
   getTariffs() {
     return this.db
       .selectFrom('tariffs')
-      .select(['id', 'name', 'durationDays', 'price'])
+      .select(['id', 'name', 'durationDays', 'priceInMinorUnits'])
       .where('deletedAt', 'is', null)
       .orderBy('durationDays', 'asc')
       .execute();

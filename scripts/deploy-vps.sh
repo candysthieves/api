@@ -15,6 +15,7 @@ flock -n 9 || { echo 'Another deployment is running' >&2; exit 1; }
 test -f docker-compose.vps.yml
 test -f .main.env
 test -f .files.env
+test -f .payments.env
 
 candidate=$(mktemp /home/api/.compose-release.XXXXXX.yml)
 trap 'rm -f "$candidate"' EXIT
@@ -36,6 +37,9 @@ compose=(docker compose -f docker-compose.vps.yml -f "$candidate")
 # Failure here leaves the existing application containers running.
 "${compose[@]}" run --rm --no-deps -T main \
   pnpm exec prisma migrate deploy --config apps/main/prisma.config.ts < /dev/null
+
+"${compose[@]}" run --rm --no-deps -T payments \
+  pnpm run payments:migrate < /dev/null
 
 # Keep the selected images for subsequent manual Compose commands.
 if [[ -f docker-compose.release.yml ]]; then
