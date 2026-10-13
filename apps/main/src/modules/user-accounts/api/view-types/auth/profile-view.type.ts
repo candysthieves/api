@@ -5,4 +5,5 @@ export type ProfileViewType = {
   firstName: string | null;
   lastName: string | null;
   isEmailConfirmed: boolean;
+  subscription_type: 'Personal' | 'Business';
 };
