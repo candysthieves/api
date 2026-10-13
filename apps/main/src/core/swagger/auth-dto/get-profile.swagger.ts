@@ -18,7 +18,13 @@ export function ApiGetProfile() {
       description: 'Success',
       schema: {
         type: 'object',
-        required: ['id', 'email', 'username', 'isEmailConfirmed'],
+        required: [
+          'id',
+          'email',
+          'username',
+          'isEmailConfirmed',
+          'subscription_type',
+        ],
         properties: {
           id: {
             type: 'string',
@@ -39,6 +45,11 @@ export function ApiGetProfile() {
           },
           isEmailConfirmed: {
             type: 'boolean',
+          },
+          subscription_type: {
+            type: 'string',
+            enum: ['Personal', 'Business'],
+            example: 'Personal',
           },
         },
       },

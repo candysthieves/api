@@ -10,6 +10,7 @@ export class AuthMapper {
       firstName: user.firstName,
       lastName: user.lastName,
       isEmailConfirmed: user.isEmailConfirmed,
+      subscription_type: user.paymentStatus,
     };
   }
 }
