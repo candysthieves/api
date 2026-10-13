@@ -8,9 +8,13 @@ import { loadEnvironment } from '../env/load-env.js';
 loadEnvironment();
 
 const host = process.env.CLICKHOUSE_HOST ?? 'http://localhost:8123';
-const username = process.env.CLICKHOUSE_USER ?? 'default';
-const password = process.env.CLICKHOUSE_PASSWORD ?? '';
+const username = process.env.CLICKHOUSE_USER;
+const password = process.env.CLICKHOUSE_PASSWORD;
 const database = process.env.CLICKHOUSE_DATABASE ?? 'payments';
+
+if (!username || !password) {
+  throw new Error('CLICKHOUSE_USER and CLICKHOUSE_PASSWORD are required');
+}
 
 const currentDir = dirname(fileURLToPath(import.meta.url));
 const migrationsDir = resolve(currentDir, 'migrations');

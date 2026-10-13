@@ -34,6 +34,7 @@ export class EnvironmentVariables {
   CLICKHOUSE_USER!: string;
 
   @IsString()
+  @IsNotEmpty()
   CLICKHOUSE_PASSWORD!: string;
 
   @IsString()

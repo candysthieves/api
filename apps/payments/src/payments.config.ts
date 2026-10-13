@@ -18,7 +18,7 @@ export class PaymentsConfig {
     this.clickhouseHost = configService.getOrThrow<string>('CLICKHOUSE_HOST');
     this.clickhouseUser = configService.getOrThrow<string>('CLICKHOUSE_USER');
     this.clickhousePassword =
-      configService.get<string>('CLICKHOUSE_PASSWORD') ?? '';
+      configService.getOrThrow<string>('CLICKHOUSE_PASSWORD');
     this.clickhouseDatabase = configService.getOrThrow<string>(
       'CLICKHOUSE_DATABASE',
     );
