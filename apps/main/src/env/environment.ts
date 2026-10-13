@@ -135,6 +135,16 @@ export class EnvironmentVariables {
   @Max(65535)
   FILES_TCP_PORT!: number;
 
+  @IsString()
+  @IsNotEmpty()
+  PAYMENTS_TCP_HOST!: string;
+
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(65535)
+  PAYMENTS_TCP_PORT!: number;
+
   @IsOptional()
   @Transform(({ value }) => value === 'true' || value === true)
   @IsBoolean()

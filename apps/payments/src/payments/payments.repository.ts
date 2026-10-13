@@ -9,4 +9,13 @@ export class PaymentsRepository {
     @Inject(KYSELY_CLICKHOUSE)
     private readonly db: Kysely<PaymentDatabase>,
   ) {}
+
+  getTariffs() {
+    return this.db
+      .selectFrom('tariffs')
+      .select(['id', 'name', 'durationDays', 'price'])
+      .where('deletedAt', 'is', null)
+      .orderBy('durationDays', 'asc')
+      .execute();
+  }
 }
