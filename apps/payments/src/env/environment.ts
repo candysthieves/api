@@ -2,7 +2,6 @@ import { Type } from 'class-transformer';
 import {
   IsInt,
   IsNotEmpty,
-  IsOptional,
   IsString,
   Max,
   Min,
@@ -16,17 +15,15 @@ export class EnvironmentVariables {
   @Max(65535)
   PORT = 3009;
 
-  @IsOptional()
   @IsString()
   @IsNotEmpty()
-  TCP_HOST?: string;
+  TCP_HOST!: string;
 
-  @IsOptional()
   @Type(() => Number)
   @IsInt()
   @Min(1)
   @Max(65535)
-  TCP_PORT?: number;
+  TCP_PORT!: number;
 
   @IsString()
   @IsNotEmpty()
