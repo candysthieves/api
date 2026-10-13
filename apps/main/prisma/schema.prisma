@@ -30,6 +30,11 @@ enum MediaStatus {
   FAILED
 }
 
+enum PaymentStatus {
+  Personal
+  Business
+}
+
 model Country {
   countryId     Int    @id @map("country_id")
   countryNameRu String @map("country_name_ru") @db.VarChar(150)
@@ -73,6 +78,7 @@ model User {
   cityId                    Int?      @map("city_id")
   aboutMe                   String?   @map("about_me")
   dateOfBirth               DateTime? @map("date_of_birth")
+  paymentStatus             PaymentStatus @default(Personal) @map("payment_status")
   termsAcceptedAt           DateTime  @default(now()) @map("terms_accepted_at")
   createdAt                 DateTime  @default(now()) @map("created_at")
   updatedAt                 DateTime  @updatedAt @map("updated_at")
