@@ -19,6 +19,8 @@ export interface TariffTable {
   duration_days: number;
   price: string;
   created_at: Generated<string>;
+  updated_at: string | null;
+  deleted_at: string | null;
 }
 
 export interface PaymentDatabase {

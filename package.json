@@ -33,7 +33,7 @@
     "payments:start:prod": "cross-env NODE_ENV=production node dist/apps/payments/main.js",
     "payments:migrate": "cross-env NODE_ENV=development tsx apps/payments/src/database/migrate.ts",
     "payments:migrate:local": "cross-env NODE_ENV=development.local tsx apps/payments/src/database/migrate.ts",
-    "payments:migration:create": "tsx apps/payments/src/database/create-migration.ts --name init",
+    "payments:migration:create": "tsx apps/payments/src/database/create-migration.ts --name seed_default_tariffs",
     "prisma:generate": "cross-env NODE_ENV=development prisma generate --config apps/main/prisma.config.ts",
     "prisma:migrate": "cross-env NODE_ENV=development prisma migrate dev --name add sessions schema --config apps/main/prisma.config.ts",
     "prisma:generate:local": "cross-env NODE_ENV=development.local prisma generate --config apps/main/prisma.config.ts",
