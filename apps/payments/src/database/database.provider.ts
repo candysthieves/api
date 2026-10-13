@@ -1,6 +1,6 @@
 import { FactoryProvider, Logger } from '@nestjs/common';
 import { ClickhouseDialect } from '@founderpath/kysely-clickhouse';
-import { Kysely, sql } from 'kysely';
+import { CamelCasePlugin, Kysely, sql } from 'kysely';
 import { PaymentsConfig } from '../payments.config.js';
 import { KYSELY_CLICKHOUSE } from './database.constants.js';
 import { PaymentDatabase } from './types/payment-database.type.js';
@@ -24,6 +24,7 @@ export const databaseProvider: FactoryProvider<
           database: paymentsConfig.clickhouseDatabase,
         },
       }),
+      plugins: [new CamelCasePlugin()],
     });
 
     try {
