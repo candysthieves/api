@@ -1,10 +1,10 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { KYSELY_CLICKHOUSE } from '../../../database/database.constants.js';
+import { KYSELY_CLICKHOUSE } from '../../../../../database/database.constants.js';
 import { Kysely } from 'kysely';
-import { PaymentDatabase } from '../../../database/types/payment-database.type.js';
+import { PaymentDatabase } from '../../../../../database/types/payment-database.type.js';
 
 @Injectable()
-export class PaymentsRepository {
+export class BonusesRepository {
   constructor(
     @Inject(KYSELY_CLICKHOUSE)
     private readonly db: Kysely<PaymentDatabase>,

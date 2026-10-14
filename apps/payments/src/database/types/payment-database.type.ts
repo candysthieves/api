@@ -1,4 +1,4 @@
-import { Generated } from 'kysely';
+import { Generated, Selectable } from 'kysely';
 
 export type PaymentProvider = 'STRIPE' | 'YOOKASSA';
 export type SubscriptionTypeName = 'Personal' | 'Business';
@@ -53,3 +53,10 @@ export interface PaymentDatabase {
   tariffs: TariffTable;
   bonuses: BonusesTable;
 }
+
+// Entities (Selectable models for queries and business logic)
+export type TariffEntity = Selectable<TariffTable>;
+export type PaymentEntity = Selectable<PaymentsTable>;
+export type SubscriptionEntity = Selectable<SubscriptionTable>;
+export type SubscriptionTypeEntity = Selectable<SubscriptionTypeTable>;
+export type BonusEntity = Selectable<BonusesTable>;
