@@ -4,7 +4,7 @@ import { Kysely } from 'kysely';
 import { PaymentDatabase } from '../../../database/types/payment-database.type.js';
 
 @Injectable()
-export class TariffsRepository {
+export class TariffsQueryRepository {
   constructor(
     @Inject(KYSELY_CLICKHOUSE)
     private readonly db: Kysely<PaymentDatabase>,

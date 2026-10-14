@@ -5,7 +5,7 @@ import { PaymentsConfig } from './payments.config.js';
 import { DatabaseModule } from './database/database.module.js';
 import { SubscriptionsController } from './api/subscriptions.controller.js';
 import { GetTariffsQueryHandler } from './application/query-handler/get-tariffs.query-handler.js';
-import { TariffsRepository } from './infrastructure/repositories/tariffs/tariffs.repository.js';
+import { TariffsQueryRepository } from './infrastructure/repositories/tariffs/tariffs.query.repository.js';
 import { PaymentsRepository } from './infrastructure/repositories/payments/payments.repository.js';
 import { SubscriptionsRepository } from './infrastructure/repositories/subscriptions/subscriptions.repository.js';
 import { BonusesRepository } from './infrastructure/repositories/bonuses/bonuses.repository.js';
@@ -22,7 +22,7 @@ import { CreatePaymentUseCase } from './application/use-cases/create-payment.use
     PaymentsConfig,
     GetTariffsQueryHandler,
     CreatePaymentUseCase,
-    TariffsRepository,
+    TariffsQueryRepository,
     PaymentsRepository,
     SubscriptionsRepository,
     BonusesRepository,
