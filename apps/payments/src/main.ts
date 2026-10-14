@@ -3,16 +3,42 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module.js';
 import { PaymentsConfig } from './payments.config.js';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
+import { RpcErrorToResponseFilter } from './core/filters/rpc-error-to-response.filter.js';
+import { RpcRequestValidationPipe } from './core/pipes/rpc-request-validation.pipe.js';
 
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, {
+    logger: ['log', 'warn', 'error', 'fatal'],
+  });
+
   const config = app.get(PaymentsConfig);
   const port = config.port;
-  app.connectMicroservice<MicroserviceOptions>({
-    transport: Transport.TCP,
-    options: { host: config.tcpHost, port: config.tcpPort },
+
+  app.enableShutdownHooks();
+
+  process.on('uncaughtException', (error: Error) => {
+    logger.fatal('Uncaught exception', error.stack);
   });
+
+  process.on('unhandledRejection', (reason: unknown) => {
+    logger.fatal(
+      'Unhandled rejection',
+      reason instanceof Error ? reason.stack : String(reason),
+    );
+  });
+
+  app.useGlobalFilters(new RpcErrorToResponseFilter());
+  app.useGlobalPipes(RpcRequestValidationPipe());
+
+  app.connectMicroservice<MicroserviceOptions>(
+    {
+      transport: Transport.TCP,
+      options: { host: config.tcpHost, port: config.tcpPort },
+    },
+    { inheritAppConfig: true },
+  );
+
   await app.listen(port);
   await app.startAllMicroservices();
 
