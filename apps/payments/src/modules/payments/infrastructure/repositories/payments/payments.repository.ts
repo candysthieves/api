@@ -1,7 +1,11 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { KYSELY_CLICKHOUSE } from '../../../../../database/database.constants.js';
-import { Kysely } from 'kysely';
-import { PaymentDatabase } from '../../../../../database/types/payment-database.type.js';
+import { Insertable, Kysely } from 'kysely';
+import {
+  PaymentDatabase,
+  PaymentEntity,
+  PaymentsTable,
+} from '../../../../../database/types/payment-database.type.js';
 
 @Injectable()
 export class PaymentsRepository {
@@ -10,10 +14,18 @@ export class PaymentsRepository {
     private readonly db: Kysely<PaymentDatabase>,
   ) {}
 
-  async create(
-    userId: string,
-    tariffId: string,
-    provider: string,
-    status: string,
-  ) {}
+  async create(payment: Insertable<PaymentsTable>): Promise<void> {
+    await this.db.insertInto('payments').values(payment).execute();
+  }
+
+  async updateExternalPaymentId(
+    paymentId: string,
+    externalPaymentId: string,
+  ): Promise<void> {
+    await this.db
+      .updateTable('payments')
+      .set({ userExternalPaymentId: externalPaymentId })
+      .where('id', '=', paymentId)
+      .execute();
+  }
 }

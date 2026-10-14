@@ -2,6 +2,7 @@ import { Generated, Selectable } from 'kysely';
 
 export type PaymentProvider = 'STRIPE' | 'YOOKASSA';
 export type SubscriptionTypeName = 'Personal' | 'Business';
+export type PaymentStatus = 'pending' | 'succeeded' | 'failed' | 'refunded';
 
 export interface SubscriptionTypeTable {
   id: number;
@@ -10,8 +11,6 @@ export interface SubscriptionTypeTable {
   updated_at: Generated<string>;
   deleted_at: string | null;
 }
-
-export type PaymentStatus = 'pending' | 'succeeded' | 'failed' | 'refunded';
 
 export interface PaymentsTable {
   id: Generated<string>;
@@ -26,6 +25,7 @@ export interface PaymentsTable {
 export interface SubscriptionTable {
   id: Generated<string>;
   userId: string;
+  tariffId: string;
   lastPaymentId: string;
   expirationDate: Date;
   createdAt: Generated<Date>;

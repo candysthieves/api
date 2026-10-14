@@ -10,3 +10,4 @@ export class SubscriptionsRepository {
     private readonly db: Kysely<PaymentDatabase>,
   ) {}
 }
+
