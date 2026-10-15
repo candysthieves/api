@@ -5,7 +5,7 @@ export class TariffViewType {
   id!: string;
 
   @ApiProperty({ example: 'Daily' })
-  name!: string;
+  tariff_name!: string;
 
   @ApiProperty({ example: 1 })
   durationDays!: number;

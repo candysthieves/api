@@ -4,9 +4,11 @@ import { TariffsController } from './api/tariffs.controller.js';
 import { SubscriptionsController } from './api/subscriptions.controller.js';
 import { PaymentsController } from './api/payments.controller.js';
 import { GetTariffsQueryHandler } from './application/query-handler/get-tariffs.query-handler.js';
+import { GetSubscriptionTypesQueryHandler } from './application/query-handler/get-subscription-types.query-handler.js';
 import { CreatePaymentUseCase } from './application/use-cases/create-payment.use-case.js';
 import { TariffsRepository } from './infrastructure/repositories/tariffs/tariffs.repository.js';
 import { TariffsQueryRepository } from './infrastructure/repositories/tariffs/tariffs.query.repository.js';
+import { SubscriptionTypesQueryRepository } from './infrastructure/repositories/subscription-types/subscription-types.query.repository.js';
 import { PaymentsRepository } from './infrastructure/repositories/payments/payments.repository.js';
 import { SubscriptionsRepository } from './infrastructure/repositories/subscriptions/subscriptions.repository.js';
 import { BonusesRepository } from './infrastructure/repositories/bonuses/bonuses.repository.js';
@@ -20,13 +22,14 @@ const controllers = [
   PaymentsController,
 ];
 
-const queryHandlers = [GetTariffsQueryHandler];
+const queryHandlers = [GetTariffsQueryHandler, GetSubscriptionTypesQueryHandler];
 
 const useCases = [CreatePaymentUseCase];
 
 const repositories = [
   TariffsRepository,
   TariffsQueryRepository,
+  SubscriptionTypesQueryRepository,
   PaymentsRepository,
   SubscriptionsRepository,
   BonusesRepository,

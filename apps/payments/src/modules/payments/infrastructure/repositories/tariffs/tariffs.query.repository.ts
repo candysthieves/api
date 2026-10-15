@@ -1,7 +1,10 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { KYSELY_CLICKHOUSE } from '../../../../../database/database.constants.js';
 import { Kysely } from 'kysely';
-import { PaymentDatabase } from '../../../../../database/types/payment-database.type.js';
+import {
+  PaymentDatabase,
+  SubscriptionTypeName,
+} from '../../../../../database/types/payment-database.type.js';
 
 @Injectable()
 export class TariffsQueryRepository {
@@ -10,12 +13,23 @@ export class TariffsQueryRepository {
     private readonly db: Kysely<PaymentDatabase>,
   ) {}
 
-  getTariffs() {
+  getTariffs(subscriptionType: SubscriptionTypeName) {
     return this.db
       .selectFrom('tariffs')
-      .select(['id', 'name', 'durationDays', 'priceInMinorUnits'])
-      .where('deletedAt', 'is', null)
-      .orderBy('durationDays', 'asc')
+      .innerJoin(
+        'subscription_types',
+        'subscription_types.id',
+        'tariffs.subscriptionTypeId',
+      )
+      .select([
+        'tariffs.id',
+        'tariffs.name',
+        'tariffs.durationDays',
+        'tariffs.priceInMinorUnits',
+      ])
+      .where('tariffs.deletedAt', 'is', null)
+      .where('subscription_types.namePaymentStatus', '=', subscriptionType)
+      .orderBy('tariffs.durationDays', 'asc')
       .execute();
   }
 }
