@@ -1,8 +1,8 @@
 import { Controller, Get } from '@nestjs/common';
 import { QueryBus } from '@nestjs/cqrs';
 import { ApiOkResponse, ApiTags } from '@nestjs/swagger';
-import { GetTariffsQuery } from '../application/get-tariffs.query-handler.js';
-import { TariffViewType } from './tariff-view.type.js';
+import { GetTariffsQuery } from '../application/query-handler/get-tariffs.query-handler.js';
+import { TariffViewType } from './view-types/tariff-view.type.js';
 
 @ApiTags('Tariffs')
 @Controller('tariffs')

@@ -1,12 +1,15 @@
 import { IQueryHandler, QueryHandler } from '@nestjs/cqrs';
-import { TariffViewType } from '../api/tariff-view.type.js';
-import { TariffsMapper } from '../api/tariffs.mapper.js';
-import { PaymentsTcpService } from './payments-tcp.service.js';
+import { PaymentsTcpService } from '../payments-tcp.service.js';
+import { TariffsMapper } from '../../api/mappers/tariffs.mapper.js';
+import { TariffViewType } from '../../api/view-types/tariff-view.type.js';
 
 export class GetTariffsQuery {}
 
 @QueryHandler(GetTariffsQuery)
-export class GetTariffsQueryHandler implements IQueryHandler<GetTariffsQuery> {
+export class GetTariffsQueryHandler implements IQueryHandler<
+  GetTariffsQuery,
+  TariffViewType[]
+> {
   constructor(private readonly paymentsTcpService: PaymentsTcpService) {}
 
   async execute(): Promise<TariffViewType[]> {

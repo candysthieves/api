@@ -1,5 +1,5 @@
-import { TariffViewType } from './tariff-view.type.js';
-import type { PaymentTariff } from '../application/payments-tcp.service.js';
+import type { PaymentTariff } from '../../application/payments-tcp.service.js';
+import { TariffViewType } from '@main/modules/payments/api/view-types/tariff-view.type.js';
 
 export class TariffsMapper {
   static toView(tariff: PaymentTariff): TariffViewType {
@@ -14,6 +14,6 @@ export class TariffsMapper {
   }
 
   static toViews(tariffs: PaymentTariff[]): TariffViewType[] {
-    return tariffs.map((tariff) => this.toView(tariff));
+    return tariffs.map((tariff): TariffViewType => this.toView(tariff));
   }
 }

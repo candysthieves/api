@@ -1,12 +1,16 @@
 import { Module } from '@nestjs/common';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { ConfigService } from '@nestjs/config';
-import { GetTariffsQueryHandler } from './application/get-tariffs.query-handler.js';
+import { GetTariffsQueryHandler } from './application/query-handler/get-tariffs.query-handler.js';
 import {
   PaymentsTcpService,
   PAYMENTS_TCP_SERVICE,
 } from './application/payments-tcp.service.js';
 import { TariffsController } from './api/tariffs.controller.js';
+
+const controllers = [TariffsController];
+const queryHandlers = [GetTariffsQueryHandler];
+const services = [PaymentsTcpService];
 
 @Module({
   imports: [
@@ -24,7 +28,8 @@ import { TariffsController } from './api/tariffs.controller.js';
       },
     ]),
   ],
-  controllers: [TariffsController],
-  providers: [PaymentsTcpService, GetTariffsQueryHandler],
+  controllers: [...controllers],
+  providers: [...queryHandlers, ...services],
+  exports: [...services],
 })
-export class TariffsModule {}
+export class PaymentsModule {}

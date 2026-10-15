@@ -17,11 +17,22 @@ export class PaymentsTcpService {
     @Inject(PAYMENTS_TCP_SERVICE) private readonly paymentsClient: ClientProxy,
   ) {}
 
-  getTariffs(): Promise<PaymentTariff[]> {
-    return lastValueFrom(
+  async getTariffs(): Promise<PaymentTariff[]> {
+    const result = await lastValueFrom(
       this.paymentsClient
-        .send<PaymentTariff[]>({ cmd: 'get-tariffs' }, {})
+        .send<{
+          data: PaymentTariff[] | null;
+          error: { errors?: { message?: string }[] } | null;
+        }>({ cmd: 'get-tariffs' }, {})
         .pipe(timeout(5_000)),
     );
+
+    if (result.error || !result.data) {
+      throw new Error(
+        result.error?.errors?.[0]?.message ?? 'Failed to get tariffs',
+      );
+    }
+
+    return result.data;
   }
 }
