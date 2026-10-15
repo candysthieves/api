@@ -3,6 +3,7 @@ export type CreatePaymentParams = {
   amount: string;
   currency: string;
   description: string;
+  durationDays: number;
 };
 
 export type CreatePaymentResult = {

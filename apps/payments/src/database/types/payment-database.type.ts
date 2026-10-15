@@ -6,10 +6,10 @@ export type PaymentStatus = 'pending' | 'succeeded' | 'failed' | 'refunded';
 
 export interface SubscriptionTypeTable {
   id: number;
-  name_payment_status: SubscriptionTypeName;
-  created_at: Generated<string>;
-  updated_at: Generated<string>;
-  deleted_at: string | null;
+  namePaymentStatus: SubscriptionTypeName;
+  createdAt: Generated<Date>;
+  updatedAt: Generated<Date>;
+  deletedAt: Date | null;
 }
 
 export interface PaymentsTable {

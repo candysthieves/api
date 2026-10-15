@@ -12,6 +12,7 @@ export class PaymentParamsFactory {
       amount: tariff.priceInMinorUnits,
       currency,
       description: `Subscription "${tariff.name}" for ${tariff.durationDays} day(s)`,
+      durationDays: tariff.durationDays,
     };
   }
 }
