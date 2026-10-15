@@ -5,6 +5,8 @@ import { PaymentFactory } from '../factories/payment.factory.js';
 import { PaymentsRepository } from '../../infrastructure/repositories/payments/payments.repository.js';
 import { PaymentProviderFactory } from '../../infrastructure/providers/payment-provider.factory.js';
 import { PaymentParamsFactory } from '../factories/payment-params.factory.js';
+import { PaymentsMapper } from '../../api/mappers/payments.mapper.js';
+import { PaymentViewType } from '../../api/view-types/payment-view.type.js';
 
 export class CreatePaymentCommand {
   constructor(
@@ -13,9 +15,6 @@ export class CreatePaymentCommand {
     public readonly provider: PaymentProvider,
   ) {}
 }
-
-import { PaymentsMapper } from '../../api/mappers/payments.mapper.js';
-import { PaymentViewType } from '../../api/view-types/payment-view.type.js';
 
 @CommandHandler(CreatePaymentCommand)
 export class CreatePaymentUseCase implements ICommandHandler<
