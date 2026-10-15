@@ -1,7 +1,9 @@
 import { Generated, Selectable } from 'kysely';
+import type { SubscriptionTypeName } from '@libs/contracts';
+
+export type { SubscriptionTypeName } from '@libs/contracts';
 
 export type PaymentProvider = 'STRIPE' | 'YOOKASSA';
-export type SubscriptionTypeName = 'Personal' | 'Business';
 export type PaymentStatus = 'pending' | 'succeeded' | 'failed' | 'refunded';
 
 export interface SubscriptionTypeTable {
@@ -40,6 +42,7 @@ export interface BonusesTable {
 export interface TariffTable {
   id: Generated<string>;
   name: string;
+  subscriptionTypeId: number;
   durationDays: number;
   priceInMinorUnits: string;
   createdAt: Generated<Date>;

@@ -7,7 +7,7 @@ export function ApiGetTariffs() {
     ApiOperation({
       summary: 'Get list of available subscription tariffs',
       description:
-        'Fetches active subscription tariffs with prices in minor units (cents).',
+        'Fetches active subscription tariffs of the requested type with prices in minor units (cents).',
     }),
     ApiOkResponse({
       description: 'List of tariffs retrieved successfully',

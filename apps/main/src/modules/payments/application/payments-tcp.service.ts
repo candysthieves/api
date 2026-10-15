@@ -2,10 +2,14 @@ import { Inject, Injectable } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { lastValueFrom, timeout } from 'rxjs';
 import { CreatePaymentContract } from '@libs/contracts';
+import type {
+  SubscriptionTypeContract,
+  SubscriptionTypeName,
+} from '@libs/contracts';
 
 export type PaymentTariff = {
   id: string;
-  name: string;
+  tariff_name: string;
   durationDays: number;
   priceInMinorUnits: string;
 };
@@ -31,16 +35,35 @@ export class PaymentsTcpService {
     @Inject(PAYMENTS_TCP_SERVICE) private readonly paymentsClient: ClientProxy,
   ) {}
 
-  async getTariffs(): Promise<PaymentTariff[]> {
+  async getTariffs(type: SubscriptionTypeName): Promise<PaymentTariff[]> {
     const result = await lastValueFrom(
       this.paymentsClient
-        .send<RpcResponse<PaymentTariff[]>>({ cmd: 'get-tariffs' }, {})
+        .send<RpcResponse<PaymentTariff[]>>({ cmd: 'get-tariffs' }, { type })
         .pipe(timeout(5_000)),
     );
 
     if (result.error || !result.data) {
       throw new Error(
         result.error?.errors?.[0]?.message ?? 'Failed to get tariffs',
+      );
+    }
+
+    return result.data;
+  }
+
+  async getSubscriptionTypes(): Promise<SubscriptionTypeContract[]> {
+    const result = await lastValueFrom(
+      this.paymentsClient
+        .send<RpcResponse<SubscriptionTypeContract[]>>(
+          { cmd: 'get-subscription-types' },
+          {},
+        )
+        .pipe(timeout(5_000)),
+    );
+
+    if (result.error || !result.data) {
+      throw new Error(
+        result.error?.errors?.[0]?.message ?? 'Failed to get subscription types',
       );
     }
 

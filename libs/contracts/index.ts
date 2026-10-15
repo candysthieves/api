@@ -7,3 +7,4 @@ export * from './post-image.contract.js';
 export * from './avatar-image.contract.js';
 export * from './cleanup-unused-avatar-files.contract.js';
 export * from './create-payment.contract.js';
+export * from './subscription-type.contract.js';

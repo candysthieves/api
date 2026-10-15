@@ -2,22 +2,28 @@ import { Module } from '@nestjs/common';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { ConfigService } from '@nestjs/config';
 import { GetTariffsQueryHandler } from './application/query-handler/get-tariffs.query-handler.js';
+import { GetSubscriptionTypesQueryHandler } from './application/query-handler/get-subscription-types.query-handler.js';
 import { CreatePaymentUseCase } from './application/use-cases/create-payment.usecase.js';
 import {
   PaymentsTcpService,
   PAYMENTS_TCP_SERVICE,
 } from './application/payments-tcp.service.js';
 import { TariffsController } from './api/tariffs.controller.js';
+import { SubscriptionTypesController } from './api/subscription-types.controller.js';
 import { PaymentsController } from './api/payments.controller.js';
 import { SubscriptionsController } from './api/subscriptions.controller.js';
 import { CancelSubscriptionUseCase } from './application/use-cases/cancel-subscription.usecase.js';
 
 const controllers = [
   TariffsController,
+  SubscriptionTypesController,
   PaymentsController,
   SubscriptionsController,
 ];
-const queryHandlers = [GetTariffsQueryHandler];
+const queryHandlers = [
+  GetTariffsQueryHandler,
+  GetSubscriptionTypesQueryHandler,
+];
 const useCases = [CreatePaymentUseCase, CancelSubscriptionUseCase];
 const services = [PaymentsTcpService];
 

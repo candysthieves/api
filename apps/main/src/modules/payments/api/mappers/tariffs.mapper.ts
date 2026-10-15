@@ -5,7 +5,7 @@ export class TariffsMapper {
   static toView(tariff: PaymentTariff): TariffViewType {
     return {
       id: tariff.id,
-      name: tariff.name,
+      tariff_name: tariff.tariff_name,
       durationDays: tariff.durationDays,
       priceInMinorUnits: Number(tariff.priceInMinorUnits),
       currency: 'USD',

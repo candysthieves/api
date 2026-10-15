@@ -11,7 +11,7 @@ export class TariffsMapper {
   static toView(tariff: TariffDbRow): TariffViewType {
     return {
       id: tariff.id,
-      name: tariff.name,
+      tariff_name: tariff.name,
       durationDays: tariff.durationDays,
       priceInMinorUnits: tariff.priceInMinorUnits,
     };
