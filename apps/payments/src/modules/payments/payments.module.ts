@@ -13,6 +13,7 @@ import { BonusesRepository } from './infrastructure/repositories/bonuses/bonuses
 import { StripeService } from './infrastructure/providers/stripe/stripe.service.js';
 import { YookassaService } from './infrastructure/providers/yookassa/yookassa.service.js';
 import { PaymentProviderFactory } from './infrastructure/providers/payment-provider.factory.js';
+import { CancelSubscriptionUseCase } from './application/use-cases/cancel-subscription.use-case.js';
 
 const controllers = [
   TariffsController,
@@ -22,7 +23,7 @@ const controllers = [
 
 const queryHandlers = [GetTariffsQueryHandler];
 
-const useCases = [CreatePaymentUseCase];
+const useCases = [CreatePaymentUseCase, CancelSubscriptionUseCase];
 
 const repositories = [
   TariffsRepository,
