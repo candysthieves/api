@@ -1,6 +1,6 @@
 export type CreatePaymentParams = {
   paymentId: string;
-  amount: string;
+  amount: number;
   currency: string;
   description: string;
   durationDays: number;
