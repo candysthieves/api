@@ -1,6 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { lastValueFrom, timeout } from 'rxjs';
+import { CreatePaymentContract } from '@libs/contracts';
 
 export type PaymentTariff = {
   id: string;
@@ -46,11 +47,9 @@ export class PaymentsTcpService {
     return result.data;
   }
 
-  createPayment(payload: {
-    userId: string;
-    tariffId: string;
-    provider: string;
-  }): Promise<RpcResponse<PaymentResult>> {
+  createPayment(
+    payload: CreatePaymentContract,
+  ): Promise<RpcResponse<PaymentResult>> {
     return lastValueFrom(
       this.paymentsClient
         .send<RpcResponse<PaymentResult>>({ cmd: 'create-payment' }, payload)

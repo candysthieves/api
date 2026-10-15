@@ -1,7 +1,7 @@
 import { Controller } from '@nestjs/common';
 import { CommandBus } from '@nestjs/cqrs';
 import { MessagePattern, Payload } from '@nestjs/microservices';
-import { CreatePaymentDto } from './dto/create-payment.dto.js';
+import { CreatePaymentContract } from '@libs/contracts';
 import { CreatePaymentCommand } from '../application/use-cases/create-payment.use-case.js';
 import { PaymentViewType } from './view-types/payment-view.type.js';
 import { ObjectResult } from '../../../core/object-result.js';
@@ -12,7 +12,7 @@ export class PaymentsController {
 
   @MessagePattern({ cmd: 'create-payment' })
   async createPayment(
-    @Payload() dto: CreatePaymentDto,
+    @Payload() dto: CreatePaymentContract,
   ): Promise<ObjectResult<PaymentViewType>> {
     const payment = await this.commandBus.execute<
       CreatePaymentCommand,

@@ -6,7 +6,7 @@ import {
 } from '../payments-tcp.service.js';
 import { PaymentsMapper } from '../../api/mappers/payments.mapper.js';
 import { PaymentViewType } from '../../api/view-types/payment-view.type.js';
-import { PaymentProvider } from '../../api/dto/create-payment.dto.js';
+import { type PaymentProvider } from '@libs/contracts';
 import { DomainExceptions } from '../../../../core/exceptions/domain-exceptions.js';
 import { ErrorStatus } from '../../../../core/exceptions/domain-exception-code.js';
 
