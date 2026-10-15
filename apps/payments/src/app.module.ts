@@ -1,12 +1,12 @@
 import { Module } from '@nestjs/common';
+import { CqrsModule } from '@nestjs/cqrs';
 import { configModule } from './config.js';
 import { PaymentsConfig } from './payments.config.js';
 import { DatabaseModule } from './database/database.module.js';
-import { PaymentsModule } from './payments/payments.module.js';
-import { SubscriptionsModule } from './subscriptions/subscriptions.module.js';
+import { PaymentsModule } from './modules/payments/payments.module.js';
 
 @Module({
-  imports: [configModule, DatabaseModule, PaymentsModule, SubscriptionsModule],
+  imports: [configModule, CqrsModule.forRoot(), DatabaseModule, PaymentsModule],
   providers: [PaymentsConfig],
   exports: [PaymentsConfig],
 })

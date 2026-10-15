@@ -8,7 +8,7 @@ import { CoreModule } from './core/core.module.js';
 import { TestController } from './test.controller.js';
 import { PrismaModule } from './infrastructure/prisma/prisma.module.js';
 import { ScheduleModule } from '@nestjs/schedule';
-import { TariffsModule } from './modules/tariffs/tariffs.module.js';
+import { PaymentsModule } from './modules/payments/payments.module.js';
 
 @Module({
   imports: [
@@ -18,7 +18,7 @@ import { TariffsModule } from './modules/tariffs/tariffs.module.js';
     CoreModule,
     CqrsModule.forRoot(),
     UserAccountsModule,
-    TariffsModule,
+    PaymentsModule,
   ],
   controllers:
     process.env.NODE_ENV === 'testing'

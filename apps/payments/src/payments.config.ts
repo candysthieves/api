@@ -10,6 +10,9 @@ export class PaymentsConfig {
   readonly clickhouseUser: string;
   readonly clickhousePassword: string;
   readonly clickhouseDatabase: string;
+  readonly stripeSecretKey: string;
+  readonly stripeWebhookSecret: string;
+  readonly frontendUrl: string;
 
   constructor(configService: ConfigService) {
     this.port = configService.getOrThrow<number>('PORT');
@@ -22,5 +25,10 @@ export class PaymentsConfig {
     this.clickhouseDatabase = configService.getOrThrow<string>(
       'CLICKHOUSE_DATABASE',
     );
+    this.stripeSecretKey = configService.getOrThrow<string>('STRIPE_SECRET_KEY');
+    this.stripeWebhookSecret = configService.getOrThrow<string>(
+      'STRIPE_WEBHOOK_SECRET',
+    );
+    this.frontendUrl = configService.getOrThrow<string>('FRONTEND_URL');
   }
 }

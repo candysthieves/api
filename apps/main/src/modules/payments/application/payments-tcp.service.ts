@@ -1,0 +1,59 @@
+import { Inject, Injectable } from '@nestjs/common';
+import { ClientProxy } from '@nestjs/microservices';
+import { lastValueFrom, timeout } from 'rxjs';
+import { CreatePaymentContract } from '@libs/contracts';
+
+export type PaymentTariff = {
+  id: string;
+  name: string;
+  durationDays: number;
+  priceInMinorUnits: string;
+};
+
+export type PaymentResult = {
+  paymentId: string;
+  paymentUrl: string;
+};
+
+export type RpcResponse<T> = {
+  data: T | null;
+  error: {
+    code?: string;
+    errors?: { field: string; message: string }[];
+  } | null;
+};
+
+export const PAYMENTS_TCP_SERVICE = 'PAYMENTS_TCP_SERVICE';
+
+@Injectable()
+export class PaymentsTcpService {
+  constructor(
+    @Inject(PAYMENTS_TCP_SERVICE) private readonly paymentsClient: ClientProxy,
+  ) {}
+
+  async getTariffs(): Promise<PaymentTariff[]> {
+    const result = await lastValueFrom(
+      this.paymentsClient
+        .send<RpcResponse<PaymentTariff[]>>({ cmd: 'get-tariffs' }, {})
+        .pipe(timeout(5_000)),
+    );
+
+    if (result.error || !result.data) {
+      throw new Error(
+        result.error?.errors?.[0]?.message ?? 'Failed to get tariffs',
+      );
+    }
+
+    return result.data;
+  }
+
+  createPayment(
+    payload: CreatePaymentContract,
+  ): Promise<RpcResponse<PaymentResult>> {
+    return lastValueFrom(
+      this.paymentsClient
+        .send<RpcResponse<PaymentResult>>({ cmd: 'create-payment' }, payload)
+        .pipe(timeout(5_000)),
+    );
+  }
+}

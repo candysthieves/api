@@ -40,5 +40,17 @@ export class EnvironmentVariables {
   @IsString()
   @IsNotEmpty()
   CLICKHOUSE_DATABASE!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  STRIPE_SECRET_KEY!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  STRIPE_WEBHOOK_SECRET!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  FRONTEND_URL!: string;
 }
 
