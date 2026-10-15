@@ -9,6 +9,19 @@ export type PaymentTariff = {
   priceInMinorUnits: string;
 };
 
+export type PaymentResult = {
+  paymentId: string;
+  paymentUrl: string;
+};
+
+export type RpcResponse<T> = {
+  data: T | null;
+  error: {
+    code?: string;
+    errors?: { field: string; message: string }[];
+  } | null;
+};
+
 export const PAYMENTS_TCP_SERVICE = 'PAYMENTS_TCP_SERVICE';
 
 @Injectable()
@@ -20,10 +33,7 @@ export class PaymentsTcpService {
   async getTariffs(): Promise<PaymentTariff[]> {
     const result = await lastValueFrom(
       this.paymentsClient
-        .send<{
-          data: PaymentTariff[] | null;
-          error: { errors?: { message?: string }[] } | null;
-        }>({ cmd: 'get-tariffs' }, {})
+        .send<RpcResponse<PaymentTariff[]>>({ cmd: 'get-tariffs' }, {})
         .pipe(timeout(5_000)),
     );
 
@@ -34,5 +44,17 @@ export class PaymentsTcpService {
     }
 
     return result.data;
+  }
+
+  createPayment(payload: {
+    userId: string;
+    tariffId: string;
+    provider: string;
+  }): Promise<RpcResponse<PaymentResult>> {
+    return lastValueFrom(
+      this.paymentsClient
+        .send<RpcResponse<PaymentResult>>({ cmd: 'create-payment' }, payload)
+        .pipe(timeout(5_000)),
+    );
   }
 }
