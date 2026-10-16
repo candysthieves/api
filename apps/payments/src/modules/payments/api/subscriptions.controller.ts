@@ -3,6 +3,7 @@ import { CommandBus } from '@nestjs/cqrs';
 import { MessagePattern, Payload } from '@nestjs/microservices';
 import { CancelSubscriptionCommand } from '../application/use-cases/cancel-subscription.use-case.js';
 import { ObjectResult } from '../../../core/object-result.js';
+import { SubscriptionErrorCode } from '@libs/contracts';
 
 @Controller('subscriptions')
 export class SubscriptionsController {
@@ -19,7 +20,7 @@ export class SubscriptionsController {
 
     if (!cancelled) {
       return ObjectResult.failure({
-        code: 'SUBSCRIPTION_NOT_FOUND',
+        code: SubscriptionErrorCode.SUBSCRIPTION_NOT_FOUND,
         errors: [
           {
             field: 'subscription',

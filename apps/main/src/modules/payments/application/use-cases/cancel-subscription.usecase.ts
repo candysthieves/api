@@ -2,6 +2,7 @@ import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { DomainExceptions } from '../../../../core/exceptions/domain-exceptions.js';
 import { ErrorStatus } from '../../../../core/exceptions/domain-exception-code.js';
 import { PaymentsTcpService } from '../payments-tcp.service.js';
+import { SubscriptionErrorCode } from '@libs/contracts';
 
 export class CancelSubscriptionCommand {
   constructor(public readonly userId: string) {}
@@ -19,7 +20,7 @@ export class CancelSubscriptionUseCase implements ICommandHandler<
 
     if (!response.error && response.data) return;
 
-    if (response.error?.code === 'SUBSCRIPTION_NOT_FOUND') {
+    if (response.error?.code === SubscriptionErrorCode.SUBSCRIPTION_NOT_FOUND) {
       DomainExceptions.notFound(
         ErrorStatus.SUBSCRIPTION_NOT_FOUND,
         'subscription',

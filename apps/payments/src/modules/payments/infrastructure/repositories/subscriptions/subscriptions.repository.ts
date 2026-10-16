@@ -10,28 +10,22 @@ export class SubscriptionsRepository {
     private readonly db: Kysely<PaymentDatabase>,
   ) {}
 
-  async requestCancellation(
-    userId: string,
-    requestedAt: Date,
-  ): Promise<boolean> {
-    const subscription = await this.db
+  async findActiveSubscription(userId: string, at: Date) {
+    return this.db
       .selectFrom('subscriptions')
-      .select(['id', 'cancellationRequestedAt'])
+      .select('id')
       .where('userId', '=', userId)
-      .where('expirationDate', '>', requestedAt)
+      .where('expirationDate', '>', at)
       .orderBy('expirationDate', 'desc')
       .executeTakeFirst();
+  }
 
-    if (!subscription) return false;
-    if (subscription.cancellationRequestedAt) return true;
-
+  async requestCancellation(subscriptionId: string, requestedAt: Date) {
     await this.db
       .updateTable('subscriptions')
       .set({ cancellationRequestedAt: requestedAt })
-      .where('id', '=', subscription.id)
+      .where('id', '=', subscriptionId)
       .where('cancellationRequestedAt', 'is', null)
       .execute();
-
-    return true;
   }
 }
