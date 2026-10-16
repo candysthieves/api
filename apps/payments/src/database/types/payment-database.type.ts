@@ -30,6 +30,7 @@ export interface SubscriptionTable {
   tariffId: string;
   lastPaymentId: string;
   expirationDate: Date;
+  cancellationRequestedAt: Date | null;
   createdAt: Generated<Date>;
 }
 

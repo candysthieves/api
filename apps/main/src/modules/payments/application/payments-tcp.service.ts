@@ -79,4 +79,12 @@ export class PaymentsTcpService {
         .pipe(timeout(5_000)),
     );
   }
+
+  cancelSubscription(userId: string): Promise<RpcResponse<boolean>> {
+    return lastValueFrom(
+      this.paymentsClient
+        .send<RpcResponse<boolean>>({ cmd: 'cancel-subscription' }, { userId })
+        .pipe(timeout(5_000)),
+    );
+  }
 }

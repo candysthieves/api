@@ -11,17 +11,20 @@ import {
 import { TariffsController } from './api/tariffs.controller.js';
 import { SubscriptionTypesController } from './api/subscription-types.controller.js';
 import { PaymentsController } from './api/payments.controller.js';
+import { SubscriptionsController } from './api/subscriptions.controller.js';
+import { CancelSubscriptionUseCase } from './application/use-cases/cancel-subscription.usecase.js';
 
 const controllers = [
   TariffsController,
   SubscriptionTypesController,
   PaymentsController,
+  SubscriptionsController,
 ];
 const queryHandlers = [
   GetTariffsQueryHandler,
   GetSubscriptionTypesQueryHandler,
 ];
-const useCases = [CreatePaymentUseCase];
+const useCases = [CreatePaymentUseCase, CancelSubscriptionUseCase];
 const services = [PaymentsTcpService];
 
 @Module({
