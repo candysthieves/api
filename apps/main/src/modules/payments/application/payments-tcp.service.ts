@@ -16,7 +16,18 @@ export type PaymentTariff = {
 
 export type PaymentResult = {
   paymentId: string;
+  yookassaPaymentId: string | null;
   paymentUrl: string;
+};
+
+export type CurrentSubscriptionResult = {
+  expirationDate: Date;
+  nextChargeDate: Date | null;
+};
+export type PendingSubscriptionNotification = {
+  id: string;
+  userId: string;
+  kind: 'RENEWAL_RETRY_SCHEDULED' | 'SUBSCRIPTION_ENDED_AFTER_RETRY';
 };
 
 export type RpcResponse<T> = {
@@ -36,10 +47,9 @@ export class PaymentsTcpService {
   ) {}
 
   async getTariffs(type: SubscriptionTypeName): Promise<PaymentTariff[]> {
-    const result = await lastValueFrom(
-      this.paymentsClient
-        .send<RpcResponse<PaymentTariff[]>>({ cmd: 'get-tariffs' }, { type })
-        .pipe(timeout(5_000)),
+    const result = await this.send<RpcResponse<PaymentTariff[]>>(
+      'get-tariffs',
+      { type },
     );
 
     if (result.error || !result.data) {
@@ -52,18 +62,15 @@ export class PaymentsTcpService {
   }
 
   async getSubscriptionTypes(): Promise<SubscriptionTypeContract[]> {
-    const result = await lastValueFrom(
-      this.paymentsClient
-        .send<RpcResponse<SubscriptionTypeContract[]>>(
-          { cmd: 'get-subscription-types' },
-          {},
-        )
-        .pipe(timeout(5_000)),
+    const result = await this.send<RpcResponse<SubscriptionTypeContract[]>>(
+      'get-subscription-types',
+      {},
     );
 
     if (result.error || !result.data) {
       throw new Error(
-        result.error?.errors?.[0]?.message ?? 'Failed to get subscription types',
+        result.error?.errors?.[0]?.message ??
+          'Failed to get subscription types',
       );
     }
 
@@ -73,18 +80,52 @@ export class PaymentsTcpService {
   createPayment(
     payload: CreatePaymentContract,
   ): Promise<RpcResponse<PaymentResult>> {
-    return lastValueFrom(
-      this.paymentsClient
-        .send<RpcResponse<PaymentResult>>({ cmd: 'create-payment' }, payload)
-        .pipe(timeout(5_000)),
-    );
+    return this.send<RpcResponse<PaymentResult>>('create-payment', payload);
   }
 
   cancelSubscription(userId: string): Promise<RpcResponse<boolean>> {
+    return this.send<RpcResponse<boolean>>('cancel-subscription', { userId });
+  }
+
+  async processYookassaNotification(yookassaPaymentId: string): Promise<void> {
+    const response = await this.send<RpcResponse<null>>(
+      'process-yookassa-notification',
+      { providerPaymentId: yookassaPaymentId },
+    );
+    if (response.error)
+      throw new Error('Payment notification processing failed');
+  }
+
+  getCurrentSubscription(
+    userId: string,
+  ): Promise<RpcResponse<CurrentSubscriptionResult>> {
+    return this.send<RpcResponse<CurrentSubscriptionResult>>(
+      'get-current-subscription',
+      { userId },
+    );
+  }
+
+  getPendingSubscriptionNotifications(
+    limit: number,
+  ): Promise<RpcResponse<PendingSubscriptionNotification[]>> {
+    return this.send<RpcResponse<PendingSubscriptionNotification[]>>(
+      'get-pending-subscription-notifications',
+      { limit },
+    );
+  }
+
+  acknowledgeSubscriptionNotification(
+    notificationId: string,
+  ): Promise<RpcResponse<boolean>> {
+    return this.send<RpcResponse<boolean>>(
+      'acknowledge-subscription-notification',
+      { notificationId },
+    );
+  }
+
+  private send<T>(cmd: string, payload: unknown): Promise<T> {
     return lastValueFrom(
-      this.paymentsClient
-        .send<RpcResponse<boolean>>({ cmd: 'cancel-subscription' }, { userId })
-        .pipe(timeout(5_000)),
+      this.paymentsClient.send<T>({ cmd }, payload).pipe(timeout(5_000)),
     );
   }
 }

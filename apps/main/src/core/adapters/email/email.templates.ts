@@ -43,4 +43,18 @@ export const emailTemplates = {
       `,
     };
   },
+
+  renewalRetryScheduled() {
+    return {
+      subject: 'Subscription renewal needs attention',
+      html: '<h1>Renewal payment failed</h1><p>We will try again in one day. Your access remains active until then.</p>',
+    };
+  },
+
+  subscriptionEndedAfterRetry() {
+    return {
+      subject: 'Your subscription has ended',
+      html: '<h1>Subscription ended</h1><p>The renewal payment failed again, so your subscription access has ended. Subscribe again to restore access.</p>',
+    };
+  },
 };

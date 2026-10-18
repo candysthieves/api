@@ -16,6 +16,15 @@ import { StripeService } from './infrastructure/providers/stripe/stripe.service.
 import { YookassaService } from './infrastructure/providers/yookassa/yookassa.service.js';
 import { PaymentProviderFactory } from './infrastructure/providers/payment-provider.factory.js';
 import { CancelSubscriptionUseCase } from './application/use-cases/cancel-subscription.use-case.js';
+import { ProcessYookassaNotificationUseCase } from './application/use-cases/process-yookassa-notification.usecase.js';
+import { ProcessDueSubscriptionsUseCase } from './application/use-cases/process-due-subscriptions.usecase.js';
+import { SubscriptionRenewalSchedulerService } from './application/services/subscription-renewal-scheduler.service.js';
+import { SubscriptionNotificationsRepository } from './infrastructure/repositories/subscription-notifications/subscription-notifications.repository.js';
+import { GetCurrentSubscriptionQueryHandler } from './application/query-handler/get-current-subscription.query-handler.js';
+import {
+  AcknowledgeSubscriptionNotificationUseCase,
+  GetPendingSubscriptionNotificationsHandler,
+} from './application/use-cases/deliver-subscription-notifications.usecase.js';
 
 const controllers = [
   TariffsController,
@@ -23,9 +32,20 @@ const controllers = [
   PaymentsController,
 ];
 
-const queryHandlers = [GetTariffsQueryHandler, GetSubscriptionTypesQueryHandler];
+const queryHandlers = [
+  GetTariffsQueryHandler,
+  GetSubscriptionTypesQueryHandler,
+  GetCurrentSubscriptionQueryHandler,
+  GetPendingSubscriptionNotificationsHandler,
+];
 
-const useCases = [CreatePaymentUseCase, CancelSubscriptionUseCase];
+const useCases = [
+  CreatePaymentUseCase,
+  CancelSubscriptionUseCase,
+  ProcessYookassaNotificationUseCase,
+  ProcessDueSubscriptionsUseCase,
+  AcknowledgeSubscriptionNotificationUseCase,
+];
 
 const repositories = [
   TariffsRepository,
@@ -34,9 +54,15 @@ const repositories = [
   PaymentsRepository,
   SubscriptionsRepository,
   BonusesRepository,
+  SubscriptionNotificationsRepository,
 ];
 
-const providers = [StripeService, YookassaService, PaymentProviderFactory];
+const providers = [
+  StripeService,
+  YookassaService,
+  PaymentProviderFactory,
+  SubscriptionRenewalSchedulerService,
+];
 
 @Module({
   imports: [CqrsModule],

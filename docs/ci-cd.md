@@ -24,7 +24,7 @@
    | DOCKERHUB_USERNAME | `chites`                                             |
    | DOCKERHUB_TOKEN    | Docker Hub token с правом публикации этих образов    |
 
-4. На VPS уже должны находиться `/home/api/docker-compose.vps.yml`, `.main.env` и `.files.env`. Payments не требует отдельного env-файла: Compose задаёт `NODE_ENV=production` и `PORT=3003`. Настройте reverse proxy на порт `3003`; свободен ли порт, проверяется при запуске контейнера. Docker Compose должен поддерживать `up --wait --wait-timeout`; ориентир проекта — версия 2.30 или новее. Bash и flock должны быть установлены.
+4. На VPS уже должны находиться `/home/api/docker-compose.vps.yml`, `.main.env`, `.files.env` и `.payments.env`. В `.payments.env` задайте `YOOKASSA_SHOP_ID` и `YOOKASSA_SECRET_KEY`; реальные значения не храните в репозитории. Настройте в кабинете YooKassa webhook `https://api.lumosapp.net/payments/yookassa/webhook`. Compose задаёт `NODE_ENV=production` и `PORT=3003`. Настройте reverse proxy на порт `3003`; свободен ли порт, проверяется при запуске контейнера. Docker Compose должен поддерживать `up --wait --wait-timeout`; ориентир проекта — версия 2.30 или новее. Bash и flock должны быть установлены.
 5. Открыть Actions → Deploy → Run workflow → выбрать **developer** → Run workflow.
 6. Проверить jobs CI, images и deploy. Итоговый тег записывается в Summary.
 

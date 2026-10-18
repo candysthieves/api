@@ -1,13 +1,11 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsEnum, IsUUID } from 'class-validator';
-
-export const PAYMENT_PROVIDERS = ['STRIPE', 'YOOKASSA'] as const;
-export type PaymentProvider = (typeof PAYMENT_PROVIDERS)[number];
+import { PAYMENT_PROVIDERS, type PaymentProvider } from '@libs/contracts';
 
 export class CreatePaymentDto {
   @ApiProperty({
     description: 'UUID of the tariff to purchase',
-    example: '123e4567-e89b-12d3-a456-426614174000',
+    example: 'f7ab9fb0-5551-4651-b101-00f4910fe68e',
   })
   @IsUUID()
   tariffId!: string;

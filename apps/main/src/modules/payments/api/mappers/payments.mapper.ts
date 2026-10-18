@@ -5,6 +5,7 @@ export class PaymentsMapper {
   static toView(result: PaymentResult): PaymentViewType {
     return {
       paymentId: result.paymentId,
+      yookassaPaymentId: result.yookassaPaymentId,
       paymentUrl: result.paymentUrl,
     };
   }

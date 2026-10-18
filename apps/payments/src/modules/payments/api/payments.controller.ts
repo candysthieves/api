@@ -5,6 +5,7 @@ import { CreatePaymentContract } from '@libs/contracts';
 import { CreatePaymentCommand } from '../application/use-cases/create-payment.use-case.js';
 import { PaymentViewType } from './view-types/payment-view.type.js';
 import { ObjectResult } from '../../../core/object-result.js';
+import { ProcessYookassaNotificationCommand } from '../application/use-cases/process-yookassa-notification.usecase.js';
 
 @Controller('payments')
 export class PaymentsController {
@@ -21,5 +22,14 @@ export class PaymentsController {
 
     return ObjectResult.success(payment);
   }
-}
 
+  @MessagePattern({ cmd: 'process-yookassa-notification' })
+  async processYookassaNotification(
+    @Payload() payload: { providerPaymentId: string },
+  ): Promise<ObjectResult<null>> {
+    await this.commandBus.execute(
+      new ProcessYookassaNotificationCommand(payload.providerPaymentId),
+    );
+    return ObjectResult.success(null);
+  }
+}

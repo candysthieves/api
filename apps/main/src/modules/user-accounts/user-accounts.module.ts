@@ -137,5 +137,6 @@ import { ProfileQueryHandler } from './application/query-handler/auth/profile.qu
     UsersService,
     InboxService,
   ],
+  exports: [UsersRepository],
 })
 export class UserAccountsModule {}

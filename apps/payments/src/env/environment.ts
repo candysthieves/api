@@ -1,12 +1,5 @@
 import { Type } from 'class-transformer';
-import {
-  IsInt,
-  IsNotEmpty,
-  IsString,
-  Max,
-  Min,
-} from 'class-validator';
-
+import { IsInt, IsNotEmpty, IsString, Max, Min } from 'class-validator';
 
 export class EnvironmentVariables {
   @Type(() => Number)
@@ -52,5 +45,12 @@ export class EnvironmentVariables {
   @IsString()
   @IsNotEmpty()
   FRONTEND_URL!: string;
-}
 
+  @IsString()
+  @IsNotEmpty()
+  YOOKASSA_SHOP_ID!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  YOOKASSA_SECRET_KEY!: string;
+}

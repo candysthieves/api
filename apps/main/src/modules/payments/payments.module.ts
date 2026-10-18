@@ -13,6 +13,9 @@ import { SubscriptionTypesController } from './api/subscription-types.controller
 import { PaymentsController } from './api/payments.controller.js';
 import { SubscriptionsController } from './api/subscriptions.controller.js';
 import { CancelSubscriptionUseCase } from './application/use-cases/cancel-subscription.usecase.js';
+import { GetCurrentSubscriptionQueryHandler } from './application/query-handler/get-current-subscription.query-handler.js';
+import { SubscriptionNotificationSchedulerService } from './application/services/subscription-notification-scheduler.service.js';
+import { UserAccountsModule } from '../user-accounts/user-accounts.module.js';
 
 const controllers = [
   TariffsController,
@@ -23,12 +26,14 @@ const controllers = [
 const queryHandlers = [
   GetTariffsQueryHandler,
   GetSubscriptionTypesQueryHandler,
+  GetCurrentSubscriptionQueryHandler,
 ];
 const useCases = [CreatePaymentUseCase, CancelSubscriptionUseCase];
-const services = [PaymentsTcpService];
+const services = [PaymentsTcpService, SubscriptionNotificationSchedulerService];
 
 @Module({
   imports: [
+    UserAccountsModule,
     ClientsModule.registerAsync([
       {
         name: PAYMENTS_TCP_SERVICE,
