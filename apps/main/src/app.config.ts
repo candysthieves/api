@@ -30,6 +30,8 @@ export class AppConfig {
   readonly unusedFilesCleanupEnabled: boolean;
   readonly adminUsername: string;
   readonly adminPassword: string;
+  readonly stripeSecretKey: string;
+  readonly stripeWebhookSecret: string;
 
   constructor(@Inject(ConfigService) configService: ConfigService) {
     this.port = Number(configService.getOrThrow<string>('PORT'));
@@ -82,9 +84,13 @@ export class AppConfig {
         .filter(Boolean),
     );
     this.clientUrl = configService.getOrThrow<string>('CLIENT_URL');
-    this.cookieDomain = configService.get<string>('COOKIE_DOMAIN')?.trim() || undefined;
+    this.cookieDomain =
+      configService.get<string>('COOKIE_DOMAIN')?.trim() || undefined;
     this.unusedFilesCleanupEnabled =
       configService.get<string>('UNUSED_FILES_CLEANUP_ENABLED') === 'true';
+    this.stripeSecretKey = configService.get<string>('STRIPE_SECRET_KEY') ?? '';
+    this.stripeWebhookSecret =
+      configService.get<string>('STRIPE_WEBHOOK_SECRET') ?? '';
   }
 
   get refreshTokenMaxAge(): number {

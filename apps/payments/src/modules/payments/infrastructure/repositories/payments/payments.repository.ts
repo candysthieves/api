@@ -5,6 +5,7 @@ import {
   PaymentDatabase,
   PaymentEntity,
   PaymentsTable,
+  PaymentStatus,
 } from '../../../../../database/types/payment-database.type.js';
 
 @Injectable()
@@ -25,6 +26,28 @@ export class PaymentsRepository {
     await this.db
       .updateTable('payments')
       .set({ userExternalPaymentId: externalPaymentId })
+      .where('id', '=', paymentId)
+      .execute();
+  }
+
+  async findByExternalPaymentId(
+    externalPaymentId: string,
+  ): Promise<PaymentEntity | undefined> {
+    return this.db
+      .selectFrom('payments')
+      .selectAll()
+      .where('userExternalPaymentId', '=', externalPaymentId)
+      .executeTakeFirst();
+  }
+
+  async updateStatus(
+    paymentId: string,
+    status: PaymentStatus,
+    paymentDate: Date,
+  ): Promise<void> {
+    await this.db
+      .updateTable('payments')
+      .set({ status, paymentDate })
       .where('id', '=', paymentId)
       .execute();
   }

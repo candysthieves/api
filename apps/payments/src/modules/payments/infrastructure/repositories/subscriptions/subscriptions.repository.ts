@@ -1,7 +1,10 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { KYSELY_CLICKHOUSE } from '../../../../../database/database.constants.js';
-import { Kysely } from 'kysely';
-import { PaymentDatabase } from '../../../../../database/types/payment-database.type.js';
+import { Insertable, Kysely } from 'kysely';
+import {
+  PaymentDatabase,
+  SubscriptionTable,
+} from '../../../../../database/types/payment-database.type.js';
 
 @Injectable()
 export class SubscriptionsRepository {
@@ -10,10 +13,14 @@ export class SubscriptionsRepository {
     private readonly db: Kysely<PaymentDatabase>,
   ) {}
 
+  async create(subscription: Insertable<SubscriptionTable>): Promise<void> {
+    await this.db.insertInto('subscriptions').values(subscription).execute();
+  }
+
   async findActiveSubscription(userId: string, at: Date) {
     return this.db
       .selectFrom('subscriptions')
-      .select('id')
+      .selectAll()
       .where('userId', '=', userId)
       .where('expirationDate', '>', at)
       .orderBy('expirationDate', 'desc')
