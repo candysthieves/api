@@ -1,12 +1,16 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { KYSELY_CLICKHOUSE } from '../../../../../database/database.constants.js';
-import { Insertable, Kysely } from 'kysely';
+import { Insertable, Kysely, sql } from 'kysely';
 import {
   PaymentDatabase,
   PaymentEntity,
   PaymentsTable,
   PaymentStatus,
 } from '../../../../../database/types/payment-database.type.js';
+
+function formatClickhouseDateTime(date: Date): string {
+  return date.toISOString().slice(0, 19).replace('T', ' ');
+}
 
 @Injectable()
 export class PaymentsRepository {
@@ -45,9 +49,14 @@ export class PaymentsRepository {
     status: PaymentStatus,
     paymentDate: Date,
   ): Promise<void> {
+    const formattedDate = formatClickhouseDateTime(paymentDate);
+
     await this.db
       .updateTable('payments')
-      .set({ status, paymentDate })
+      .set({
+        status,
+        paymentDate: sql<Date>`toDateTime(${formattedDate})` as unknown as Date,
+      })
       .where('id', '=', paymentId)
       .execute();
   }

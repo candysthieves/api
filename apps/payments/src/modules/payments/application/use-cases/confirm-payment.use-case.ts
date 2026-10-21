@@ -3,7 +3,7 @@ import { ConfirmPaymentContract } from '@libs/contracts/confirm-payment.contract
 import { PaymentsRepository } from '../../infrastructure/repositories/payments/payments.repository.js';
 import { SubscriptionsRepository } from '../../infrastructure/repositories/subscriptions/subscriptions.repository.js';
 import { TariffsRepository } from '../../infrastructure/repositories/tariffs/tariffs.repository.js';
-import { randomUUID } from 'node:crypto';
+import { SubscriptionFactory } from '../factories/subscription.factory.js';
 
 export class ConfirmPaymentCommand {
   constructor(public readonly dto: ConfirmPaymentContract) {}
@@ -29,7 +29,6 @@ export class ConfirmPaymentUseCase implements ICommandHandler<
       return;
     }
 
-    // Идемпотентность: не обрабатываем повторно успешный платеж
     if (payment.status === 'succeeded') {
       return;
     }
@@ -55,13 +54,13 @@ export class ConfirmPaymentUseCase implements ICommandHandler<
     const expirationDate = new Date(baseDate);
     expirationDate.setDate(expirationDate.getDate() + tariff.durationDays);
 
-    await this.subscriptionsRepository.create({
-      id: randomUUID(),
-      userId: dto.userId,
-      tariffId: tariff.id,
-      lastPaymentId: payment.id,
+    const subscription = SubscriptionFactory.create(
+      dto.userId,
+      tariff.id,
+      payment.id,
       expirationDate,
-      cancellationRequestedAt: null,
-    });
+    );
+
+    await this.subscriptionsRepository.create(subscription);
   }
 }

@@ -1,8 +1,7 @@
 import { Controller } from '@nestjs/common';
 import { CommandBus } from '@nestjs/cqrs';
 import { MessagePattern, Payload } from '@nestjs/microservices';
-import { CreatePaymentContract } from '@libs/contracts';
-import { ConfirmPaymentContract } from '@libs/contracts/confirm-payment.contract.js';
+import { CreatePaymentContract, ConfirmPaymentContract } from '@libs/contracts';
 import { CreatePaymentCommand } from '../application/use-cases/create-payment.use-case.js';
 import { ConfirmPaymentCommand } from '../application/use-cases/confirm-payment.use-case.js';
 import { PaymentViewType } from './view-types/payment-view.type.js';

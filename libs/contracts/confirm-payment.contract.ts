@@ -1,7 +1,23 @@
+import { IsIn, IsNotEmpty, IsString } from 'class-validator';
+
 export class ConfirmPaymentContract {
+  @IsString()
+  @IsIn(['STRIPE', 'YOOKASSA'])
   provider: 'STRIPE' | 'YOOKASSA';
-  eventId: string; // id события провайдера (для идемпотентности)
-  externalPaymentId: string; // id платежа на стороне провайдера
-  userId: string; // id пользователя
+
+  @IsString()
+  @IsNotEmpty()
+  eventId: string;
+
+  @IsString()
+  @IsNotEmpty()
+  externalPaymentId: string;
+
+  @IsString()
+  @IsNotEmpty()
+  userId: string;
+
+  @IsString()
+  @IsIn(['succeeded', 'failed'])
   status: 'succeeded' | 'failed';
 }
