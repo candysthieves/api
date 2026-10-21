@@ -1,11 +1,26 @@
 import { ApiProperty } from '@nestjs/swagger';
 
 export class SubscriptionHistoryItemViewType {
+  @ApiProperty({ example: 'payment-123' })
+  id!: string;
+
   @ApiProperty({
     example: '2026-09-15T12:00:00.000Z',
     format: 'date-time',
   })
   date!: string;
+
+  @ApiProperty({
+    example: '2026-09-15T12:00:00.000Z',
+    format: 'date-time',
+  })
+  paymentDate!: string;
+
+  @ApiProperty({
+    example: '2026-10-15T12:00:00.000Z',
+    format: 'date-time',
+  })
+  subscriptionEndDate!: string;
 
   @ApiProperty({ example: 999, description: 'Payment amount.' })
   price!: number;

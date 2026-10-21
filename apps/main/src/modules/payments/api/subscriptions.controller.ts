@@ -18,14 +18,20 @@ import { SubscriptionHistoryItemViewType } from './view-types/subscription-histo
 
 const subscriptionHistoryExample: SubscriptionHistoryItemViewType[] = [
   {
+    id: 'payment-123',
     date: '2026-09-15T12:00:00.000Z',
+    paymentDate: '2026-09-15T12:00:00.000Z',
+    subscriptionEndDate: '2026-10-15T12:00:00.000Z',
     price: 999,
     subscriptionName: 'Monthly',
     subscriptionType: 'Personal',
     paymentService: 'YOOKASSA',
   },
   {
+    id: 'payment-122',
     date: '2026-08-15T12:00:00.000Z',
+    paymentDate: '2026-08-15T12:00:00.000Z',
+    subscriptionEndDate: '2026-09-15T12:00:00.000Z',
     price: 999,
     subscriptionName: 'Monthly',
     subscriptionType: 'Personal',
