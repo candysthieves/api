@@ -7,7 +7,9 @@ import { Logger } from '@nestjs/common';
 import { MainRabbitMqProducerService } from './core/rabbitmq/main-rabbitmq-producer.service.js';
 
 async function bootstrap() {
-  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
+    rawBody: true,
+  });
   const appConfig = app.get<AppConfig>(AppConfig);
 
   setupApp(app);

@@ -6,6 +6,8 @@ import { PaymentsController } from './api/payments.controller.js';
 import { GetTariffsQueryHandler } from './application/query-handler/get-tariffs.query-handler.js';
 import { GetSubscriptionTypesQueryHandler } from './application/query-handler/get-subscription-types.query-handler.js';
 import { CreatePaymentUseCase } from './application/use-cases/create-payment.use-case.js';
+import { CancelSubscriptionUseCase } from './application/use-cases/cancel-subscription.use-case.js';
+import { ConfirmPaymentUseCase } from './application/use-cases/confirm-payment.use-case.js';
 import { TariffsRepository } from './infrastructure/repositories/tariffs/tariffs.repository.js';
 import { TariffsQueryRepository } from './infrastructure/repositories/tariffs/tariffs.query.repository.js';
 import { SubscriptionTypesQueryRepository } from './infrastructure/repositories/subscription-types/subscription-types.query.repository.js';
@@ -15,7 +17,6 @@ import { BonusesRepository } from './infrastructure/repositories/bonuses/bonuses
 import { StripeService } from './infrastructure/providers/stripe/stripe.service.js';
 import { YookassaService } from './infrastructure/providers/yookassa/yookassa.service.js';
 import { PaymentProviderFactory } from './infrastructure/providers/payment-provider.factory.js';
-import { CancelSubscriptionUseCase } from './application/use-cases/cancel-subscription.use-case.js';
 
 const controllers = [
   TariffsController,
@@ -23,9 +24,16 @@ const controllers = [
   PaymentsController,
 ];
 
-const queryHandlers = [GetTariffsQueryHandler, GetSubscriptionTypesQueryHandler];
+const queryHandlers = [
+  GetTariffsQueryHandler,
+  GetSubscriptionTypesQueryHandler,
+];
 
-const useCases = [CreatePaymentUseCase, CancelSubscriptionUseCase];
+const useCases = [
+  CreatePaymentUseCase,
+  CancelSubscriptionUseCase,
+  ConfirmPaymentUseCase,
+];
 
 const repositories = [
   TariffsRepository,

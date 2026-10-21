@@ -13,9 +13,12 @@ import { SubscriptionTypesController } from './api/subscription-types.controller
 import { PaymentsController } from './api/payments.controller.js';
 import { SubscriptionsController } from './api/subscriptions.controller.js';
 import { CancelSubscriptionUseCase } from './application/use-cases/cancel-subscription.usecase.js';
+import { PaymentsWebhookController } from '@main/modules/payments/api/payments-webhook.controller.js';
+import { StripeWebhookUseCase } from './application/use-cases/stripe-webhook.usecase.js';
 
 const controllers = [
   TariffsController,
+  PaymentsWebhookController,
   SubscriptionTypesController,
   PaymentsController,
   SubscriptionsController,
@@ -24,7 +27,11 @@ const queryHandlers = [
   GetTariffsQueryHandler,
   GetSubscriptionTypesQueryHandler,
 ];
-const useCases = [CreatePaymentUseCase, CancelSubscriptionUseCase];
+const useCases = [
+  CreatePaymentUseCase,
+  CancelSubscriptionUseCase,
+  StripeWebhookUseCase,
+];
 const services = [PaymentsTcpService];
 
 @Module({
