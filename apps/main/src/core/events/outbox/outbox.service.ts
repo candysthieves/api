@@ -1,10 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { Injectable } from '@nestjs/common';
-import { Cron } from '@nestjs/schedule';
-import type {
-  AvatarImageInputEvent,
-  ImageInputEvent,
-} from '@libs/contracts';
+import { Cron, CronExpression } from '@nestjs/schedule';
+import type { AvatarImageInputEvent, ImageInputEvent } from '@libs/contracts';
 import { PrismaService } from '../../../infrastructure/prisma/prisma.service.js';
 import { MainRabbitMqProducerService } from '../../rabbitmq/main-rabbitmq-producer.service.js';
 import { EventStoreService } from '../event-store.service.js';
@@ -72,7 +69,7 @@ export class OutboxService {
     });
   }
 
-  @Cron('* * * * * *', { waitForCompletion: true })
+  @Cron(CronExpression.EVERY_SECOND, { waitForCompletion: true })
   // Отправляет сохранённые события в файловый сервис.
   async processPending(): Promise<void> {
     await this.events.run('outputEvent', async (event) => {

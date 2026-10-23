@@ -1,11 +1,5 @@
 import { TariffViewType } from '../view-types/tariff-view.type.js';
-
-type TariffDbRow = {
-  id: string;
-  name: string;
-  durationDays: number;
-  priceInMinorUnits: string;
-};
+import type { TariffDbRow } from './types/tariff-db-row.type.js';
 
 export class TariffsMapper {
   static toView(tariff: TariffDbRow): TariffViewType {

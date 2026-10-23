@@ -34,7 +34,13 @@ export class CreatePaymentUseCase implements ICommandHandler<
   }: CreatePaymentCommand): Promise<PaymentViewType> {
     const tariff = await this.tariffsRepository.findTariffById(tariffId);
 
-    const payment = PaymentFactory.create(userId, tariffId, provider);
+    const payment = PaymentFactory.create(
+      userId,
+      tariffId,
+      provider,
+      'pending',
+      tariff.priceInMinorUnits,
+    );
 
     await this.paymentsRepository.create(payment);
 
@@ -45,7 +51,7 @@ export class CreatePaymentUseCase implements ICommandHandler<
     const { paymentUrl, externalPaymentId } =
       await paymentService.createPayment(paymentParams);
 
-    await this.paymentsRepository.updateExternalPaymentId(
+    await this.paymentsRepository.setProviderPaymentId(
       payment.id,
       externalPaymentId,
     );

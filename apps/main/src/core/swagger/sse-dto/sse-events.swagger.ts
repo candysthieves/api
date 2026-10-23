@@ -12,7 +12,7 @@ export function ApiSseEvents() {
     ApiResponse({
       status: 200,
       description:
-        'post-created is emitted after creation, before image processing completes. post-media-updated reports a saved image. post-deleted reports removal of the entire post after an image publication or processing failure. All contain postId.',
+        'Post events include postId. payment-status-updated includes paymentId, status, and occurredAt.',
       schema: {
         type: 'object',
         properties: {
@@ -22,9 +22,10 @@ export function ApiSseEvents() {
               SseEventEnum.POST_CREATED,
               SseEventEnum.POST_MEDIA_UPDATED,
               SseEventEnum.POST_DELETED,
+              SseEventEnum.PAYMENT_STATUS_UPDATED,
             ],
             example: SseEventEnum.POST_CREATED,
-            description: 'Post creation or media processing update.',
+            description: 'Post, media, or payment status update.',
           },
           data: {
             type: 'object',
@@ -34,8 +35,13 @@ export function ApiSseEvents() {
                 format: 'uuid',
                 example: '550e8400-e29b-41d4-a716-446655440000',
               },
+              paymentId: { type: 'string' },
+              status: {
+                type: 'string',
+                enum: ['pending', 'succeeded', 'failed', 'refunded'],
+              },
+              occurredAt: { type: 'string', format: 'date-time' },
             },
-            required: ['postId'],
           },
         },
         required: ['type', 'data'],

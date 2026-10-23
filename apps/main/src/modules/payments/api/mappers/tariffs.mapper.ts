@@ -1,4 +1,4 @@
-import type { PaymentTariff } from '../../application/payments-tcp.service.js';
+import type { PaymentTariff } from '../../application/types/payment-tariff.type.js';
 import { TariffViewType } from '@main/modules/payments/api/view-types/tariff-view.type.js';
 
 export class TariffsMapper {
@@ -9,7 +9,6 @@ export class TariffsMapper {
       durationDays: tariff.durationDays,
       priceInMinorUnits: Number(tariff.priceInMinorUnits),
       currency: 'USD',
-      priceUnit: 'CENT',
     };
   }
 

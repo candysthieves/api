@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import { Inject, Injectable } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { lastValueFrom, timeout } from 'rxjs';
@@ -6,26 +7,11 @@ import type {
   SubscriptionTypeContract,
   SubscriptionTypeName,
 } from '@libs/contracts';
-
-export type PaymentTariff = {
-  id: string;
-  tariff_name: string;
-  durationDays: number;
-  priceInMinorUnits: string;
-};
-
-export type PaymentResult = {
-  paymentId: string;
-  paymentUrl: string;
-};
-
-export type RpcResponse<T> = {
-  data: T | null;
-  error: {
-    code?: string;
-    errors?: { field: string; message: string }[];
-  } | null;
-};
+import type { CurrentSubscriptionResult } from './types/current-subscription-result.type.js';
+import type { PaymentResult } from './types/payment-result.type.js';
+import type { PaymentTariff } from './types/payment-tariff.type.js';
+import type { RpcResponse } from './types/rpc-response.type.js';
+import type { SubscriptionPaymentHistoryItem } from './types/subscription-payment-history-item.type.js';
 
 export const PAYMENTS_TCP_SERVICE = 'PAYMENTS_TCP_SERVICE';
 
@@ -36,10 +22,9 @@ export class PaymentsTcpService {
   ) {}
 
   async getTariffs(type: SubscriptionTypeName): Promise<PaymentTariff[]> {
-    const result = await lastValueFrom(
-      this.paymentsClient
-        .send<RpcResponse<PaymentTariff[]>>({ cmd: 'get-tariffs' }, { type })
-        .pipe(timeout(5_000)),
+    const result = await this.send<RpcResponse<PaymentTariff[]>>(
+      'get-tariffs',
+      { type },
     );
 
     if (result.error || !result.data) {
@@ -52,18 +37,15 @@ export class PaymentsTcpService {
   }
 
   async getSubscriptionTypes(): Promise<SubscriptionTypeContract[]> {
-    const result = await lastValueFrom(
-      this.paymentsClient
-        .send<RpcResponse<SubscriptionTypeContract[]>>(
-          { cmd: 'get-subscription-types' },
-          {},
-        )
-        .pipe(timeout(5_000)),
+    const result = await this.send<RpcResponse<SubscriptionTypeContract[]>>(
+      'get-subscription-types',
+      {},
     );
 
     if (result.error || !result.data) {
       throw new Error(
-        result.error?.errors?.[0]?.message ?? 'Failed to get subscription types',
+        result.error?.errors?.[0]?.message ??
+          'Failed to get subscription types',
       );
     }
 
@@ -73,18 +55,43 @@ export class PaymentsTcpService {
   createPayment(
     payload: CreatePaymentContract,
   ): Promise<RpcResponse<PaymentResult>> {
-    return lastValueFrom(
-      this.paymentsClient
-        .send<RpcResponse<PaymentResult>>({ cmd: 'create-payment' }, payload)
-        .pipe(timeout(5_000)),
-    );
+    return this.send<RpcResponse<PaymentResult>>('create-payment', payload);
   }
 
   cancelSubscription(userId: string): Promise<RpcResponse<boolean>> {
+    return this.send<RpcResponse<boolean>>('cancel-subscription', { userId });
+  }
+
+  async processYookassaNotification(yookassaPaymentId: string): Promise<void> {
+    const response = await this.send<RpcResponse<null>>(
+      'process-yookassa-notification',
+      { eventId: randomUUID(), providerPaymentId: yookassaPaymentId },
+    );
+    if (response.error)
+      throw new Error('Payment notification processing failed');
+  }
+
+  getCurrentSubscription(
+    userId: string,
+  ): Promise<RpcResponse<CurrentSubscriptionResult>> {
+    return this.send<RpcResponse<CurrentSubscriptionResult>>(
+      'get-current-subscription',
+      { userId },
+    );
+  }
+
+  getSubscriptionHistory(
+    userId: string,
+  ): Promise<RpcResponse<SubscriptionPaymentHistoryItem[]>> {
+    return this.send<RpcResponse<SubscriptionPaymentHistoryItem[]>>(
+      'get-subscription-history',
+      { userId },
+    );
+  }
+
+  private send<T>(cmd: string, payload: unknown): Promise<T> {
     return lastValueFrom(
-      this.paymentsClient
-        .send<RpcResponse<boolean>>({ cmd: 'cancel-subscription' }, { userId })
-        .pipe(timeout(5_000)),
+      this.paymentsClient.send<T>({ cmd }, payload).pipe(timeout(5_000)),
     );
   }
 }

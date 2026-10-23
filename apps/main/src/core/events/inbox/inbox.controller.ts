@@ -5,6 +5,7 @@ import {
   validateImageEvent,
   type AvatarImageEvent,
   type ImageEvent,
+  type PaymentStatusChangedEvent,
 } from '@libs/contracts';
 import { InboxService } from '@main/core/events/inbox/inbox.service.js';
 
@@ -24,15 +25,22 @@ export class InboxController {
     return this.handle(body, 'Avatar', validateAvatarImageEvent);
   }
 
-  private async handle<T extends ImageEvent | AvatarImageEvent>(
+  @RabbitSubscribe({ name: 'paymentStatusResults' })
+  handlePaymentStatusResult(body: Buffer): Promise<void | Nack> {
+    return this.handle<PaymentStatusChangedEvent>(body, 'Payment');
+  }
+
+  private async handle<
+    T extends ImageEvent | AvatarImageEvent | PaymentStatusChangedEvent,
+  >(
     body: Buffer,
-    eventName: 'Image' | 'Avatar',
-    validate: (value: unknown) => void,
+    eventName: 'Image' | 'Avatar' | 'Payment',
+    validate?: (value: unknown) => void,
   ): Promise<void | Nack> {
     let event: T;
     try {
       const parsed: unknown = JSON.parse(body.toString('utf8'));
-      validate(parsed);
+      validate?.(parsed);
       event = parsed as T;
     } catch {
       this.logger.warn(`${eventName} result rejected: invalid contract`);

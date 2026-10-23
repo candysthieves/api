@@ -11,11 +11,19 @@ import { TariffsQueryRepository } from './infrastructure/repositories/tariffs/ta
 import { SubscriptionTypesQueryRepository } from './infrastructure/repositories/subscription-types/subscription-types.query.repository.js';
 import { PaymentsRepository } from './infrastructure/repositories/payments/payments.repository.js';
 import { SubscriptionsRepository } from './infrastructure/repositories/subscriptions/subscriptions.repository.js';
-import { BonusesRepository } from './infrastructure/repositories/bonuses/bonuses.repository.js';
+import { SubscriptionsQueryRepository } from './infrastructure/repositories/subscriptions/subscriptions.query.repository.js';
 import { StripeService } from './infrastructure/providers/stripe/stripe.service.js';
 import { YookassaService } from './infrastructure/providers/yookassa/yookassa.service.js';
 import { PaymentProviderFactory } from './infrastructure/providers/payment-provider.factory.js';
 import { CancelSubscriptionUseCase } from './application/use-cases/cancel-subscription.use-case.js';
+import { ProcessYookassaNotificationUseCase } from './application/use-cases/process-yookassa-notification.usecase.js';
+import { ProcessDueSubscriptionsUseCase } from './application/use-cases/process-due-subscriptions.usecase.js';
+import { SubscriptionRenewalSchedulerService } from './application/services/subscription-renewal-scheduler.service.js';
+import { GetCurrentSubscriptionQueryHandler } from './application/query-handler/get-current-subscription.query-handler.js';
+import { GetSubscriptionHistoryQueryHandler } from './application/query-handler/get-subscription-history.query-handler.js';
+import { PaymentEventsRepository } from './infrastructure/repositories/payment-events.repository.js';
+import { PaymentEventsTransportModule } from './infrastructure/payment-events-transport.module.js';
+import { PaymentEventsSchedulerService } from './application/services/payment-events-scheduler.service.js';
 
 const controllers = [
   TariffsController,
@@ -23,9 +31,19 @@ const controllers = [
   PaymentsController,
 ];
 
-const queryHandlers = [GetTariffsQueryHandler, GetSubscriptionTypesQueryHandler];
+const queryHandlers = [
+  GetTariffsQueryHandler,
+  GetSubscriptionTypesQueryHandler,
+  GetCurrentSubscriptionQueryHandler,
+  GetSubscriptionHistoryQueryHandler,
+];
 
-const useCases = [CreatePaymentUseCase, CancelSubscriptionUseCase];
+const useCases = [
+  CreatePaymentUseCase,
+  CancelSubscriptionUseCase,
+  ProcessYookassaNotificationUseCase,
+  ProcessDueSubscriptionsUseCase,
+];
 
 const repositories = [
   TariffsRepository,
@@ -33,15 +51,27 @@ const repositories = [
   SubscriptionTypesQueryRepository,
   PaymentsRepository,
   SubscriptionsRepository,
-  BonusesRepository,
+  SubscriptionsQueryRepository,
 ];
 
-const providers = [StripeService, YookassaService, PaymentProviderFactory];
+const providers = [
+  StripeService,
+  YookassaService,
+  PaymentProviderFactory,
+  SubscriptionRenewalSchedulerService,
+];
 
 @Module({
-  imports: [CqrsModule],
+  imports: [CqrsModule, PaymentEventsTransportModule],
   controllers: [...controllers],
-  providers: [...queryHandlers, ...useCases, ...repositories, ...providers],
-  exports: [...repositories, ...providers],
+  providers: [
+    ...queryHandlers,
+    ...useCases,
+    ...repositories,
+    ...providers,
+    PaymentEventsRepository,
+    PaymentEventsSchedulerService,
+  ],
+  exports: [...repositories, ...providers, PaymentEventsRepository],
 })
 export class PaymentsModule {}

@@ -1,9 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { Cron } from '@nestjs/schedule';
-import type {
-  AvatarImageEvent,
-  ImageEvent,
-} from '@libs/contracts';
+import { Cron, CronExpression } from '@nestjs/schedule';
+import type { AvatarImageEvent, ImageEvent } from '@libs/contracts';
 import { FilesRabbitMqProducerService } from '../rabbitmq/files-rabbitmq-producer.service.js';
 import { OutboxRepository } from './outbox/outbox.repository.js';
 import { InboxRepository } from './inbox/inbox.repository.js';
@@ -18,20 +15,20 @@ export class FilesEventsScheduler {
   ) {}
 
   // Отправляет ожидающие результаты в RabbitMQ.
-  @Cron('* * * * * *', { waitForCompletion: true })
+  @Cron(CronExpression.EVERY_SECOND, { waitForCompletion: true })
   async processPending(): Promise<void> {
     await this.outbox.run((event) => this.publishEvent(event));
   }
 
   // Возвращает зависшие события в обработку или завершает их с ошибкой.
-  @Cron('*/10 * * * * *', { waitForCompletion: true })
+  @Cron(CronExpression.EVERY_10_SECONDS, { waitForCompletion: true })
   async recover(): Promise<void> {
     await this.inbox.recover();
     await this.outbox.recover();
   }
 
   // Очищает старые события из входящей и исходящей очередей.
-  @Cron('0 * * * * *', { waitForCompletion: true })
+  @Cron(CronExpression.EVERY_MINUTE, { waitForCompletion: true })
   async cleanup(): Promise<void> {
     await this.inbox.cleanup();
     await this.outbox.cleanup();

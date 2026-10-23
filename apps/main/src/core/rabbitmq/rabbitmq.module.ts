@@ -14,6 +14,7 @@ import { MainRabbitMqProducerService } from './main-rabbitmq-producer.service.js
         const results = `${config.getOrThrow<string>('RABBITMQ_FILES_TO_MAIN_QUEUE')}.post-images.results`;
         const avatarInput = `${config.getOrThrow<string>('RABBITMQ_MAIN_TO_FILES_QUEUE')}.avatar-images`;
         const avatarResults = `${config.getOrThrow<string>('RABBITMQ_FILES_TO_MAIN_QUEUE')}.avatar-images.results`;
+        const paymentResults = `${config.getOrThrow<string>('RABBITMQ_FILES_TO_MAIN_QUEUE')}.payments.status`;
         const imageQueueOptions = {
           durable: true,
           arguments: { 'x-single-active-consumer': true },
@@ -27,6 +28,7 @@ import { MainRabbitMqProducerService } from './main-rabbitmq-producer.service.js
             { name: results, options: { durable: true } },
             { name: avatarInput, options: imageQueueOptions },
             { name: avatarResults, options: { durable: true } },
+            { name: paymentResults, options: { durable: true } },
           ],
           handlers: {
             postImageResults: {
@@ -40,6 +42,13 @@ import { MainRabbitMqProducerService } from './main-rabbitmq-producer.service.js
               exchange: '',
               routingKey: avatarResults,
               queue: avatarResults,
+              queueOptions: { durable: true },
+              deserializer: (body: Buffer) => body,
+            },
+            paymentStatusResults: {
+              exchange: '',
+              routingKey: paymentResults,
+              queue: paymentResults,
               queueOptions: { durable: true },
               deserializer: (body: Buffer) => body,
             },

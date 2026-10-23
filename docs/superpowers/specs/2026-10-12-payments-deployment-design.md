@@ -7,9 +7,10 @@ Run the existing NestJS `payments` application as its own container on the VPS a
 ## Runtime
 
 - Add a Dockerfile for `apps/payments` following the existing application image conventions.
-- Add `payments` to `docker-compose.vps.yml` as a separate service using `chites/lumos-payments`, host networking, production mode, and restart-on-failure behavior. The current payments configuration only needs `PORT`, so no additional server env file is required.
+- Add `payments` to `docker-compose.vps.yml` as a separate service using `chites/lumos-payments`, host networking, production mode, and restart-on-failure behavior. YooKassa recurring payments also require `YOOKASSA_SHOP_ID` and `YOOKASSA_SECRET_KEY` supplied as deployment secrets; never commit them.
 - Set `PORT=3003` for the container. This is the selected application and reverse-proxy target port. The repository does not expose the VPS socket table, so actual port availability must be confirmed on the server during rollout.
 - Keep the existing `.main.env` and `.files.env` prerequisites for the services that use them.
+- Configure the YooKassa notification URL as `https://api.lumosapp.net/payments/yookassa/webhook` in the shop settings.
 
 ## Image and deployment flow
 

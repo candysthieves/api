@@ -1,5 +1,6 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { SubscriptionsRepository } from '../../infrastructure/repositories/subscriptions/subscriptions.repository.js';
+import { SubscriptionsQueryRepository } from '../../infrastructure/repositories/subscriptions/subscriptions.query.repository.js';
 
 export class CancelSubscriptionCommand {
   constructor(public readonly userId: string) {}
@@ -13,13 +14,14 @@ export class CancelSubscriptionUseCase implements ICommandHandler<
 > {
   constructor(
     private readonly subscriptionsRepository: SubscriptionsRepository,
+    private readonly subscriptionsQueryRepository: SubscriptionsQueryRepository,
   ) {}
 
   async execute({ userId }: CancelSubscriptionCommand): Promise<boolean> {
     const requestedAt = new Date();
     // Находим активную подписку пользователя, которую нужно отменить.
     const subscription =
-      await this.subscriptionsRepository.findActiveSubscription(
+      await this.subscriptionsQueryRepository.findActiveSubscription(
         userId,
         requestedAt,
       );

@@ -1,8 +1,3 @@
-export type EmailTemplateType = {
-  subject: string;
-  html: string;
-};
-
 export const emailTemplates = {
   registration(code: string, clientUrl: string) {
     return {

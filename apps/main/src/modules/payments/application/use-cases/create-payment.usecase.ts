@@ -1,9 +1,7 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import {
-  PaymentsTcpService,
-  type PaymentResult,
-  type RpcResponse,
-} from '../payments-tcp.service.js';
+import { PaymentsTcpService } from '../payments-tcp.service.js';
+import type { PaymentResult } from '../types/payment-result.type.js';
+import type { RpcResponse } from '../types/rpc-response.type.js';
 import { PaymentsMapper } from '../../api/mappers/payments.mapper.js';
 import { PaymentViewType } from '../../api/view-types/payment-view.type.js';
 import { type PaymentProvider } from '@libs/contracts';

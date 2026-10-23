@@ -1,7 +1,7 @@
 import nodemailer from 'nodemailer';
 import { Injectable } from '@nestjs/common';
 import { AppConfig } from '../../../app.config.js';
-import { EmailTemplateType } from './email.templates.js';
+import type { EmailTemplateType } from './types/email-template.type.js';
 
 @Injectable()
 export class EmailAdapter {
