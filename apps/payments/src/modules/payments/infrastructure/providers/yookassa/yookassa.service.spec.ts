@@ -8,27 +8,32 @@ describe('YookassaService', () => {
     frontendUrl: 'https://app.example/',
   } as PaymentsConfig;
   let service: YookassaService;
-  let fetchSpy: jest.SpyInstance;
+  let createPaymentSpy: jest.SpyInstance;
+  let getPaymentSpy: jest.SpyInstance;
 
   beforeEach(() => {
     service = new YookassaService(config);
-    fetchSpy = jest.spyOn(global, 'fetch').mockResolvedValue(
-      new Response(
-        JSON.stringify({
-          id: 'provider-id',
-          status: 'pending',
-          paid: false,
-          amount: { value: '12.34', currency: 'USD' },
-          confirmation: { confirmation_url: 'https://pay.example' },
-        }),
-        { status: 200 },
-      ),
-    );
+    const checkout = (
+      service as unknown as {
+        checkout: {
+          createPayment: (...args: unknown[]) => unknown;
+          getPayment: (...args: unknown[]) => unknown;
+        };
+      }
+    ).checkout;
+    createPaymentSpy = jest.spyOn(checkout, 'createPayment');
+    getPaymentSpy = jest.spyOn(checkout, 'getPayment');
   });
 
-  afterEach(() => fetchSpy.mockRestore());
+  afterEach(() => jest.restoreAllMocks());
 
   it('creates a redirect payment and requests method saving with a stable key', async () => {
+    createPaymentSpy.mockResolvedValue({
+      id: 'provider-id',
+      status: 'pending',
+      paid: false,
+      confirmation: { confirmation_url: 'https://pay.example' },
+    });
     const result = await service.createPayment({
       paymentId: 'local-id',
       amount: 1234,
@@ -36,20 +41,19 @@ describe('YookassaService', () => {
       description: 'Subscription',
       durationDays: 30,
     });
-    const [url, options] = fetchSpy.mock.calls[0] as [string, RequestInit];
-    const body = JSON.parse(options.body as string) as unknown;
-    expect(url).toBe('https://api.yookassa.ru/v3/payments');
-    expect(options.headers).toMatchObject({ 'Idempotence-Key': 'local-id' });
-    expect(body).toMatchObject({
-      amount: { value: '12.34', currency: 'USD' },
-      capture: true,
-      save_payment_method: true,
-      metadata: { paymentId: 'local-id' },
-    });
-    expect(
-      (body as { confirmation: { return_url: string } }).confirmation
-        .return_url,
-    ).toContain('https://app.example/payment/success');
+    expect(createPaymentSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        amount: { value: '1038.16', currency: 'RUB' },
+        capture: true,
+        save_payment_method: true,
+        metadata: { paymentId: 'local-id' },
+        confirmation: {
+          type: 'redirect',
+          return_url: 'https://app.example/payment/success?paymentId=local-id',
+        },
+      }),
+      'local-id',
+    );
     expect(result).toEqual({
       externalPaymentId: 'provider-id',
       paymentUrl: 'https://pay.example',
@@ -57,6 +61,7 @@ describe('YookassaService', () => {
   });
 
   it('charges a saved method with the requested idempotency key', async () => {
+    createPaymentSpy.mockResolvedValue({ id: 'provider-id' });
     await service.chargeSavedPaymentMethod({
       paymentMethodId: 'saved-id',
       amount: 500,
@@ -64,17 +69,18 @@ describe('YookassaService', () => {
       description: 'Renewal',
       idempotencyKey: 'attempt-key',
     });
-    const [, options] = fetchSpy.mock.calls[0] as [string, RequestInit];
-    expect(options.headers).toMatchObject({ 'Idempotence-Key': 'attempt-key' });
-    expect(JSON.parse(options.body as string)).toMatchObject({
-      payment_method_id: 'saved-id',
-      amount: { value: '5.00' },
-      capture: true,
-    });
+    expect(createPaymentSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        payment_method_id: 'saved-id',
+        amount: { value: '420.65', currency: 'RUB' },
+        capture: true,
+      }),
+      'attempt-key',
+    );
   });
 
   it('does not leak credentials in provider errors', async () => {
-    fetchSpy.mockResolvedValue(new Response('', { status: 401 }));
+    getPaymentSpy.mockRejectedValue(new Error('HTTP 401'));
     await expect(service.getPaymentByProviderId('provider-id')).rejects.toThrow(
       'HTTP 401',
     );

@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import { Inject, Injectable } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { lastValueFrom, timeout } from 'rxjs';
@@ -6,37 +7,11 @@ import type {
   SubscriptionTypeContract,
   SubscriptionTypeName,
 } from '@libs/contracts';
-
-export type PaymentTariff = {
-  id: string;
-  tariff_name: string;
-  durationDays: number;
-  priceInMinorUnits: string;
-};
-
-export type PaymentResult = {
-  paymentId: string;
-  yookassaPaymentId: string | null;
-  paymentUrl: string;
-};
-
-export type CurrentSubscriptionResult = {
-  expirationDate: Date;
-  nextChargeDate: Date | null;
-};
-export type PendingSubscriptionNotification = {
-  id: string;
-  userId: string;
-  kind: 'RENEWAL_RETRY_SCHEDULED' | 'SUBSCRIPTION_ENDED_AFTER_RETRY';
-};
-
-export type RpcResponse<T> = {
-  data: T | null;
-  error: {
-    code?: string;
-    errors?: { field: string; message: string }[];
-  } | null;
-};
+import type { CurrentSubscriptionResult } from './types/current-subscription-result.type.js';
+import type { PaymentResult } from './types/payment-result.type.js';
+import type { PaymentTariff } from './types/payment-tariff.type.js';
+import type { RpcResponse } from './types/rpc-response.type.js';
+import type { SubscriptionPaymentHistoryItem } from './types/subscription-payment-history-item.type.js';
 
 export const PAYMENTS_TCP_SERVICE = 'PAYMENTS_TCP_SERVICE';
 
@@ -90,7 +65,7 @@ export class PaymentsTcpService {
   async processYookassaNotification(yookassaPaymentId: string): Promise<void> {
     const response = await this.send<RpcResponse<null>>(
       'process-yookassa-notification',
-      { providerPaymentId: yookassaPaymentId },
+      { eventId: randomUUID(), providerPaymentId: yookassaPaymentId },
     );
     if (response.error)
       throw new Error('Payment notification processing failed');
@@ -105,21 +80,12 @@ export class PaymentsTcpService {
     );
   }
 
-  getPendingSubscriptionNotifications(
-    limit: number,
-  ): Promise<RpcResponse<PendingSubscriptionNotification[]>> {
-    return this.send<RpcResponse<PendingSubscriptionNotification[]>>(
-      'get-pending-subscription-notifications',
-      { limit },
-    );
-  }
-
-  acknowledgeSubscriptionNotification(
-    notificationId: string,
-  ): Promise<RpcResponse<boolean>> {
-    return this.send<RpcResponse<boolean>>(
-      'acknowledge-subscription-notification',
-      { notificationId },
+  getSubscriptionHistory(
+    userId: string,
+  ): Promise<RpcResponse<SubscriptionPaymentHistoryItem[]>> {
+    return this.send<RpcResponse<SubscriptionPaymentHistoryItem[]>>(
+      'get-subscription-history',
+      { userId },
     );
   }
 

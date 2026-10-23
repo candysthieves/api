@@ -11,7 +11,7 @@ import { TariffsQueryRepository } from './infrastructure/repositories/tariffs/ta
 import { SubscriptionTypesQueryRepository } from './infrastructure/repositories/subscription-types/subscription-types.query.repository.js';
 import { PaymentsRepository } from './infrastructure/repositories/payments/payments.repository.js';
 import { SubscriptionsRepository } from './infrastructure/repositories/subscriptions/subscriptions.repository.js';
-import { BonusesRepository } from './infrastructure/repositories/bonuses/bonuses.repository.js';
+import { SubscriptionsQueryRepository } from './infrastructure/repositories/subscriptions/subscriptions.query.repository.js';
 import { StripeService } from './infrastructure/providers/stripe/stripe.service.js';
 import { YookassaService } from './infrastructure/providers/yookassa/yookassa.service.js';
 import { PaymentProviderFactory } from './infrastructure/providers/payment-provider.factory.js';
@@ -19,12 +19,11 @@ import { CancelSubscriptionUseCase } from './application/use-cases/cancel-subscr
 import { ProcessYookassaNotificationUseCase } from './application/use-cases/process-yookassa-notification.usecase.js';
 import { ProcessDueSubscriptionsUseCase } from './application/use-cases/process-due-subscriptions.usecase.js';
 import { SubscriptionRenewalSchedulerService } from './application/services/subscription-renewal-scheduler.service.js';
-import { SubscriptionNotificationsRepository } from './infrastructure/repositories/subscription-notifications/subscription-notifications.repository.js';
 import { GetCurrentSubscriptionQueryHandler } from './application/query-handler/get-current-subscription.query-handler.js';
-import {
-  AcknowledgeSubscriptionNotificationUseCase,
-  GetPendingSubscriptionNotificationsHandler,
-} from './application/use-cases/deliver-subscription-notifications.usecase.js';
+import { GetSubscriptionHistoryQueryHandler } from './application/query-handler/get-subscription-history.query-handler.js';
+import { PaymentEventsRepository } from './infrastructure/repositories/payment-events.repository.js';
+import { PaymentEventsTransportModule } from './infrastructure/payment-events-transport.module.js';
+import { PaymentEventsSchedulerService } from './application/services/payment-events-scheduler.service.js';
 
 const controllers = [
   TariffsController,
@@ -36,7 +35,7 @@ const queryHandlers = [
   GetTariffsQueryHandler,
   GetSubscriptionTypesQueryHandler,
   GetCurrentSubscriptionQueryHandler,
-  GetPendingSubscriptionNotificationsHandler,
+  GetSubscriptionHistoryQueryHandler,
 ];
 
 const useCases = [
@@ -44,7 +43,6 @@ const useCases = [
   CancelSubscriptionUseCase,
   ProcessYookassaNotificationUseCase,
   ProcessDueSubscriptionsUseCase,
-  AcknowledgeSubscriptionNotificationUseCase,
 ];
 
 const repositories = [
@@ -53,8 +51,7 @@ const repositories = [
   SubscriptionTypesQueryRepository,
   PaymentsRepository,
   SubscriptionsRepository,
-  BonusesRepository,
-  SubscriptionNotificationsRepository,
+  SubscriptionsQueryRepository,
 ];
 
 const providers = [
@@ -65,9 +62,16 @@ const providers = [
 ];
 
 @Module({
-  imports: [CqrsModule],
+  imports: [CqrsModule, PaymentEventsTransportModule],
   controllers: [...controllers],
-  providers: [...queryHandlers, ...useCases, ...repositories, ...providers],
-  exports: [...repositories, ...providers],
+  providers: [
+    ...queryHandlers,
+    ...useCases,
+    ...repositories,
+    ...providers,
+    PaymentEventsRepository,
+    PaymentEventsSchedulerService,
+  ],
+  exports: [...repositories, ...providers, PaymentEventsRepository],
 })
 export class PaymentsModule {}

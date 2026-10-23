@@ -40,17 +40,9 @@ export class CreatePaymentUseCase implements ICommandHandler<
       provider,
       'pending',
       tariff.priceInMinorUnits,
-      'USD',
     );
 
-    if (provider === 'YOOKASSA') {
-      const existingPayment = await this.paymentsRepository.findById(
-        payment.id,
-      );
-      if (!existingPayment) await this.paymentsRepository.create(payment);
-    } else {
-      await this.paymentsRepository.create(payment);
-    }
+    await this.paymentsRepository.create(payment);
 
     const paymentService = this.paymentProviderFactory.getProvider(provider);
 
@@ -64,10 +56,6 @@ export class CreatePaymentUseCase implements ICommandHandler<
       externalPaymentId,
     );
 
-    return PaymentsMapper.toView(
-      payment.id,
-      provider === 'YOOKASSA' ? externalPaymentId : null,
-      paymentUrl,
-    );
+    return PaymentsMapper.toView(payment.id, paymentUrl);
   }
 }

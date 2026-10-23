@@ -14,6 +14,7 @@ export class PaymentsRepository {
   ) {}
 
   async create(payment: Insertable<PaymentsTable>): Promise<void> {
+    // TODO: Discuss with the tech lead how to handle INSERT parameter processing in the Kysely ClickHouse adapter.
     await this.db.insertInto('payments').values(payment).execute();
   }
 
@@ -64,6 +65,32 @@ export class PaymentsRepository {
       .set({ status: 'failed' })
       .where('id', '=', paymentId)
       .where('status', '=', 'pending')
+      .execute();
+  }
+
+  findHistoryByUserId(userId: string) {
+    return this.db
+      .selectFrom('payments')
+      .leftJoin('tariffs', 'tariffs.id', 'payments.tariffId')
+      .leftJoin(
+        'subscription_types',
+        'subscription_types.id',
+        'tariffs.subscriptionTypeId',
+      )
+      .leftJoin('subscriptions', 'subscriptions.lastPaymentId', 'payments.id')
+      .select([
+        'payments.id as id',
+        'payments.createdAt as date',
+        'payments.paymentDate as paymentDate',
+        'payments.amountMinorUnits as amountMinorUnits',
+        'payments.status as status',
+        'payments.provider as paymentService',
+        'tariffs.name as subscriptionName',
+        'subscription_types.namePaymentStatus as subscriptionType',
+        'subscriptions.expirationDate as subscriptionEndDate',
+      ])
+      .where('payments.userExternalPaymentId', '=', userId)
+      .orderBy('payments.createdAt', 'desc')
       .execute();
   }
 }

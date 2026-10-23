@@ -2,27 +2,14 @@
 // Выбирает и захватывает события, управляет повторами, восстанавливает зависшие
 // и очищает завершённые записи.
 import { Injectable } from '@nestjs/common';
-import { Cron } from '@nestjs/schedule';
+import { Cron, CronExpression } from '@nestjs/schedule';
 import { Prisma } from '../../generated/prisma/client.js';
 import type { InboxEvent } from '../../generated/prisma/client.js';
 import { PrismaService } from '../../infrastructure/prisma/prisma.service.js';
+import type { EventRepository } from './types/event-repository.type.js';
+import type { EventTable } from './types/event-table.type.js';
 
-const EVENT_TABLES = ['inboxEvent', 'outputEvent'] as const;
-type EventTable = (typeof EVENT_TABLES)[number];
-
-// Методы хранилища событий, которые использует сервис.
-interface EventRepository {
-  // Находит события для обработки.
-  findMany(args: {
-    where?: Prisma.InboxEventWhereInput & Prisma.OutputEventWhereInput;
-    orderBy?: Prisma.InboxEventOrderByWithRelationInput;
-    take?: number;
-  }): Promise<InboxEvent[]>;
-  // Обновляет все события, подходящие под условия.
-  updateMany(
-    args: Prisma.InboxEventUpdateManyArgs & Prisma.OutputEventUpdateManyArgs,
-  ): Promise<{ count: number }>;
-}
+const EVENT_TABLES: EventTable[] = ['inboxEvent', 'outputEvent'];
 
 @Injectable()
 export class EventStoreService {
@@ -115,7 +102,7 @@ export class EventStoreService {
   }
 
   // Возвращает в очередь события, застрявшие в обработке.
-  @Cron('*/10 * * * * *', { waitForCompletion: true })
+  @Cron(CronExpression.EVERY_10_SECONDS, { waitForCompletion: true })
   async recover(): Promise<void> {
     const now = Date.now();
     const processingDeadline = new Date(now - 60_000);
@@ -158,7 +145,7 @@ export class EventStoreService {
   }
 
   // Очищает данные завершённых событий старше часа.
-  @Cron('0 * * * * *', { waitForCompletion: true })
+  @Cron(CronExpression.EVERY_MINUTE, { waitForCompletion: true })
   async cleanup(): Promise<void> {
     // Через час удаляем содержимое завершённых событий.
     for (const table of EVENT_TABLES) {

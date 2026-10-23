@@ -1,11 +1,11 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { Observable, Subject } from 'rxjs';
 import { SseEvent, SseEventEnum } from './types/sse-event.type.js';
 import { SseEventData } from './types/sse-event-data.type.js';
+import type { PaymentStatusChangedEvent } from '@libs/contracts';
 
 @Injectable()
 export class SseService {
-  private readonly logger = new Logger(SseService.name);
   private readonly events$ = new Subject<SseEvent>();
 
   // Возвращает поток событий для SSE-подключений.
@@ -24,16 +24,14 @@ export class SseService {
   // Отправляет событие об изменении аватара.
   emitAvatarUpdated(userId: number): void {
     this.emit(SseEventEnum.AVATAR_UPDATED, { userId: String(userId) });
-    this.logger.log(
-      `SSE emitted: event=${SseEventEnum.AVATAR_UPDATED} userId=${userId}`,
-    );
   }
 
   // Отправляет событие о готовности изображений поста.
   emitPostMediaUpdated(postId: string): void {
     this.emit(SseEventEnum.POST_MEDIA_UPDATED, { postId });
-    this.logger.log(
-      `Post READY; SSE emitted: event=${SseEventEnum.POST_MEDIA_UPDATED} postId=${postId}`,
-    );
+  }
+
+  emitPaymentStatusUpdated(data: PaymentStatusChangedEvent['data']): void {
+    this.emit(SseEventEnum.PAYMENT_STATUS_UPDATED, data);
   }
 }

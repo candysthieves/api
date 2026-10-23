@@ -6,10 +6,7 @@ import { ObjectResult } from '../../../core/object-result.js';
 import { SubscriptionErrorCode } from '@libs/contracts';
 import { QueryBus } from '@nestjs/cqrs';
 import { GetCurrentSubscriptionQuery } from '../application/query-handler/get-current-subscription.query-handler.js';
-import {
-  GetPendingSubscriptionNotificationsQuery,
-  AcknowledgeSubscriptionNotificationCommand,
-} from '../application/use-cases/deliver-subscription-notifications.usecase.js';
+import { GetSubscriptionHistoryQuery } from '../application/query-handler/get-subscription-history.query-handler.js';
 
 @Controller('subscriptions')
 export class SubscriptionsController {
@@ -51,22 +48,12 @@ export class SubscriptionsController {
     );
   }
 
-  @MessagePattern({ cmd: 'get-pending-subscription-notifications' })
-  async getPendingNotifications(@Payload() payload: { limit: number }) {
+  @MessagePattern({ cmd: 'get-subscription-history' })
+  async getSubscriptionHistory(@Payload() payload: { userId: string }) {
     return ObjectResult.success(
       await this.queryBus.execute(
-        new GetPendingSubscriptionNotificationsQuery(payload.limit),
+        new GetSubscriptionHistoryQuery(payload.userId),
       ),
     );
-  }
-
-  @MessagePattern({ cmd: 'acknowledge-subscription-notification' })
-  async acknowledgeNotification(
-    @Payload() payload: { notificationId: string },
-  ) {
-    await this.commandBus.execute(
-      new AcknowledgeSubscriptionNotificationCommand(payload.notificationId),
-    );
-    return ObjectResult.success(true);
   }
 }

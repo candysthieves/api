@@ -14,7 +14,7 @@ import { PaymentsController } from './api/payments.controller.js';
 import { SubscriptionsController } from './api/subscriptions.controller.js';
 import { CancelSubscriptionUseCase } from './application/use-cases/cancel-subscription.usecase.js';
 import { GetCurrentSubscriptionQueryHandler } from './application/query-handler/get-current-subscription.query-handler.js';
-import { SubscriptionNotificationSchedulerService } from './application/services/subscription-notification-scheduler.service.js';
+import { GetSubscriptionHistoryQueryHandler } from './application/query-handler/get-subscription-history.query-handler.js';
 import { UserAccountsModule } from '../user-accounts/user-accounts.module.js';
 
 const controllers = [
@@ -27,9 +27,10 @@ const queryHandlers = [
   GetTariffsQueryHandler,
   GetSubscriptionTypesQueryHandler,
   GetCurrentSubscriptionQueryHandler,
+  GetSubscriptionHistoryQueryHandler,
 ];
 const useCases = [CreatePaymentUseCase, CancelSubscriptionUseCase];
-const services = [PaymentsTcpService, SubscriptionNotificationSchedulerService];
+const services = [PaymentsTcpService];
 
 @Module({
   imports: [

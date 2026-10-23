@@ -1,7 +1,5 @@
 import { IQueryHandler, QueryHandler } from '@nestjs/cqrs';
-import { RpcException } from '@nestjs/microservices';
-import { ObjectResult } from '../../../../core/object-result.js';
-import { SubscriptionsRepository } from '../../infrastructure/repositories/subscriptions/subscriptions.repository.js';
+import { SubscriptionsQueryRepository } from '../../infrastructure/repositories/subscriptions/subscriptions.query.repository.js';
 
 export class GetCurrentSubscriptionQuery {
   constructor(public readonly userId: string) {}
@@ -9,25 +7,17 @@ export class GetCurrentSubscriptionQuery {
 
 @QueryHandler(GetCurrentSubscriptionQuery)
 export class GetCurrentSubscriptionQueryHandler implements IQueryHandler<GetCurrentSubscriptionQuery> {
-  constructor(private readonly subscriptions: SubscriptionsRepository) {}
+  constructor(private readonly subscriptions: SubscriptionsQueryRepository) {}
   async execute({ userId }: GetCurrentSubscriptionQuery) {
     const subscription = await this.subscriptions.findCurrentSubscription(
       userId,
       new Date(),
     );
-    if (!subscription) {
-      throw new RpcException(
-        ObjectResult.failure({
-          code: 'SUBSCRIPTION_NOT_FOUND',
-          errors: [
-            {
-              field: 'subscription',
-              message: 'No current subscription was found',
-            },
-          ],
-        }),
-      );
-    }
-    return subscription;
+    return (
+      subscription ?? {
+        expirationDate: null,
+        nextChargeDate: null,
+      }
+    );
   }
 }

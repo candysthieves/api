@@ -1,10 +1,14 @@
 import { Injectable } from '@nestjs/common';
-import { Cron } from '@nestjs/schedule';
+import { Cron, CronExpression } from '@nestjs/schedule';
 import { PrismaService } from '../../../infrastructure/prisma/prisma.service.js';
 import { SseService } from '../../sse/sse.service.js';
 import { PostsService } from '../../../modules/user-accounts/application/services/posts.service.js';
 import { UsersService } from '../../../modules/user-accounts/application/services/users.service.js';
-import { AvatarImageEvent, ImageEvent } from '@libs/contracts';
+import {
+  AvatarImageEvent,
+  ImageEvent,
+  PaymentStatusChangedEvent,
+} from '@libs/contracts';
 import { EventStoreService } from '../event-store.service.js';
 
 // Сохраняет результаты обработки файлов и обновляет посты и аватары.
@@ -18,7 +22,9 @@ export class InboxService {
     private readonly users: UsersService,
   ) {}
 
-  async accept(event: ImageEvent | AvatarImageEvent): Promise<void> {
+  async accept(
+    event: ImageEvent | AvatarImageEvent | PaymentStatusChangedEvent,
+  ): Promise<void> {
     // Сохраняем событие до подтверждения сообщения в RabbitMQ.
     await this.prisma.inboxEvent.upsert({
       where: { eventId: event.eventId },
@@ -28,7 +34,7 @@ export class InboxService {
   }
 
   // Применяет сохранённые результаты по типу события.
-  @Cron('* * * * * *', { waitForCompletion: true })
+  @Cron(CronExpression.EVERY_SECOND, { waitForCompletion: true })
   async processPending(): Promise<void> {
     await this.events.run('inboxEvent', async (event) => {
       switch (event.type) {
@@ -37,6 +43,11 @@ export class InboxService {
           break;
         case 'post.image.updated':
           await this.applyMediaEvent(event.data as ImageEvent['data']);
+          break;
+        case 'payment.status.changed':
+          this.applyPaymentStatusEvent(
+            event.data as PaymentStatusChangedEvent['data'],
+          );
           break;
         default:
           throw new Error(`UNKNOWN_IMAGE_EVENT_TYPE:${event.type}`);
@@ -65,5 +76,12 @@ export class InboxService {
     if (!isPostReady) return;
 
     this.sse.emitPostMediaUpdated(data.postId);
+  }
+
+  // Отправляет событие об изменении статуса платежа.
+  private applyPaymentStatusEvent(
+    data: PaymentStatusChangedEvent['data'],
+  ): void {
+    this.sse.emitPaymentStatusUpdated(data);
   }
 }

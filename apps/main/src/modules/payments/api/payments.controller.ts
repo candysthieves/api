@@ -47,12 +47,9 @@ export class PaymentsController {
   @Post('yookassa/webhook')
   @HttpCode(HttpStatus.OK)
   @ApiYookassaWebhook()
-  async yookassaWebhook(
-    @Body() payload: YookassaWebhookDto,
-  ): Promise<{ accepted: true }> {
+  async yookassaWebhook(@Body() payload: YookassaWebhookDto): Promise<void> {
     await this.paymentsTcpService.processYookassaNotification(
       payload.object.id,
     );
-    return { accepted: true };
   }
 }

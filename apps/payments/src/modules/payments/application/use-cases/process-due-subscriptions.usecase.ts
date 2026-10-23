@@ -1,19 +1,26 @@
 import { createHash } from 'node:crypto';
+import { ConfigService } from '@nestjs/config';
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { PaymentFactory } from '../factories/payment.factory.js';
-import { SubscriptionRenewalFactory } from '../factories/subscription-renewal.factory.js';
 import { PaymentsRepository } from '../../infrastructure/repositories/payments/payments.repository.js';
+import { PaymentEventsRepository } from '../../infrastructure/repositories/payment-events.repository.js';
 import { SubscriptionsRepository } from '../../infrastructure/repositories/subscriptions/subscriptions.repository.js';
+import { SubscriptionsQueryRepository } from '../../infrastructure/repositories/subscriptions/subscriptions.query.repository.js';
+import type { SubscriptionEntity } from '../../../../database/types/payment-database.type.js';
 import { TariffsRepository } from '../../infrastructure/repositories/tariffs/tariffs.repository.js';
-import { SubscriptionNotificationsRepository } from '../../infrastructure/repositories/subscription-notifications/subscription-notifications.repository.js';
 import { YookassaService } from '../../infrastructure/providers/yookassa/yookassa.service.js';
 import type { YookassaPayment } from '../../infrastructure/providers/payment-provider.interface.js';
 import { PaymentParamsFactory } from '../factories/payment-params.factory.js';
+import { SubscriptionRenewalFactory } from '../factories/subscription-renewal.factory.js';
 
+// МЕРЗОСТЬ ДЛЯ АВТО ПРОДЛЕНИЯ ПОДПИСОК
+
+// Запускает обработку подписок, срок списания которых наступил к указанному времени.
 export class ProcessDueSubscriptionsCommand {
   constructor(public readonly at: Date) {}
 }
 
+// Создаёт повторяемый UUID для одной попытки продления подписки.
 function stableUuid(value: string): string {
   const hex = createHash('sha256')
     .update(value)
@@ -26,6 +33,13 @@ function stableUuid(value: string): string {
   return `${result.slice(0, 8)}-${result.slice(8, 12)}-${result.slice(12, 16)}-${result.slice(16, 20)}-${result.slice(20)}`;
 }
 
+// Приводит дату списания к строке для формирования ключа попытки.
+function dateKey(value: Date | string): string {
+  return value instanceof Date ? value.toISOString() : value;
+}
+
+// Находит подписки с наступившей датой списания и продлевает их через YooKassa.
+// TODO: Обсудить со старшим разработчиком, как упростить этот сценарий.
 @CommandHandler(ProcessDueSubscriptionsCommand)
 export class ProcessDueSubscriptionsUseCase implements ICommandHandler<
   ProcessDueSubscriptionsCommand,
@@ -33,36 +47,30 @@ export class ProcessDueSubscriptionsUseCase implements ICommandHandler<
 > {
   constructor(
     private readonly subscriptions: SubscriptionsRepository,
+    private readonly subscriptionsQuery: SubscriptionsQueryRepository,
     private readonly payments: PaymentsRepository,
+    private readonly paymentEvents: PaymentEventsRepository,
     private readonly tariffs: TariffsRepository,
-    private readonly notifications: SubscriptionNotificationsRepository,
     private readonly yookassa: YookassaService,
+    private readonly configService: ConfigService,
   ) {}
 
+  // Обрабатывает ограниченную пачку подписок, для которых наступил срок списания.
   async execute({ at }: ProcessDueSubscriptionsCommand): Promise<void> {
-    const due = await this.subscriptions.findDueForRenewal(at, 10);
+    // Обрабатывает подписки, срок списания по которым уже наступил.
+    const due = await this.subscriptionsQuery.findDueForRenewal(at, 10);
     for (const subscription of due) await this.process(subscription, at);
   }
 
-  private async process(
-    subscription: Awaited<
-      ReturnType<SubscriptionsRepository['findDueForRenewal']>
-    >[number],
-    at: Date,
-  ) {
+  // Выполняет или восстанавливает одну попытку списания и сохраняет её результат.
+  private async process(subscription: SubscriptionEntity, at: Date) {
     if (!subscription.nextChargeDate || !subscription.paymentMethodId) return;
+    const current = await this.subscriptionsQuery.findById(subscription.id);
+    if (!current || current.cancellationRequestedAt) return;
+
     const attemptKey = stableUuid(
-      `${subscription.id}:${subscription.nextChargeDate.toISOString()}:${subscription.retryCount}`,
+      `${subscription.id}:${dateKey(subscription.nextChargeDate)}`,
     );
-    if (
-      !(await this.subscriptions.prepareRenewalAttempt(
-        subscription.id,
-        attemptKey,
-      ))
-    )
-      return;
-    const latest = await this.subscriptions.findById(subscription.id);
-    if (!latest || latest.cancellationRequestedAt) return;
     const tariff = await this.tariffs.findTariffById(subscription.tariffId);
     const payment = {
       ...PaymentFactory.create(
@@ -71,7 +79,6 @@ export class ProcessDueSubscriptionsUseCase implements ICommandHandler<
         'YOOKASSA',
         'pending',
         tariff.priceInMinorUnits,
-        'USD',
       ),
       id: attemptKey,
       providerPaymentId: null,
@@ -82,23 +89,19 @@ export class ProcessDueSubscriptionsUseCase implements ICommandHandler<
     }
     const params = PaymentParamsFactory.create(payment.id, tariff);
     let providerPayment: YookassaPayment;
-    try {
-      if (existingPayment?.providerPaymentId) {
-        providerPayment = await this.yookassa.getPaymentByProviderId(
-          existingPayment.providerPaymentId,
-        );
-      } else {
-        providerPayment = await this.yookassa.chargeSavedPaymentMethod({
-          paymentMethodId: subscription.paymentMethodId,
-          amount: params.amount,
-          currency: params.currency,
-          description: params.description,
-          idempotencyKey: attemptKey,
-        });
-      }
-    } catch {
-      // Network ambiguity is not a decline: keep the same key and retry next tick.
-      return;
+    // При повторном запуске проверяет уже созданный платёж, чтобы не списать повторно.
+    if (existingPayment?.providerPaymentId) {
+      providerPayment = await this.yookassa.getPaymentByProviderId(
+        existingPayment.providerPaymentId,
+      );
+    } else {
+      providerPayment = await this.yookassa.chargeSavedPaymentMethod({
+        paymentMethodId: subscription.paymentMethodId,
+        amount: params.amount,
+        currency: params.currency,
+        description: params.description,
+        idempotencyKey: attemptKey,
+      });
     }
 
     await this.payments.setProviderPaymentId(payment.id, providerPayment.id);
@@ -107,11 +110,16 @@ export class ProcessDueSubscriptionsUseCase implements ICommandHandler<
         providerPayment.captured_at ?? providerPayment.created_at ?? at,
       );
       await this.payments.confirmPayment(payment.id, paidAt);
+      await this.paymentEvents.enqueueStatus(payment.id, 'succeeded');
+      const expirationDate = SubscriptionRenewalFactory.nextChargeAt(
+        paidAt,
+        tariff.durationDays,
+        this.configService.get<number>('SUBSCRIPTION_DURATION_MINUTES'),
+      );
       await this.subscriptions.markRenewalSucceeded(
         subscription.id,
         payment.id,
-        paidAt,
-        tariff.durationDays,
+        expirationDate,
       );
       return;
     }
@@ -119,30 +127,7 @@ export class ProcessDueSubscriptionsUseCase implements ICommandHandler<
     if (providerPayment.status !== 'canceled') return;
 
     await this.payments.failPayment(payment.id);
-    if (subscription.retryCount === 0) {
-      const retryAt = SubscriptionRenewalFactory.retryAt(at);
-      await this.notifications.createPending({
-        id: stableUuid(
-          `${subscription.id}:RENEWAL_RETRY_SCHEDULED:${attemptKey}`,
-        ),
-        userId: subscription.userId,
-        kind: 'RENEWAL_RETRY_SCHEDULED',
-      });
-      await this.subscriptions.scheduleRetry(
-        subscription.id,
-        retryAt,
-        stableUuid(`${subscription.id}:retry:${retryAt.toISOString()}`),
-      );
-      return;
-    }
-
-    await this.notifications.createPending({
-      id: stableUuid(
-        `${subscription.id}:SUBSCRIPTION_ENDED_AFTER_RETRY:${attemptKey}`,
-      ),
-      userId: subscription.userId,
-      kind: 'SUBSCRIPTION_ENDED_AFTER_RETRY',
-    });
-    await this.subscriptions.endAfterFailedRetry(subscription.id, at);
+    await this.subscriptions.markRenewalFailed(subscription.id);
+    await this.paymentEvents.enqueueStatus(payment.id, 'failed');
   }
 }

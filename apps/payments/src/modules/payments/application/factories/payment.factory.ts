@@ -13,14 +13,12 @@ export class PaymentFactory {
     provider: PaymentProvider,
     status: PaymentStatus = 'pending',
     amountMinorUnits: string | null = null,
-    currency: string | null = null,
   ): Insertable<PaymentsTable> & { id: string } {
     return {
       id: randomUUID(),
       provider,
       providerPaymentId: null,
       amountMinorUnits,
-      currency,
       tariffId,
       userExternalPaymentId,
       paymentDate: null,

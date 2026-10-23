@@ -8,14 +8,6 @@ export class PaymentViewType {
   paymentId!: string;
 
   @ApiProperty({
-    description:
-      'YooKassa payment ID. For local webhook testing, copy this value to object.id; null for other providers.',
-    example: '3265d4d2-000f-5001-8000-12c0b7d66709',
-    nullable: true,
-  })
-  yookassaPaymentId!: string | null;
-
-  @ApiProperty({
     description: 'URL to redirect the user to complete payment',
     example: 'https://checkout.stripe.com/pay/...',
   })

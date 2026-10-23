@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Cron } from '@nestjs/schedule';
+import { Cron, CronExpression } from '@nestjs/schedule';
 import {
   ProcessDueSubscriptionsUseCase,
   ProcessDueSubscriptionsCommand,
@@ -12,7 +12,7 @@ export class SubscriptionRenewalSchedulerService {
   constructor(private readonly processDue: ProcessDueSubscriptionsUseCase) {}
 
   /** Запускает обработку подписок с наступившей датой списания. */
-  @Cron('* * * * * *')
+  @Cron(CronExpression.EVERY_SECOND)
   async process(): Promise<void> {
     if (this.running) return;
     this.running = true;

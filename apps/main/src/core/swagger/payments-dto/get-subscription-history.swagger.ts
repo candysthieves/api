@@ -13,7 +13,7 @@ export function ApiGetSubscriptionHistory() {
     ApiOperation({
       summary: 'Get the current user subscription payment history',
       description:
-        'Returns example subscription payment history for the authenticated user. The response is currently mocked.',
+        'Returns all subscription payments for the authenticated user, including pending, failed, and refunded payments.',
     }),
     ApiOkResponse({
       description: 'Subscription payment history',

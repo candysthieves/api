@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Cron } from '@nestjs/schedule';
+import { Cron, CronExpression } from '@nestjs/schedule';
 import { InboxRepository } from '../../../../events/inbox/inbox.repository.js';
 import { FilesService } from './files.service.js';
 import { S3Adapter } from '../../../../core/adapters/s3.adapter.js';
@@ -24,7 +24,7 @@ export class PostImageWorkerService {
     private readonly avatars: AvatarImageProcessingService,
   ) {}
 
-  @Cron('* * * * * *', { waitForCompletion: true })
+  @Cron(CronExpression.EVERY_SECOND, { waitForCompletion: true })
   async processPending(): Promise<void> {
     await this.inbox.run(
       (event) =>

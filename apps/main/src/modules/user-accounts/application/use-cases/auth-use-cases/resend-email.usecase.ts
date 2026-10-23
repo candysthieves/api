@@ -2,10 +2,8 @@ import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { UsersRepository } from '../../../infrastructure/repositories/user-repositories/users.repository.js';
 import ms from 'ms';
 import { AppConfig } from '../../../../../app.config.js';
-import {
-  emailTemplates,
-  EmailTemplateType,
-} from '../../../../../core/adapters/email/email.templates.js';
+import { emailTemplates } from '../../../../../core/adapters/email/email.templates.js';
+import type { EmailTemplateType } from '../../../../../core/adapters/email/types/email-template.type.js';
 import { EmailAdapter } from '../../../../../core/adapters/email/email.adapter.js';
 import { DomainExceptions } from '../../../../../core/exceptions/domain-exceptions.js';
 import { ErrorStatus } from '../../../../../core/exceptions/domain-exception-code.js';
