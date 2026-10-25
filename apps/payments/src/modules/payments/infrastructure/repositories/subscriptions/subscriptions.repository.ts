@@ -20,6 +20,16 @@ export class SubscriptionsRepository {
       .executeTakeFirst();
   }
 
+  async findCurrentSubscription(userId: string, at: Date) {
+    return this.db
+      .selectFrom('subscriptions')
+      .select(['expirationDate', 'cancellationRequestedAt'])
+      .where('userId', '=', userId)
+      .where('expirationDate', '>', at)
+      .orderBy('expirationDate', 'desc')
+      .executeTakeFirst();
+  }
+
   async requestCancellation(subscriptionId: string, requestedAt: Date) {
     await this.db
       .updateTable('subscriptions')

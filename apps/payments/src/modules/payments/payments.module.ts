@@ -16,6 +16,7 @@ import { StripeService } from './infrastructure/providers/stripe/stripe.service.
 import { YookassaService } from './infrastructure/providers/yookassa/yookassa.service.js';
 import { PaymentProviderFactory } from './infrastructure/providers/payment-provider.factory.js';
 import { CancelSubscriptionUseCase } from './application/use-cases/cancel-subscription.use-case.js';
+import { GetCurrentSubscriptionQueryHandler } from './application/query-handler/get-current-subscription.query-handler.js';
 
 const controllers = [
   TariffsController,
@@ -23,7 +24,11 @@ const controllers = [
   PaymentsController,
 ];
 
-const queryHandlers = [GetTariffsQueryHandler, GetSubscriptionTypesQueryHandler];
+const queryHandlers = [
+  GetTariffsQueryHandler,
+  GetSubscriptionTypesQueryHandler,
+  GetCurrentSubscriptionQueryHandler,
+];
 
 const useCases = [CreatePaymentUseCase, CancelSubscriptionUseCase];
 

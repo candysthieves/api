@@ -19,6 +19,11 @@ export type PaymentResult = {
   paymentUrl: string;
 };
 
+export type CurrentSubscription = {
+  expirationDate: string | null;
+  nextChangeDate: string | null;
+};
+
 export type RpcResponse<T> = {
   data: T | null;
   error: {
@@ -63,7 +68,8 @@ export class PaymentsTcpService {
 
     if (result.error || !result.data) {
       throw new Error(
-        result.error?.errors?.[0]?.message ?? 'Failed to get subscription types',
+        result.error?.errors?.[0]?.message ??
+          'Failed to get subscription types',
       );
     }
 
@@ -84,6 +90,19 @@ export class PaymentsTcpService {
     return lastValueFrom(
       this.paymentsClient
         .send<RpcResponse<boolean>>({ cmd: 'cancel-subscription' }, { userId })
+        .pipe(timeout(5_000)),
+    );
+  }
+
+  getCurrentSubscription(
+    userId: string,
+  ): Promise<RpcResponse<CurrentSubscription>> {
+    return lastValueFrom(
+      this.paymentsClient
+        .send<RpcResponse<CurrentSubscription>>(
+          { cmd: 'get-current-subscription' },
+          { userId },
+        )
         .pipe(timeout(5_000)),
     );
   }

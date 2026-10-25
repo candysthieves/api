@@ -22,8 +22,11 @@ export class SubscriptionHistoryItemViewType {
   })
   subscriptionEndDate!: string;
 
-  @ApiProperty({ example: 999, description: 'Payment amount.' })
-  price!: number;
+  @ApiProperty({ example: 999, description: 'Payment amount in minor units.' })
+  priceInMinorUnits!: number;
+
+  @ApiProperty({ example: 'USD', enum: ['USD'] })
+  currency!: 'USD';
 
   @ApiProperty({ example: 'Monthly' })
   subscriptionName!: string;

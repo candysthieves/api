@@ -13,6 +13,7 @@ import { SubscriptionTypesController } from './api/subscription-types.controller
 import { PaymentsController } from './api/payments.controller.js';
 import { SubscriptionsController } from './api/subscriptions.controller.js';
 import { CancelSubscriptionUseCase } from './application/use-cases/cancel-subscription.usecase.js';
+import { GetCurrentSubscriptionQueryHandler } from './application/query-handler/get-current-subscription.query-handler.js';
 
 const controllers = [
   TariffsController,
@@ -23,6 +24,7 @@ const controllers = [
 const queryHandlers = [
   GetTariffsQueryHandler,
   GetSubscriptionTypesQueryHandler,
+  GetCurrentSubscriptionQueryHandler,
 ];
 const useCases = [CreatePaymentUseCase, CancelSubscriptionUseCase];
 const services = [PaymentsTcpService];
