@@ -1,10 +1,12 @@
 import { Generated, Selectable } from 'kysely';
 import type { SubscriptionTypeName } from '@libs/contracts';
+import type { PaymentEventTable } from '../../events/payment-event.type.js';
 
 export type { SubscriptionTypeName } from '@libs/contracts';
 
 export type PaymentProvider = 'STRIPE' | 'YOOKASSA';
-export type PaymentStatus = 'pending' | 'succeeded' | 'failed' | 'refunded';
+export type PaymentStatus =
+  'pending' | 'succeeded' | 'canceled' | 'failed' | 'refunded';
 
 export interface SubscriptionTypeTable {
   id: number;
@@ -17,7 +19,11 @@ export interface SubscriptionTypeTable {
 export interface PaymentsTable {
   id: Generated<string>;
   provider: PaymentProvider;
-  userExternalPaymentId: string;
+  userId: string;
+  externalPaymentId: string;
+  amount: number;
+  currency: string;
+  paymentMethodId: string | null;
   tariffId: string;
   paymentDate: Date | null;
   status: PaymentStatus;
@@ -51,6 +57,8 @@ export interface TariffTable {
 }
 
 export interface PaymentDatabase {
+  paymentInbox: PaymentEventTable;
+  paymentOutbox: PaymentEventTable;
   payments: PaymentsTable;
   subscriptions: SubscriptionTable;
   subscription_types: SubscriptionTypeTable;

@@ -5,6 +5,7 @@ import type { ImageInputEvent } from '../../../../../libs/contracts/index.js';
 import type { AvatarImageInputEvent } from '../../../../../libs/contracts/index.js';
 import { Injectable } from '@nestjs/common';
 import { firstValueFrom, from, timeout } from 'rxjs';
+import type { PaymentWebhookEvent } from '@libs/contracts';
 
 @Injectable()
 export class MainRabbitMqProducerService {
@@ -12,6 +13,22 @@ export class MainRabbitMqProducerService {
     private readonly connection: AmqpConnection,
     private readonly config: ConfigService,
   ) {}
+
+  async publishPaymentWebhook(event: PaymentWebhookEvent): Promise<void> {
+    if (!this.connection.connected) throw new Error('TRANSPORT_UNAVAILABLE');
+    const options: NonNullable<Parameters<ChannelWrapper['publish']>[3]> = {
+      persistent: true,
+      messageId: event.eventId,
+      type: event.type,
+      timeout: 5_000,
+    };
+    await this.connection.publish(
+      '',
+      this.config.getOrThrow<string>('RABBITMQ_MAIN_TO_PAYMENTS_QUEUE'),
+      event,
+      options,
+    );
+  }
 
   async checkConnection(): Promise<boolean> {
     if (!this.connection.connected) return false;

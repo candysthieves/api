@@ -9,3 +9,4 @@ export * from './cleanup-unused-avatar-files.contract.js';
 export * from './create-payment.contract.js';
 export * from './subscription-type.contract.js';
 export * from './subscription-error-code.contract.js';
+export * from './payment-event.contract.js';

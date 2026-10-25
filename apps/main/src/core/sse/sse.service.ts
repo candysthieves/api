@@ -21,6 +21,13 @@ export class SseService {
     });
   }
 
+  emitPaymentCompleted(userId: string): void {
+    this.emit(SseEventEnum.PAYMENT_COMPLETED, {
+      userId,
+      paymentStatus: 'completed',
+    });
+  }
+
   // Отправляет событие об изменении аватара.
   emitAvatarUpdated(userId: number): void {
     this.emit(SseEventEnum.AVATAR_UPDATED, { userId: String(userId) });

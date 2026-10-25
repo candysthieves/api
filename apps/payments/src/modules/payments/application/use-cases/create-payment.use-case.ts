@@ -7,6 +7,7 @@ import { PaymentProviderFactory } from '../../infrastructure/providers/payment-p
 import { PaymentParamsFactory } from '../factories/payment-params.factory.js';
 import { PaymentsMapper } from '../../api/mappers/payments.mapper.js';
 import { PaymentViewType } from '../../api/view-types/payment-view.type.js';
+import { randomUUID } from 'node:crypto';
 
 export class CreatePaymentCommand {
   constructor(
@@ -34,21 +35,28 @@ export class CreatePaymentUseCase implements ICommandHandler<
   }: CreatePaymentCommand): Promise<PaymentViewType> {
     const tariff = await this.tariffsRepository.findTariffById(tariffId);
 
-    const payment = PaymentFactory.create(userId, tariffId, provider);
-
-    await this.paymentsRepository.create(payment);
-
+    const paymentId = randomUUID();
     const paymentService = this.paymentProviderFactory.getProvider(provider);
 
-    const paymentParams = PaymentParamsFactory.create(payment.id, tariff);
+    const paymentParams = PaymentParamsFactory.create(
+      paymentId,
+      tariff,
+      provider === 'YOOKASSA' ? 'RUB' : 'USD',
+    );
 
     const { paymentUrl, externalPaymentId } =
       await paymentService.createPayment(paymentParams);
 
-    await this.paymentsRepository.updateExternalPaymentId(
-      payment.id,
+    const payment = PaymentFactory.create(
+      userId,
+      tariffId,
+      provider,
       externalPaymentId,
+      paymentParams.amount,
+      paymentParams.currency,
+      paymentId,
     );
+    await this.paymentsRepository.create(payment);
 
     return PaymentsMapper.toView(payment.id, paymentUrl);
   }

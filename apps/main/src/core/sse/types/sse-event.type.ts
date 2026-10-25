@@ -6,6 +6,7 @@ export enum SseEventEnum {
   POST_RESTORED = 'post-restored',
   AVATAR_UPDATED = 'avatar-updated',
   POST_MEDIA_UPDATED = 'post-media-updated',
+  PAYMENT_COMPLETED = 'payment-completed',
 }
 
 export type SseEvent = {

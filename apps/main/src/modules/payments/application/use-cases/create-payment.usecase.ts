@@ -14,7 +14,7 @@ export class CreatePaymentCommand {
   constructor(
     public readonly userId: string,
     public readonly tariffId: string,
-    public readonly provider: PaymentProvider,
+    public readonly paymentProvider: PaymentProvider,
   ) {}
 }
 
@@ -30,7 +30,7 @@ export class CreatePaymentUseCase implements ICommandHandler<
       await this.paymentsTcpService.createPayment({
         userId: command.userId,
         tariffId: command.tariffId,
-        provider: command.provider,
+        provider: command.paymentProvider,
       });
 
     if (response.error || !response.data) {

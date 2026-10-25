@@ -1,9 +1,10 @@
 import { randomUUID } from 'node:crypto';
 import { Injectable } from '@nestjs/common';
-import { Cron } from '@nestjs/schedule';
+import { Cron, CronExpression } from '@nestjs/schedule';
 import type {
   AvatarImageInputEvent,
   ImageInputEvent,
+  PaymentWebhookEvent,
 } from '@libs/contracts';
 import { PrismaService } from '../../../infrastructure/prisma/prisma.service.js';
 import { MainRabbitMqProducerService } from '../../rabbitmq/main-rabbitmq-producer.service.js';
@@ -16,6 +17,16 @@ export class OutboxService {
     private readonly events: EventStoreService,
     private readonly producer: MainRabbitMqProducerService,
   ) {}
+
+  async savePaymentWebhook(externalPaymentId: string): Promise<void> {
+    const event: PaymentWebhookEvent = {
+      eventId: randomUUID(),
+      consumer: 'PAYMENTS',
+      type: 'payment.status.requested',
+      data: { externalPaymentId },
+    };
+    await this.prisma.outputEvent.create({ data: event });
+  }
 
   // Сохраняет исходные изображения поста для отправки в files.
   async save(postId: string, files: Express.Multer.File[]): Promise<void> {
@@ -72,10 +83,19 @@ export class OutboxService {
     });
   }
 
-  @Cron('* * * * * *', { waitForCompletion: true })
-  // Отправляет сохранённые события в файловый сервис.
+  @Cron(CronExpression.EVERY_SECOND, { waitForCompletion: true })
+  // Отправляет сохранённые события файловому и платёжному сервисам.
   async processPending(): Promise<void> {
     await this.events.run('outputEvent', async (event) => {
+      if (event.type === 'payment.status.requested') {
+        await this.producer.publishPaymentWebhook({
+          eventId: event.eventId,
+          consumer: 'PAYMENTS',
+          type: 'payment.status.requested',
+          data: event.data as PaymentWebhookEvent['data'],
+        });
+        return;
+      }
       if (!event.body || !event.data) throw new Error('MISSING_IMAGE_INPUT');
       const common = {
         ...(event.data as Record<string, unknown>),
