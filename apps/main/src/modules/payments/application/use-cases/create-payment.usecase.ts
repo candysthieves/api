@@ -13,7 +13,7 @@ import { ErrorStatus } from '../../../../core/exceptions/domain-exception-code.j
 export class CreatePaymentCommand {
   constructor(
     public readonly userId: string,
-    public readonly tariffId: string,
+    public readonly tariffId: number,
     public readonly paymentProvider: PaymentProvider,
   ) {}
 }

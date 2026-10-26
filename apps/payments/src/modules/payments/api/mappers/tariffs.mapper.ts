@@ -1,10 +1,10 @@
 import { TariffViewType } from '../view-types/tariff-view.type.js';
 
 type TariffDbRow = {
-  id: string;
+  id: number;
   name: string;
   durationDays: number;
-  priceInMinorUnits: string;
+  price: string;
 };
 
 export class TariffsMapper {
@@ -13,7 +13,7 @@ export class TariffsMapper {
       id: tariff.id,
       tariff_name: tariff.name,
       durationDays: tariff.durationDays,
-      priceInMinorUnits: tariff.priceInMinorUnits,
+      price: tariff.price,
     };
   }
 

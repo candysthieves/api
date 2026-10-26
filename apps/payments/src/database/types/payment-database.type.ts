@@ -21,10 +21,10 @@ export interface PaymentsTable {
   provider: PaymentProvider;
   userId: string;
   externalPaymentId: string;
+  /** Tariff price in USD cents. */
   amount: number;
-  currency: string;
   paymentMethodId: string | null;
-  tariffId: string;
+  tariffId: number;
   paymentDate: Date | null;
   status: PaymentStatus;
   createdAt: Generated<Date>;
@@ -33,10 +33,10 @@ export interface PaymentsTable {
 export interface SubscriptionTable {
   id: Generated<string>;
   userId: string;
-  tariffId: string;
+  tariffId: number;
   lastPaymentId: string;
   expirationDate: Date;
-  cancellationRequestedAt: Date | null;
+  nextChargeDate: Date | null;
   createdAt: Generated<Date>;
 }
 
@@ -46,11 +46,11 @@ export interface BonusesTable {
 }
 
 export interface TariffTable {
-  id: Generated<string>;
+  id: number;
   name: string;
   subscriptionTypeId: number;
   durationDays: number;
-  priceInMinorUnits: string;
+  price: string;
   createdAt: Generated<Date>;
   updatedAt: Date | null;
   deletedAt: Date | null;

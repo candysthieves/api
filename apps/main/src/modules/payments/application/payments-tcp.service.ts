@@ -8,10 +8,10 @@ import type {
 } from '@libs/contracts';
 
 export type PaymentTariff = {
-  id: string;
+  id: number;
   tariff_name: string;
   durationDays: number;
-  priceInMinorUnits: string;
+  price: string;
 };
 
 export type PaymentResult = {

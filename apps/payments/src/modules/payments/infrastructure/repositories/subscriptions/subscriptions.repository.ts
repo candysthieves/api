@@ -24,7 +24,7 @@ export class SubscriptionsRepository {
 
   async saveSubscription(
     userId: string,
-    tariffId: string,
+    tariffId: number,
     paymentId: string,
     durationDays: number,
   ): Promise<void> {
@@ -35,14 +35,14 @@ export class SubscriptionsRepository {
         tariffId,
         lastPaymentId: paymentId,
         expirationDate: sql<Date>`now() + toIntervalDay(${durationDays})`,
-        cancellationRequestedAt: sql<null>`NULL`,
+        nextChargeDate: sql<Date>`now() + toIntervalDay(${durationDays})`,
       }),
     );
   }
 
   async updateSubscription(
     userId: string,
-    tariffId: string,
+    tariffId: number,
     paymentId: string,
     durationDays: number,
   ): Promise<void> {
@@ -54,7 +54,7 @@ export class SubscriptionsRepository {
           tariffId,
           lastPaymentId: paymentId,
           expirationDate: sql<Date>`now() + toIntervalDay(${durationDays})`,
-          cancellationRequestedAt: sql<null>`NULL`,
+          nextChargeDate: sql<Date>`now() + toIntervalDay(${durationDays})`,
         })
         .where('userId', '=', userId)
         .modifyEnd(sql`SETTINGS mutations_sync = 1`),
@@ -74,19 +74,21 @@ export class SubscriptionsRepository {
   async findCurrentSubscription(userId: string, at: Date) {
     return this.db
       .selectFrom('subscriptions')
-      .select(['expirationDate', 'cancellationRequestedAt'])
+      .select(['expirationDate', 'nextChargeDate'])
       .where('userId', '=', userId)
       .where('expirationDate', '>', toClickHouseDateTime(at))
       .orderBy('expirationDate', 'desc')
       .executeTakeFirst();
   }
 
-  async requestCancellation(subscriptionId: string, requestedAt: Date) {
-    await this.db
-      .updateTable('subscriptions')
-      .set({ cancellationRequestedAt: toClickHouseDateTime(requestedAt) })
-      .where('id', '=', subscriptionId)
-      .where('cancellationRequestedAt', 'is', null)
-      .execute();
+  async requestCancellation(subscriptionId: string): Promise<void> {
+    await executeMutation(
+      this.db,
+      this.db
+        .updateTable('subscriptions')
+        .set({ nextChargeDate: sql<null>`NULL` })
+        .where('id', '=', subscriptionId)
+        .modifyEnd(sql`SETTINGS mutations_sync = 1`),
+    );
   }
 }

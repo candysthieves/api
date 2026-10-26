@@ -27,10 +27,7 @@ export class CancelSubscriptionUseCase implements ICommandHandler<
     if (!subscription) return false;
 
     // Запрашиваем отмену найденной подписки по её ID.
-    await this.subscriptionsRepository.requestCancellation(
-      subscription.id,
-      requestedAt,
-    );
+    await this.subscriptionsRepository.requestCancellation(subscription.id);
 
     return true;
   }

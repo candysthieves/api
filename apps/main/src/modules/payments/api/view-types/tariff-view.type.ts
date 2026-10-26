@@ -1,8 +1,8 @@
 import { ApiProperty } from '@nestjs/swagger';
 
 export class TariffViewType {
-  @ApiProperty({ example: 'daily' })
-  id!: string;
+  @ApiProperty({ example: 1 })
+  id!: number;
 
   @ApiProperty({ example: 'Daily' })
   tariff_name!: string;
@@ -14,7 +14,7 @@ export class TariffViewType {
     example: 100,
     description: 'Price in the unit specified by priceUnit.',
   })
-  priceInMinorUnits!: number;
+  price!: number;
 
   @ApiProperty({ example: 'USD' })
   currency!: string;

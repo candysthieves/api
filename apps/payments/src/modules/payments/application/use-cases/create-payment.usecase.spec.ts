@@ -16,9 +16,11 @@ import {
 } from './create-payment.use-case.js';
 
 describe('CreatePaymentUseCase', () => {
-  const tariff = { name: 'Daily', durationDays: 1, priceInMinorUnits: '100' };
+  const tariff = { name: 'Daily', durationDays: 1, price: '100' };
   const tariffs = { findTariffById: jest.fn().mockResolvedValue(tariff) };
-  const payments = { create: jest.fn() };
+  const payments = {
+    create: jest.fn<Promise<void>, [Record<string, unknown>]>(),
+  };
   const provider = { createPayment: jest.fn() };
   const factory = { getProvider: jest.fn().mockReturnValue(provider) };
   const usecase = new CreatePaymentUseCase(
@@ -37,18 +39,17 @@ describe('CreatePaymentUseCase', () => {
     });
   });
 
-  it('converts USD to kopecks and preserves the user and provider IDs separately', async () => {
+  it('stores USD cents while sending kopecks to YooKassa', async () => {
     const result = await usecase.execute(
-      new CreatePaymentCommand('42', 'tariff', 'YOOKASSA'),
+      new CreatePaymentCommand('42', 1, 'YOOKASSA'),
     );
     expect(payments.create).toHaveBeenCalledWith(
       expect.objectContaining({
         id: result.paymentId,
         userId: '42',
         externalPaymentId: 'provider-payment',
-        tariffId: 'tariff',
-        amount: 8333,
-        currency: 'RUB',
+        tariffId: 1,
+        amount: 100,
         status: 'pending',
         paymentMethodId: null,
       }),
@@ -57,11 +58,19 @@ describe('CreatePaymentUseCase', () => {
       expect.objectContaining({ amount: 8333, currency: 'RUB' }),
     );
     expect(result.paymentUrl).toBe('https://pay.example/1');
+    expect(payments.create.mock.calls[0][0]).not.toHaveProperty('currency');
+    expect(payments.create.mock.calls[0][0]).not.toHaveProperty(
+      'amountMinorUnits',
+    );
   });
 
   it('preserves USD cents for Stripe', async () => {
-    await usecase.execute(new CreatePaymentCommand('42', 'tariff', 'STRIPE'));
+    await usecase.execute(new CreatePaymentCommand('42', 1, 'STRIPE'));
     expect(payments.create).toHaveBeenCalledWith(
+      expect.objectContaining({ amount: 100 }),
+    );
+    expect(payments.create.mock.calls[0][0]).not.toHaveProperty('currency');
+    expect(provider.createPayment).toHaveBeenCalledWith(
       expect.objectContaining({ amount: 100, currency: 'USD' }),
     );
   });
@@ -69,7 +78,7 @@ describe('CreatePaymentUseCase', () => {
   it('does not save a pending payment when the provider fails', async () => {
     provider.createPayment.mockRejectedValueOnce(new Error('unavailable'));
     await expect(
-      usecase.execute(new CreatePaymentCommand('42', 'tariff', 'YOOKASSA')),
+      usecase.execute(new CreatePaymentCommand('42', 1, 'YOOKASSA')),
     ).rejects.toThrow('unavailable');
     expect(payments.create).not.toHaveBeenCalled();
   });
@@ -77,7 +86,7 @@ describe('CreatePaymentUseCase', () => {
   it('does not return a URL when persistence fails', async () => {
     payments.create.mockRejectedValueOnce(new Error('database unavailable'));
     await expect(
-      usecase.execute(new CreatePaymentCommand('42', 'tariff', 'YOOKASSA')),
+      usecase.execute(new CreatePaymentCommand('42', 1, 'YOOKASSA')),
     ).rejects.toThrow('database unavailable');
   });
 });

@@ -70,7 +70,7 @@ export function ApiCreatePayment() {
                 field: { type: 'string', example: 'tariffId' },
                 message: {
                   type: 'string',
-                  example: "Tariff with id '123e4567-e89b-12d3-a456-426614174000' was not found",
+                  example: "Tariff with id '1' was not found",
                 },
               },
             },

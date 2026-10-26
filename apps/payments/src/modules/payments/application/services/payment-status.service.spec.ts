@@ -47,9 +47,8 @@ describe('PaymentStatusService', () => {
       userId: '42',
       provider: 'YOOKASSA',
       status: 'pending',
-      amount: 8333,
-      currency: 'RUB',
-      tariffId: 'tariff',
+      amount: 100,
+      tariffId: 1,
       paymentMethodId: null,
       paymentDate: null,
       createdAt: new Date(),
@@ -101,7 +100,7 @@ describe('PaymentStatusService', () => {
     await service.process('external-id');
     expect(subscriptions.saveSubscription).toHaveBeenCalledWith(
       '42',
-      'tariff',
+      1,
       'local-id',
       30,
     );
@@ -137,7 +136,7 @@ describe('PaymentStatusService', () => {
     expect(subscriptions.saveSubscription).not.toHaveBeenCalled();
     expect(subscriptions.updateSubscription).toHaveBeenCalledWith(
       '42',
-      'tariff',
+      1,
       'local-id',
       30,
     );

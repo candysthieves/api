@@ -1,6 +1,6 @@
 export type TariffViewType = {
-  id: string;
+  id: number;
   tariff_name: string;
   durationDays: number;
-  priceInMinorUnits: string;
+  price: string;
 };

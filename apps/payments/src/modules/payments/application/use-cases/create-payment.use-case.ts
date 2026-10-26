@@ -12,7 +12,7 @@ import { randomUUID } from 'node:crypto';
 export class CreatePaymentCommand {
   constructor(
     public readonly userId: string,
-    public readonly tariffId: string,
+    public readonly tariffId: number,
     public readonly provider: PaymentProvider,
   ) {}
 }
@@ -52,8 +52,7 @@ export class CreatePaymentUseCase implements ICommandHandler<
       tariffId,
       provider,
       externalPaymentId,
-      paymentParams.amount,
-      paymentParams.currency,
+      Number(tariff.price),
       paymentId,
     );
     await this.paymentsRepository.create(payment);

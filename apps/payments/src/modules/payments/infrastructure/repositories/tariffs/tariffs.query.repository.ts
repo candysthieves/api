@@ -25,7 +25,7 @@ export class TariffsQueryRepository {
         'tariffs.id',
         'tariffs.name',
         'tariffs.durationDays',
-        'tariffs.priceInMinorUnits',
+        'tariffs.price',
       ])
       .where('tariffs.deletedAt', 'is', null)
       .where('subscription_types.namePaymentStatus', '=', subscriptionType)

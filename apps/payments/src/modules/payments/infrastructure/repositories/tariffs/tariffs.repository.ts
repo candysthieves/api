@@ -15,7 +15,7 @@ export class TariffsRepository {
     private readonly db: Kysely<PaymentDatabase>,
   ) {}
 
-  async findTariffById(tariffId: string): Promise<TariffEntity> {
+  async findTariffById(tariffId: number): Promise<TariffEntity> {
     const tariff = await this.db
       .selectFrom('tariffs')
       .selectAll()

@@ -3,11 +3,17 @@ import {
   Controller,
   HttpCode,
   HttpStatus,
+  Param,
   Post,
   UseGuards,
 } from '@nestjs/common';
 import { CommandBus } from '@nestjs/cqrs';
-import { ApiTags, ApiOperation, ApiOkResponse } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiOkResponse,
+  ApiParam,
+} from '@nestjs/swagger';
 import { AccessTokenGuard } from '../../user-accounts/api/guards/access-token.guard.js';
 import { User } from '../../user-accounts/api/decorators/user.decorator.js';
 import type { JwtAccessPayload } from '../../../core/types/jwt-payload.type.js';
@@ -33,6 +39,21 @@ export class PaymentsController {
   acceptYookassaWebhook(@Body() dto: YookassaWebhookDto): Promise<void> {
     return this.commandBus.execute(
       new AcceptYookassaWebhookCommand(dto.event, dto.object.id),
+    );
+  }
+
+  @Post('test/yookassa/:paymentId')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Simulate a successful YooKassa webhook for local testing',
+  })
+  @ApiParam({ name: 'paymentId', description: 'Payment ID from YooKassa' })
+  @ApiOkResponse({ description: 'Notification persisted for processing' })
+  simulateYookassaWebhook(
+    @Param('paymentId') paymentId: string,
+  ): Promise<void> {
+    return this.commandBus.execute(
+      new AcceptYookassaWebhookCommand('payment.succeeded', paymentId),
     );
   }
 

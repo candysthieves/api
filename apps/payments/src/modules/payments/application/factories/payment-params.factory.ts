@@ -13,8 +13,8 @@ export class PaymentParamsFactory {
       paymentId,
       amount:
         currency === 'RUB'
-          ? Math.round(Number(tariff.priceInMinorUnits) / USD_PER_RUB)
-          : Number(tariff.priceInMinorUnits),
+          ? Math.round(Number(tariff.price) / USD_PER_RUB)
+          : Number(tariff.price),
       currency,
       description: `Subscription "${tariff.name}" for ${tariff.durationDays} day(s)`,
       durationDays: tariff.durationDays,
