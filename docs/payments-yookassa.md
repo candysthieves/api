@@ -1,5 +1,23 @@
 # Оплата через ЮKassa
 
+## Исправление старой схемы событий
+
+Если cleanup падает с `Cannot convert NULL to a non-nullable type`, примените
+`20261026000000_fix_payment_event_cleanup_schema.sql` через migration runner.
+Старые таблицы с `DateTime64(3)` и обязательными `data`/`attempts` не обновляются
+через `CREATE TABLE IF NOT EXISTS` из исходной миграции.
+
+Перед применением остановите payments и проверьте целевую БД в выбранном окружении.
+Для `development.local`: `pnpm run payments:migrate:local`. После успешной миграции
+запустите payments снова. Миграция сохраняет ID, статусы, данные и миллисекунды,
+разрешает NULL для очистки и поддерживает повторный запуск. Не запускайте её
+параллельно с записью событий: временные столбцы копируются перед заменой.
+
+Проверка на отдельном локальном контейнере ClickHouse:
+`node apps/payments/test/payment-event-migration.integration.cjs <container-name>`.
+Тест создаёт и удаляет собственную БД и проверяет старую/текущую схемы, повтор
+после прерывания и очистку завершённых событий с сохранением ID и статуса.
+
 ## Настройка
 
 В main и payments должны совпадать `RABBITMQ_URL`, `RABBITMQ_MAIN_TO_PAYMENTS_QUEUE`, `RABBITMQ_PAYMENTS_TO_MAIN_QUEUE`. Например, имена очередей: `main-to-payments` и `payments-to-main`. Обе очереди durable; приложения объявляют их самостоятельно.
