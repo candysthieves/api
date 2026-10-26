@@ -2,6 +2,9 @@ import { Injectable } from '@nestjs/common';
 import { PaymentsRepository } from '../../infrastructure/repositories/payments/payments.repository.js';
 import { YookassaService } from '../../infrastructure/providers/yookassa/yookassa.service.js';
 import { OutboxService } from '../../../../events/outbox/outbox.service.js';
+import { SubscriptionsRepository } from '../../infrastructure/repositories/subscriptions/subscriptions.repository.js';
+import { TariffsRepository } from '../../infrastructure/repositories/tariffs/tariffs.repository.js';
+import { TariffEntity } from '../../../../database/types/payment-database.type.js';
 
 @Injectable()
 export class PaymentStatusService {
@@ -9,6 +12,8 @@ export class PaymentStatusService {
     private readonly paymentsRepository: PaymentsRepository,
     private readonly yookassaService: YookassaService,
     private readonly outboxService: OutboxService,
+    private readonly subscriptionsRepository: SubscriptionsRepository,
+    private readonly tariffsRepository: TariffsRepository,
   ) {}
 
   async process(externalPaymentId: string): Promise<void> {
@@ -30,6 +35,29 @@ export class PaymentStatusService {
       payment.status = current.status;
     }
     if (payment.status !== 'succeeded') return;
+    //TODO посоветоваться, оставить 2 явных метода на создание и апдейт или объеденить их
+    const tariff: TariffEntity = await this.tariffsRepository.findTariffById(
+      payment.tariffId,
+    );
+    const subscription =
+      await this.subscriptionsRepository.findSubscriptionByUserId(
+        payment.userId,
+      );
+    if (subscription) {
+      await this.subscriptionsRepository.updateSubscription(
+        payment.userId,
+        payment.tariffId,
+        payment.id,
+        tariff.durationDays,
+      );
+    } else {
+      await this.subscriptionsRepository.saveSubscription(
+        payment.userId,
+        payment.tariffId,
+        payment.id,
+        tariff.durationDays,
+      );
+    }
     // Повтор после сохранения succeeded восстанавливает outbox без нового GET.
     await this.outboxService.save({
       eventId: payment.id,
