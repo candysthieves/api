@@ -6,7 +6,10 @@ import { ObjectResult } from '../../../core/object-result.js';
 import { SubscriptionErrorCode } from '@libs/contracts';
 import { GetCurrentSubscriptionQuery } from '../application/query-handler/get-current-subscription.query-handler.js';
 import { GetSubscriptionHistoryQuery } from '../application/query-handler/get-subscription-history.query-handler.js';
-import type { SubscriptionHistoryItemContract } from '@libs/contracts';
+import type {
+  GetSubscriptionHistoryContract,
+  SubscriptionHistoryContract,
+} from '@libs/contracts';
 
 @Controller('subscriptions')
 export class SubscriptionsController {
@@ -32,12 +35,18 @@ export class SubscriptionsController {
 
   @MessagePattern({ cmd: 'get-subscription-history' })
   async getSubscriptionHistory(
-    @Payload() payload: { userId: string },
-  ): Promise<ObjectResult<SubscriptionHistoryItemContract[]>> {
+    @Payload() payload: GetSubscriptionHistoryContract,
+  ): Promise<ObjectResult<SubscriptionHistoryContract>> {
     const history = await this.queryBus.execute<
       GetSubscriptionHistoryQuery,
-      SubscriptionHistoryItemContract[]
-    >(new GetSubscriptionHistoryQuery(payload.userId));
+      SubscriptionHistoryContract
+    >(
+      new GetSubscriptionHistoryQuery(
+        payload.userId,
+        payload.page,
+        payload.pageSize,
+      ),
+    );
     return ObjectResult.success(history);
   }
 

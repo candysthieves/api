@@ -13,3 +13,16 @@ export type SubscriptionHistoryItemContract = {
   paymentService: 'STRIPE' | 'YOOKASSA';
   status: PaymentHistoryStatus;
 };
+
+export type GetSubscriptionHistoryContract = {
+  userId: string;
+  page: number;
+  pageSize: number;
+};
+
+export type SubscriptionHistoryContract = {
+  items: SubscriptionHistoryItemContract[];
+  totalCount: number;
+  page: number;
+  pageSize: number;
+};

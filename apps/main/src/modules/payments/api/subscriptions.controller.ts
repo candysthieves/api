@@ -4,6 +4,7 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
@@ -14,7 +15,8 @@ import type { JwtAccessPayload } from '../../../core/types/jwt-payload.type.js';
 import { CancelSubscriptionCommand } from '../application/use-cases/cancel-subscription.usecase.js';
 import { ApiCancelCurrentSubscription } from '../../../core/swagger/payments-dto/cancel-subscription.swagger.js';
 import { ApiGetSubscriptionHistory } from '../../../core/swagger/payments-dto/get-subscription-history.swagger.js';
-import { SubscriptionHistoryItemViewType } from './view-types/subscription-history-item-view.type.js';
+import { SubscriptionHistoryViewType } from './view-types/subscription-history-view.type.js';
+import { GetSubscriptionHistoryQueryParamsDto } from './dto/get-subscription-history-query-params.dto.js';
 import { GetCurrentSubscriptionQuery } from '../application/query-handler/get-current-subscription.query-handler.js';
 import { CurrentSubscriptionViewType } from './view-types/current-subscription-view.type.js';
 import { ApiGetCurrentSubscription } from '../../../core/swagger/payments-dto/get-current-subscription.swagger.js';
@@ -45,11 +47,18 @@ export class SubscriptionsController {
   @ApiGetSubscriptionHistory()
   getSubscriptionHistory(
     @User() user: JwtAccessPayload,
-  ): Promise<SubscriptionHistoryItemViewType[]> {
+    @Query() query: GetSubscriptionHistoryQueryParamsDto,
+  ): Promise<SubscriptionHistoryViewType> {
     return this.queryBus.execute<
       GetSubscriptionHistoryQuery,
-      SubscriptionHistoryItemViewType[]
-    >(new GetSubscriptionHistoryQuery(user.userId.toString()));
+      SubscriptionHistoryViewType
+    >(
+      new GetSubscriptionHistoryQuery(
+        user.userId.toString(),
+        query.page,
+        query.pageSize,
+      ),
+    );
   }
 
   @Delete('current')

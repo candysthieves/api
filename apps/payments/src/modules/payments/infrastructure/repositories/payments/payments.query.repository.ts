@@ -26,8 +26,12 @@ export class PaymentsQueryRepository {
     private readonly db: Kysely<PaymentDatabase>,
   ) {}
 
-  findHistory(userId: string): Promise<SubscriptionHistoryRow[]> {
-    return this.db
+  async findHistory(
+    userId: string,
+    page: number,
+    pageSize: number,
+  ): Promise<{ items: SubscriptionHistoryRow[]; totalCount: number }> {
+    const query = this.db
       .selectFrom('payments')
       .innerJoin('tariffs', 'tariffs.id', 'payments.tariffId')
       .innerJoin(
@@ -35,26 +39,37 @@ export class PaymentsQueryRepository {
         'subscription_types.id',
         'tariffs.subscriptionTypeId',
       )
-      .select([
-        'payments.id as id',
-        sql<number>`toUnixTimestamp(${sql.ref('payments.createdAt')})`.as(
-          'createdAtSeconds',
-        ),
-        sql<
-          number | null
-        >`toUnixTimestamp(${sql.ref('payments.paymentDate')})`.as(
-          'paymentDateSeconds',
-        ),
-        'payments.amount as amount',
-        'payments.provider as provider',
-        'payments.status as status',
-        'tariffs.name as subscriptionName',
-        'tariffs.durationDays as durationDays',
-        'subscription_types.namePaymentStatus as subscriptionType',
-      ])
-      .where('payments.userId', '=', userId)
-      .orderBy('payments.createdAt', 'desc')
-      .orderBy('payments.id', 'desc')
-      .execute();
+      .where('payments.userId', '=', userId);
+
+    const [items, count] = await Promise.all([
+      query
+        .select([
+          'payments.id as id',
+          sql<number>`toUnixTimestamp(${sql.ref('payments.createdAt')})`.as(
+            'createdAtSeconds',
+          ),
+          sql<
+            number | null
+          >`toUnixTimestamp(${sql.ref('payments.paymentDate')})`.as(
+            'paymentDateSeconds',
+          ),
+          'payments.amount as amount',
+          'payments.provider as provider',
+          'payments.status as status',
+          'tariffs.name as subscriptionName',
+          'tariffs.durationDays as durationDays',
+          'subscription_types.namePaymentStatus as subscriptionType',
+        ])
+        .orderBy('payments.createdAt', 'desc')
+        .orderBy('payments.id', 'desc')
+        .limit(pageSize)
+        .offset((page - 1) * pageSize)
+        .execute(),
+      query
+        .select(sql<number | string>`count(*)`.as('totalCount'))
+        .executeTakeFirstOrThrow(),
+    ]);
+
+    return { items, totalCount: Number(count.totalCount) };
   }
 }

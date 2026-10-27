@@ -5,7 +5,8 @@ import { CreatePaymentContract } from '@libs/contracts';
 import type {
   SubscriptionTypeContract,
   SubscriptionTypeName,
-  SubscriptionHistoryItemContract,
+  SubscriptionHistoryContract,
+  GetSubscriptionHistoryContract,
 } from '@libs/contracts';
 
 export type PaymentTariff = {
@@ -96,13 +97,13 @@ export class PaymentsTcpService {
   }
 
   getSubscriptionHistory(
-    userId: string,
-  ): Promise<RpcResponse<SubscriptionHistoryItemContract[]>> {
+    payload: GetSubscriptionHistoryContract,
+  ): Promise<RpcResponse<SubscriptionHistoryContract>> {
     return lastValueFrom(
       this.paymentsClient
-        .send<RpcResponse<SubscriptionHistoryItemContract[]>>(
+        .send<RpcResponse<SubscriptionHistoryContract>>(
           { cmd: 'get-subscription-history' },
-          { userId },
+          payload,
         )
         .pipe(timeout(5_000)),
     );
