@@ -18,31 +18,7 @@ import { SubscriptionHistoryItemViewType } from './view-types/subscription-histo
 import { GetCurrentSubscriptionQuery } from '../application/query-handler/get-current-subscription.query-handler.js';
 import { CurrentSubscriptionViewType } from './view-types/current-subscription-view.type.js';
 import { ApiGetCurrentSubscription } from '../../../core/swagger/payments-dto/get-current-subscription.swagger.js';
-
-const subscriptionHistoryExample: SubscriptionHistoryItemViewType[] = [
-  {
-    id: 'payment-123',
-    date: '2026-09-15T12:00:00.000Z',
-    paymentDate: '2026-09-15T12:00:00.000Z',
-    subscriptionEndDate: '2026-10-15T12:00:00.000Z',
-    priceInMinorUnits: 999,
-    currency: 'USD',
-    subscriptionName: 'Monthly',
-    subscriptionType: 'Personal',
-    paymentService: 'YOOKASSA',
-  },
-  {
-    id: 'payment-122',
-    date: '2026-08-15T12:00:00.000Z',
-    paymentDate: '2026-08-15T12:00:00.000Z',
-    subscriptionEndDate: '2026-09-15T12:00:00.000Z',
-    priceInMinorUnits: 999,
-    currency: 'USD',
-    subscriptionName: 'Monthly',
-    subscriptionType: 'Personal',
-    paymentService: 'YOOKASSA',
-  },
-];
+import { GetSubscriptionHistoryQuery } from '../application/query-handler/get-subscription-history.query-handler.js';
 
 @ApiTags('Subscriptions')
 @Controller('subscriptions')
@@ -67,8 +43,13 @@ export class SubscriptionsController {
   @Get('history')
   @UseGuards(AccessTokenGuard)
   @ApiGetSubscriptionHistory()
-  getSubscriptionHistory(): SubscriptionHistoryItemViewType[] {
-    return subscriptionHistoryExample;
+  getSubscriptionHistory(
+    @User() user: JwtAccessPayload,
+  ): Promise<SubscriptionHistoryItemViewType[]> {
+    return this.queryBus.execute<
+      GetSubscriptionHistoryQuery,
+      SubscriptionHistoryItemViewType[]
+    >(new GetSubscriptionHistoryQuery(user.userId.toString()));
   }
 
   @Delete('current')

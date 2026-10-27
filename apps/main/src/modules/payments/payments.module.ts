@@ -14,6 +14,7 @@ import { PaymentsController } from './api/payments.controller.js';
 import { SubscriptionsController } from './api/subscriptions.controller.js';
 import { CancelSubscriptionUseCase } from './application/use-cases/cancel-subscription.usecase.js';
 import { GetCurrentSubscriptionQueryHandler } from './application/query-handler/get-current-subscription.query-handler.js';
+import { GetSubscriptionHistoryQueryHandler } from './application/query-handler/get-subscription-history.query-handler.js';
 import { EventsModule } from '../../core/events/events.module.js';
 import { AcceptYookassaWebhookUseCase } from './application/use-cases/accept-yookassa-webhook.usecase.js';
 
@@ -27,6 +28,7 @@ const queryHandlers = [
   GetTariffsQueryHandler,
   GetSubscriptionTypesQueryHandler,
   GetCurrentSubscriptionQueryHandler,
+  GetSubscriptionHistoryQueryHandler,
 ];
 const useCases = [
   CreatePaymentUseCase,

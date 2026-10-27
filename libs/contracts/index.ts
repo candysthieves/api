@@ -10,3 +10,4 @@ export * from './create-payment.contract.js';
 export * from './subscription-type.contract.js';
 export * from './subscription-error-code.contract.js';
 export * from './payment-event.contract.js';
+export * from './subscription-history.contract.js';

@@ -4,6 +4,7 @@ import {
   ApiOkResponse,
   ApiOperation,
   ApiUnauthorizedResponse,
+  ApiServiceUnavailableResponse,
 } from '@nestjs/swagger';
 import { SubscriptionHistoryItemViewType } from '../../../modules/payments/api/view-types/subscription-history-item-view.type.js';
 
@@ -13,7 +14,7 @@ export function ApiGetSubscriptionHistory() {
     ApiOperation({
       summary: 'Get the current user subscription payment history',
       description:
-        'Returns example subscription payment history for the authenticated user. The response is currently mocked.',
+        'Returns all payment attempts for the authenticated user, newest first by creation date. Includes pending, succeeded, canceled and failed attempts. Returns an empty array when there are no payments. Payment date and subscription end date are null for unpaid attempts. Subscription end date is calculated from the payment date and current tariff duration.',
     }),
     ApiOkResponse({
       description: 'Subscription payment history',
@@ -22,6 +23,9 @@ export function ApiGetSubscriptionHistory() {
     }),
     ApiUnauthorizedResponse({
       description: 'Access token is invalid or expired.',
+    }),
+    ApiServiceUnavailableResponse({
+      description: 'Subscription payment history could not be retrieved.',
     }),
   );
 }

@@ -10,6 +10,7 @@ import { TariffsRepository } from './infrastructure/repositories/tariffs/tariffs
 import { TariffsQueryRepository } from './infrastructure/repositories/tariffs/tariffs.query.repository.js';
 import { SubscriptionTypesQueryRepository } from './infrastructure/repositories/subscription-types/subscription-types.query.repository.js';
 import { PaymentsRepository } from './infrastructure/repositories/payments/payments.repository.js';
+import { PaymentsQueryRepository } from './infrastructure/repositories/payments/payments.query.repository.js';
 import { SubscriptionsRepository } from './infrastructure/repositories/subscriptions/subscriptions.repository.js';
 import { BonusesRepository } from './infrastructure/repositories/bonuses/bonuses.repository.js';
 import { StripeService } from './infrastructure/providers/stripe/stripe.service.js';
@@ -17,6 +18,7 @@ import { YookassaService } from './infrastructure/providers/yookassa/yookassa.se
 import { PaymentProviderFactory } from './infrastructure/providers/payment-provider.factory.js';
 import { CancelSubscriptionUseCase } from './application/use-cases/cancel-subscription.use-case.js';
 import { GetCurrentSubscriptionQueryHandler } from './application/query-handler/get-current-subscription.query-handler.js';
+import { GetSubscriptionHistoryQueryHandler } from './application/query-handler/get-subscription-history.query-handler.js';
 import { RenewSubscriptionsUseCase } from './application/use-cases/renew-subscriptions.usecase.js';
 import { SubscriptionsScheduler } from './application/subscriptions.scheduler.js';
 
@@ -30,6 +32,7 @@ const queryHandlers = [
   GetTariffsQueryHandler,
   GetSubscriptionTypesQueryHandler,
   GetCurrentSubscriptionQueryHandler,
+  GetSubscriptionHistoryQueryHandler,
 ];
 
 const useCases = [
@@ -43,6 +46,7 @@ const repositories = [
   TariffsQueryRepository,
   SubscriptionTypesQueryRepository,
   PaymentsRepository,
+  PaymentsQueryRepository,
   SubscriptionsRepository,
   BonusesRepository,
 ];

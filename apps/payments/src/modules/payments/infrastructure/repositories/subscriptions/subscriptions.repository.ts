@@ -52,7 +52,7 @@ export class SubscriptionsRepository {
         status: 'Processing',
         lastPaymentId: sql<null>`NULL`,
         expirationDate: sql<null>`NULL`,
-        nextChargeDate: sql<Date>`now() + toIntervalDay(${durationDays})`,
+        nextChargeDate: sql<Date>`now() + toIntervalSecond(${Math.round(durationDays * 86400)})`,
       }),
     );
   }
@@ -103,7 +103,7 @@ export class SubscriptionsRepository {
     durationDays: number,
     paidAt: Date | string,
   ): Promise<void> {
-    const expirationDate = sql<Date>`coalesce(expiration_date, ${toClickHouseDateTime(paidAt)}) + toIntervalDay(${durationDays})`;
+    const expirationDate = sql<Date>`coalesce(expiration_date, ${toClickHouseDateTime(paidAt)}) + toIntervalSecond(${Math.round(durationDays * 86400)})`;
     await executeMutation(
       this.db,
       this.db
