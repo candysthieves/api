@@ -5,8 +5,8 @@ import type { PaymentEventTable } from '../../events/payment-event.type.js';
 export type { SubscriptionTypeName } from '@libs/contracts';
 
 export type PaymentProvider = 'STRIPE' | 'YOOKASSA';
-export type PaymentStatus =
-  'pending' | 'succeeded' | 'canceled' | 'failed' | 'refunded';
+export type SubscriptionStatus = 'Processing' | 'Done' | 'Failed';
+export type PaymentStatus = 'pending' | 'succeeded' | 'canceled' | 'failed';
 
 export interface SubscriptionTypeTable {
   id: number;
@@ -20,7 +20,7 @@ export interface PaymentsTable {
   id: Generated<string>;
   provider: PaymentProvider;
   userId: string;
-  externalPaymentId: string;
+  externalPaymentId: string | null;
   /** Tariff price in USD cents. */
   amount: number;
   paymentMethodId: string | null;
@@ -34,8 +34,10 @@ export interface SubscriptionTable {
   id: Generated<string>;
   userId: string;
   tariffId: number;
-  lastPaymentId: string;
-  expirationDate: Date;
+  lastPaymentId: string | null;
+  provider: PaymentProvider | null;
+  status: SubscriptionStatus;
+  expirationDate: Date | null;
   nextChargeDate: Date | null;
   createdAt: Generated<Date>;
 }

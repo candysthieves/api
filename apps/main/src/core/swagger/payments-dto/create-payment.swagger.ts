@@ -17,14 +17,15 @@ export function ApiCreatePayment() {
     ApiOperation({
       summary: 'Create payment and get external checkout URL',
       description:
-        'Creates a payment session with the selected provider (STRIPE or YOOKASSA) for the given tariff and returns payment ID and redirect URL.',
+        'Creates a Processing subscription and a payment session with the selected provider (STRIPE or YOOKASSA). Returns payment ID and redirect URL. Rejected while the latest subscription is Processing.',
     }),
     ApiOkResponse({
       description: 'Payment session created successfully',
       type: PaymentViewType,
     }),
     ApiBadRequestResponse({
-      description: 'Request validation failed or unsupported payment provider',
+      description:
+        'Request validation failed, unsupported payment provider, or the latest subscription is still Processing (PAYMENT_CREATION_FAILED)',
       schema: {
         type: 'object',
         required: ['code', 'errorsMessages'],

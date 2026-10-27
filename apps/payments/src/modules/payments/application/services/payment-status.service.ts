@@ -4,10 +4,11 @@ import { YookassaService } from '../../infrastructure/providers/yookassa/yookass
 import { OutboxService } from '../../../../events/outbox/outbox.service.js';
 import { SubscriptionsRepository } from '../../infrastructure/repositories/subscriptions/subscriptions.repository.js';
 import { TariffsRepository } from '../../infrastructure/repositories/tariffs/tariffs.repository.js';
-import { TariffEntity } from '../../../../database/types/payment-database.type.js';
+import type { PaymentEntity } from '../../../../database/types/payment-database.type.js';
 
 @Injectable()
 export class PaymentStatusService {
+  // Подключает хранилища платежей и подписок, клиент Yookassa и outbox.
   constructor(
     private readonly paymentsRepository: PaymentsRepository,
     private readonly yookassaService: YookassaService,
@@ -16,69 +17,120 @@ export class PaymentStatusService {
     private readonly tariffsRepository: TariffsRepository,
   ) {}
 
+  // Выбирает обработчик результата; для уже успешного платежа повторяет только локальные шаги.
   async process(externalPaymentId: string): Promise<void> {
+    // Находим платёж
     const payment =
       await this.paymentsRepository.findByExternalPaymentId(externalPaymentId);
     if (!payment) throw new Error('PAYMENT_NOT_FOUND');
-    if (payment.status === 'pending') {
-      const current = await this.yookassaService.getPayment(externalPaymentId);
-      if (current.status !== 'succeeded' && current.status !== 'canceled')
-        return;
-      const methodId = current.payment_method?.saved
-        ? current.payment_method.id
-        : null;
+
+    if (payment.status === 'succeeded') {
+      return this.processSucceededPayment(payment);
+    }
+    //Достаем данные с Yookassa для конкретного платежа
+    const updatedPayment = await this.syncPaymentStatus(
+      payment,
+      externalPaymentId,
+    );
+    if (!updatedPayment) return;
+
+    //Если статус от Yookassa canceled -> запускаем протокол отмены для платёжки
+    if (updatedPayment.status === 'canceled') {
+      return this.processCanceledPayment(updatedPayment);
+    }
+    return this.processSucceededPayment(updatedPayment);
+  }
+
+  // Отменяет локальные платежи, для которых истёк срок ожидания оплаты.
+  async cancelExpired(): Promise<void> {
+    for (const payment of await this.paymentsRepository.findExpired()) {
       await this.paymentsRepository.updateStatus(
         payment.id,
-        current.status,
-        methodId,
+        'canceled',
+        null,
+        null,
       );
-      payment.status = current.status;
     }
-    if (payment.status !== 'succeeded') return;
-    //TODO посоветоваться, оставить 2 явных метода на создание и апдейт или объеденить их
-    const tariff: TariffEntity = await this.tariffsRepository.findTariffById(
+  }
+
+  // Сохраняет финальный результат Yookassa
+  private async syncPaymentStatus(
+    payment: PaymentEntity,
+    externalPaymentId: string,
+  ): Promise<PaymentEntity | null> {
+    const infoFromYookassa =
+      await this.yookassaService.getPayment(externalPaymentId);
+    if (
+      infoFromYookassa.status !== 'succeeded' &&
+      infoFromYookassa.status !== 'canceled'
+    ) {
+      return null;
+    }
+
+    const paymentMethodId = infoFromYookassa.payment_method?.saved
+      ? infoFromYookassa.payment_method.id
+      : null;
+    const paymentDate =
+      infoFromYookassa.status === 'succeeded' ? new Date() : null;
+
+    await this.paymentsRepository.updateStatus(
+      payment.id,
+      infoFromYookassa.status,
+      paymentMethodId,
+      paymentDate,
+    );
+
+    return {
+      ...payment,
+      status: infoFromYookassa.status,
+      paymentMethodId,
+      paymentDate,
+    };
+  }
+
+  // Завершает подписку перед записью события; оба шага можно повторить после сбоя.
+  private async processSucceededPayment(payment: PaymentEntity): Promise<void> {
+    await this.completeSubscription(payment);
+    await this.savePaymentCompletedEvent(payment);
+  }
+
+  // Продлевает связанную подписку, если она ещё не завершена, используя сохранённую дату оплаты.
+  private async completeSubscription(payment: PaymentEntity): Promise<void> {
+    const subscription = await this.subscriptionsRepository.findByLastPaymentId(
+      payment.id,
+    );
+    if (!subscription) throw new Error('SUBSCRIPTION_NOT_FOUND');
+    if (subscription.status === 'Done') return;
+
+    const tariff = await this.tariffsRepository.findTariffById(
       payment.tariffId,
     );
-    const subscription =
-      await this.subscriptionsRepository.findSubscriptionByUserId(
-        payment.userId,
-      );
-    if (subscription) {
-      await this.subscriptionsRepository.updateSubscription(
-        payment.userId,
-        payment.tariffId,
-        payment.id,
-        tariff.durationDays,
-      );
-    } else {
-      await this.subscriptionsRepository.saveSubscription(
-        payment.userId,
-        payment.tariffId,
-        payment.id,
-        tariff.durationDays,
-      );
-    }
-    // Повтор после сохранения succeeded восстанавливает outbox без нового GET.
+    await this.subscriptionsRepository.complete(
+      subscription.id,
+      payment.id,
+      tariff.durationDays,
+      payment.paymentDate ?? new Date(),
+    );
+  }
+
+  // Переводит подписку отменённого платежа в Failed.
+  private async processCanceledPayment(payment: PaymentEntity): Promise<void> {
+    const subscription = await this.subscriptionsRepository.findByLastPaymentId(
+      payment.id,
+    );
+    if (!subscription) throw new Error('SUBSCRIPTION_NOT_FOUND');
+    await this.subscriptionsRepository.fail(subscription.id);
+  }
+
+  // Сохраняет событие успешной оплаты для main с постоянным eventId для повторных попыток.
+  private async savePaymentCompletedEvent(
+    payment: PaymentEntity,
+  ): Promise<void> {
     await this.outboxService.save({
       eventId: payment.id,
       consumer: 'MAIN',
       type: 'payment.completed',
       data: { userId: payment.userId, paymentStatus: 'completed' },
     });
-  }
-
-  async cancelExpired(): Promise<void> {
-    for (const payment of await this.paymentsRepository.findExpired()) {
-      const current = await this.paymentsRepository.findByExternalPaymentId(
-        payment.externalPaymentId,
-      );
-      if (current?.status === 'pending') {
-        await this.paymentsRepository.updateStatus(
-          current.id,
-          'canceled',
-          null,
-        );
-      }
-    }
   }
 }

@@ -8,6 +8,9 @@ import { PaymentParamsFactory } from '../factories/payment-params.factory.js';
 import { PaymentsMapper } from '../../api/mappers/payments.mapper.js';
 import { PaymentViewType } from '../../api/view-types/payment-view.type.js';
 import { randomUUID } from 'node:crypto';
+import { RpcException } from '@nestjs/microservices';
+import { ObjectResult } from '../../../../core/object-result.js';
+import { SubscriptionsRepository } from '../../infrastructure/repositories/subscriptions/subscriptions.repository.js';
 
 export class CreatePaymentCommand {
   constructor(
@@ -26,6 +29,7 @@ export class CreatePaymentUseCase implements ICommandHandler<
     private readonly tariffsRepository: TariffsRepository,
     private readonly paymentsRepository: PaymentsRepository,
     private readonly paymentProviderFactory: PaymentProviderFactory,
+    private readonly subscriptionsRepository: SubscriptionsRepository,
   ) {}
 
   async execute({
@@ -33,10 +37,35 @@ export class CreatePaymentUseCase implements ICommandHandler<
     tariffId,
     provider,
   }: CreatePaymentCommand): Promise<PaymentViewType> {
+    const latest = await this.subscriptionsRepository.findLatest(userId);
+    if (latest?.status === 'Processing') {
+      throw new RpcException(
+        ObjectResult.failure({
+          code: 'PAYMENT_CREATION_FAILED',
+          errors: [
+            {
+              field: 'subscription',
+              message: 'The latest subscription is still processing',
+            },
+          ],
+        }),
+      );
+    }
     const tariff = await this.tariffsRepository.findTariffById(tariffId);
 
     const paymentId = randomUUID();
     const paymentService = this.paymentProviderFactory.getProvider(provider);
+    const subscriptionId = randomUUID();
+    await this.subscriptionsRepository.createProcessing(
+      subscriptionId,
+      userId,
+      tariffId,
+      provider,
+      tariff.durationDays,
+    );
+    if (latest) {
+      await this.subscriptionsRepository.requestCancellation(latest.id);
+    }
 
     const paymentParams = PaymentParamsFactory.create(
       paymentId,
@@ -56,6 +85,10 @@ export class CreatePaymentUseCase implements ICommandHandler<
       paymentId,
     );
     await this.paymentsRepository.create(payment);
+    await this.subscriptionsRepository.addPaymentIdToSubscriptions(
+      subscriptionId,
+      payment.id,
+    );
 
     return PaymentsMapper.toView(payment.id, paymentUrl);
   }

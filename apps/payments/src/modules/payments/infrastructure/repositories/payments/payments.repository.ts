@@ -19,6 +19,28 @@ export class PaymentsRepository {
     await this.db.insertInto('payments').values(payment).execute();
   }
 
+  findById(id: string): Promise<PaymentEntity | undefined> {
+    return this.db
+      .selectFrom('payments')
+      .selectAll()
+      .where('id', '=', id)
+      .executeTakeFirst();
+  }
+
+  async addExternalPaymentId(
+    id: string,
+    externalPaymentId: string,
+  ): Promise<void> {
+    await executeMutation(
+      this.db,
+      this.db
+        .updateTable('payments')
+        .set({ externalPaymentId })
+        .where('id', '=', id)
+        .modifyEnd(sql`SETTINGS mutations_sync = 1`),
+    );
+  }
+
   findByExternalPaymentId(
     externalPaymentId: string,
   ): Promise<PaymentEntity | undefined> {
@@ -34,6 +56,7 @@ export class PaymentsRepository {
     id: string,
     status: 'succeeded' | 'canceled',
     paymentMethodId: string | null,
+    paymentDate: Date | null,
   ): Promise<void> {
     await executeMutation(
       this.db,
@@ -42,10 +65,18 @@ export class PaymentsRepository {
         .set({
           status,
           paymentMethodId: paymentMethodId ?? sql`NULL`,
-          paymentDate: status === 'succeeded' ? sql`now()` : sql`NULL`,
+          paymentDate: paymentDate
+            ? sql<Date>`parseDateTimeBestEffort(${paymentDate.toISOString()})`
+            : sql`NULL`,
         })
         .where('id', '=', id)
-        .where('status', '=', 'pending')
+        .where(
+          'status',
+          'in',
+          status === 'succeeded'
+            ? ['pending', 'canceled', 'failed']
+            : ['pending'],
+        )
         .modifyEnd(sql`SETTINGS mutations_sync = 1`),
     );
   }

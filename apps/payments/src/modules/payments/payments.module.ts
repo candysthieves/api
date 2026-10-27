@@ -17,6 +17,8 @@ import { YookassaService } from './infrastructure/providers/yookassa/yookassa.se
 import { PaymentProviderFactory } from './infrastructure/providers/payment-provider.factory.js';
 import { CancelSubscriptionUseCase } from './application/use-cases/cancel-subscription.use-case.js';
 import { GetCurrentSubscriptionQueryHandler } from './application/query-handler/get-current-subscription.query-handler.js';
+import { RenewSubscriptionsUseCase } from './application/use-cases/renew-subscriptions.usecase.js';
+import { SubscriptionsScheduler } from './application/subscriptions.scheduler.js';
 
 const controllers = [
   TariffsController,
@@ -30,7 +32,11 @@ const queryHandlers = [
   GetCurrentSubscriptionQueryHandler,
 ];
 
-const useCases = [CreatePaymentUseCase, CancelSubscriptionUseCase];
+const useCases = [
+  CreatePaymentUseCase,
+  CancelSubscriptionUseCase,
+  RenewSubscriptionsUseCase,
+];
 
 const repositories = [
   TariffsRepository,
@@ -41,7 +47,12 @@ const repositories = [
   BonusesRepository,
 ];
 
-const providers = [StripeService, YookassaService, PaymentProviderFactory];
+const providers = [
+  StripeService,
+  YookassaService,
+  PaymentProviderFactory,
+  SubscriptionsScheduler,
+];
 
 @Module({
   imports: [CqrsModule],

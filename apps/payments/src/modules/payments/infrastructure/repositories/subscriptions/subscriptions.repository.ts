@@ -1,83 +1,172 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { KYSELY_CLICKHOUSE } from '../../../../../database/database.constants.js';
 import { Kysely, sql } from 'kysely';
-import { PaymentDatabase } from '../../../../../database/types/payment-database.type.js';
+import type {
+  PaymentDatabase,
+  PaymentProvider,
+  SubscriptionEntity,
+} from '../../../../../database/types/payment-database.type.js';
 import { executeMutation } from '../../../../../database/execute-mutation.js';
 
-const toClickHouseDateTime = (date: Date) =>
-  sql<Date>`parseDateTimeBestEffort(${date.toISOString()})`;
+const toClickHouseDateTime = (date: Date | string) =>
+  sql<Date>`parseDateTime64BestEffort(${typeof date === 'string' ? date : date.toISOString()}, 3)`;
 
 @Injectable()
 export class SubscriptionsRepository {
   constructor(
-    @Inject(KYSELY_CLICKHOUSE)
-    private readonly db: Kysely<PaymentDatabase>,
+    @Inject(KYSELY_CLICKHOUSE) private readonly db: Kysely<PaymentDatabase>,
   ) {}
 
-  findSubscriptionByUserId(userId: string) {
+  findLatest(userId: string): Promise<SubscriptionEntity | undefined> {
     return this.db
       .selectFrom('subscriptions')
-      .select('id')
+      .selectAll()
       .where('userId', '=', userId)
+      .orderBy('createdAt', 'desc')
+      .orderBy('id', 'desc')
       .executeTakeFirst();
   }
 
-  async saveSubscription(
+  findByLastPaymentId(paymentId: string) {
+    return this.db
+      .selectFrom('subscriptions')
+      .selectAll()
+      .where('lastPaymentId', '=', paymentId)
+      .executeTakeFirst();
+  }
+
+  async createProcessing(
+    id: string,
     userId: string,
     tariffId: number,
-    paymentId: string,
+    provider: PaymentProvider,
     durationDays: number,
   ): Promise<void> {
     await executeMutation(
       this.db,
       this.db.insertInto('subscriptions').values({
+        id,
         userId,
         tariffId,
-        lastPaymentId: paymentId,
-        expirationDate: sql<Date>`now() + toIntervalDay(${durationDays})`,
+        provider,
+        status: 'Processing',
+        lastPaymentId: sql<null>`NULL`,
+        expirationDate: sql<null>`NULL`,
         nextChargeDate: sql<Date>`now() + toIntervalDay(${durationDays})`,
       }),
     );
   }
 
-  async updateSubscription(
-    userId: string,
-    tariffId: number,
+  findDueForYookassa(at: Date): Promise<SubscriptionEntity[]> {
+    // Determine the latest row among ALL subscriptions before eligibility filters.
+    const latestIds = this.db
+      .selectFrom('subscriptions')
+      .select(sql<string>`argMax(id, tuple(created_at, id))`.as('id'))
+      .groupBy('userId');
+    return this.db
+      .selectFrom('subscriptions')
+      .selectAll()
+      .where('id', 'in', latestIds)
+      .where('status', '=', 'Done')
+      .where('provider', '=', 'YOOKASSA')
+      .where('expirationDate', '<=', toClickHouseDateTime(at))
+      .where('nextChargeDate', 'is not', null)
+      .execute();
+  }
+
+  async updateSubscriptionsStatusToProcessing(id: string): Promise<void> {
+    await executeMutation(
+      this.db,
+      this.db
+        .updateTable('subscriptions')
+        .set({ status: 'Processing' })
+        .where('id', '=', id)
+        .where('status', '=', 'Done')
+        .modifyEnd(sql`SETTINGS mutations_sync = 1`),
+    );
+  }
+
+  async addPaymentIdToSubscriptions(id: string, paymentId: string): Promise<void> {
+    await executeMutation(
+      this.db,
+      this.db
+        .updateTable('subscriptions')
+        .set({ lastPaymentId: paymentId })
+        .where('id', '=', id)
+        .modifyEnd(sql`SETTINGS mutations_sync = 1`),
+    );
+  }
+
+  async complete(
+    id: string,
     paymentId: string,
     durationDays: number,
+    paidAt: Date | string,
   ): Promise<void> {
+    const expirationDate = sql<Date>`coalesce(expiration_date, ${toClickHouseDateTime(paidAt)}) + toIntervalDay(${durationDays})`;
     await executeMutation(
       this.db,
       this.db
         .updateTable('subscriptions')
         .set({
-          tariffId,
-          lastPaymentId: paymentId,
-          expirationDate: sql<Date>`now() + toIntervalDay(${durationDays})`,
-          nextChargeDate: sql<Date>`now() + toIntervalDay(${durationDays})`,
+          status: 'Done',
+          expirationDate,
+          nextChargeDate: sql<Date | null>`if(isNull(next_charge_date), NULL, ${expirationDate})`,
         })
-        .where('userId', '=', userId)
+        .where('id', '=', id)
+        .where('lastPaymentId', '=', paymentId)
+        .where('status', 'in', ['Processing', 'Failed'])
         .modifyEnd(sql`SETTINGS mutations_sync = 1`),
     );
   }
 
-  async findActiveSubscription(userId: string, at: Date) {
+  async fail(id: string): Promise<void> {
+    await executeMutation(
+      this.db,
+      this.db
+        .updateTable('subscriptions')
+        .set({ status: 'Failed' })
+        .where('id', '=', id)
+        .where('status', '=', 'Processing')
+        .modifyEnd(sql`SETTINGS mutations_sync = 1`),
+    );
+  }
+
+  async failExpiredProcessing(): Promise<void> {
+    await executeMutation(
+      this.db,
+      this.db
+        .updateTable('subscriptions')
+        .set({ status: 'Failed' })
+        .where('status', '=', 'Processing')
+        .where(
+          sql<boolean>`coalesce(expiration_date, created_at) < now() - INTERVAL 15 MINUTE`,
+        )
+        .modifyEnd(sql`SETTINGS mutations_sync = 1`),
+    );
+  }
+
+  findActiveSubscription(userId: string, at: Date) {
     return this.db
       .selectFrom('subscriptions')
       .select('id')
       .where('userId', '=', userId)
+      .where('status', '=', 'Done')
       .where('expirationDate', '>', toClickHouseDateTime(at))
-      .orderBy('expirationDate', 'desc')
+      .orderBy('createdAt', 'desc')
+      .orderBy('id', 'desc')
       .executeTakeFirst();
   }
 
-  async findCurrentSubscription(userId: string, at: Date) {
+  findCurrentSubscription(userId: string, at: Date) {
     return this.db
       .selectFrom('subscriptions')
       .select(['expirationDate', 'nextChargeDate'])
       .where('userId', '=', userId)
+      .where('status', '=', 'Done')
       .where('expirationDate', '>', toClickHouseDateTime(at))
-      .orderBy('expirationDate', 'desc')
+      .orderBy('createdAt', 'desc')
+      .orderBy('id', 'desc')
       .executeTakeFirst();
   }
 

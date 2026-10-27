@@ -11,7 +11,7 @@ export class PaymentFactory {
     userId: string,
     tariffId: number,
     provider: PaymentProvider,
-    externalPaymentId: string,
+    externalPaymentId: string | null,
     amount: number,
     id = randomUUID(),
     status: PaymentStatus = 'pending',

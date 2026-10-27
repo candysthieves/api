@@ -63,6 +63,25 @@ export class YookassaService implements IPaymentProvider {
     return this.request(`/${encodeURIComponent(externalPaymentId)}`);
   }
 
+  createAutoRenewalPayment(
+    params: CreatePaymentParams,
+    paymentMethodId: string,
+  ): Promise<YookassaPayment> {
+    return this.request('', {
+      method: 'POST',
+      headers: { 'Idempotence-Key': params.paymentId },
+      body: JSON.stringify({
+        amount: {
+          value: (params.amount / 100).toFixed(2),
+          currency: params.currency,
+        },
+        capture: true,
+        payment_method_id: paymentMethodId,
+        description: params.description,
+      }),
+    });
+  }
+
   private async request(
     path: string,
     init: RequestInit = {},
