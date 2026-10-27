@@ -5,7 +5,7 @@ import {
   validateImageEvent,
   type AvatarImageEvent,
   type ImageEvent,
-  type PaymentCompletedEvent,
+  type PaymentResultEvent,
 } from '@libs/contracts';
 import { InboxService } from '@main/core/events/inbox/inbox.service.js';
 
@@ -17,7 +17,7 @@ export class InboxController {
 
   @RabbitSubscribe({ name: 'paymentResults' })
   handlePaymentResult(body: Buffer): Promise<void | Nack> {
-    return this.handle<PaymentCompletedEvent>(body, 'Payment');
+    return this.handle<PaymentResultEvent>(body, 'Payment');
   }
 
   @RabbitSubscribe({ name: 'postImageResults' })
@@ -31,7 +31,7 @@ export class InboxController {
   }
 
   private async handle<
-    T extends ImageEvent | AvatarImageEvent | PaymentCompletedEvent,
+    T extends ImageEvent | AvatarImageEvent | PaymentResultEvent,
   >(
     body: Buffer,
     eventName: 'Image' | 'Avatar' | 'Payment',

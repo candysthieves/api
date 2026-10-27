@@ -7,12 +7,12 @@ export function ApiSseEvents() {
     ApiOperation({
       summary: 'Subscribe to server-sent events',
       description:
-        'Opens a persistent SSE connection for post updates and completed payments.',
+        'Opens a persistent SSE connection for post updates and payment results.',
     }),
     ApiResponse({
       status: 200,
       description:
-        'Post events contain postId. payment-completed is emitted after the user is updated to Business and contains userId as a string and paymentStatus: completed.',
+        'Post events contain postId. payment-processed contains userId as a string and paymentStatus: completed or canceled. Only completed activates Business before emission.',
       schema: {
         type: 'object',
         properties: {
@@ -22,7 +22,7 @@ export function ApiSseEvents() {
               SseEventEnum.POST_CREATED,
               SseEventEnum.POST_MEDIA_UPDATED,
               SseEventEnum.POST_DELETED,
-              SseEventEnum.PAYMENT_COMPLETED,
+              SseEventEnum.PAYMENT_PROCESSED,
             ],
             example: SseEventEnum.POST_CREATED,
             description: 'Post or payment update.',
@@ -39,7 +39,10 @@ export function ApiSseEvents() {
                 required: ['userId', 'paymentStatus'],
                 properties: {
                   userId: { type: 'string', example: '42' },
-                  paymentStatus: { type: 'string', enum: ['completed'] },
+                  paymentStatus: {
+                    type: 'string',
+                    enum: ['completed', 'canceled'],
+                  },
                 },
               },
             ],

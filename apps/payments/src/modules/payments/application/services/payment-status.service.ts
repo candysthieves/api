@@ -167,6 +167,12 @@ export class PaymentStatusService {
     );
     if (!subscription) throw new Error('SUBSCRIPTION_NOT_FOUND');
     await this.subscriptionsRepository.fail(subscription.id);
+    await this.outboxService.save({
+      eventId: payment.id,
+      consumer: 'MAIN',
+      type: 'payment.canceled',
+      data: { userId: payment.userId, paymentStatus: 'canceled' },
+    });
   }
 
   // Сохраняет событие успешной оплаты для main с постоянным eventId для повторных попыток.

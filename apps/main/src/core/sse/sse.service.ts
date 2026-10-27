@@ -21,10 +21,13 @@ export class SseService {
     });
   }
 
-  emitPaymentCompleted(userId: string): void {
-    this.emit(SseEventEnum.PAYMENT_COMPLETED, {
+  emitPaymentProcessed(
+    userId: string,
+    paymentStatus: 'completed' | 'canceled',
+  ): void {
+    this.emit(SseEventEnum.PAYMENT_PROCESSED, {
       userId,
-      paymentStatus: 'completed',
+      paymentStatus,
     });
   }
 

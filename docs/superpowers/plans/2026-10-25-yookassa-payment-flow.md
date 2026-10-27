@@ -128,14 +128,14 @@ await outbox.save({
 - Modify: `apps/main/src/core/swagger/sse-dto/sse-events.swagger.ts`
 - Test: `apps/main/src/core/events/inbox/inbox.service.spec.ts`
 
-**Interfaces:** PaymentCompletedEvent; UsersService.activateBusiness(userId:number); SseService.emitPaymentCompleted(userId:string).
+**Interfaces:** PaymentCompletedEvent; UsersService.activateBusiness(userId:number); SseService.emitPaymentProcessed(userId:string).
 
 - [x] Принимать payment.completed в существующий inbox main без валидации внутреннего контракта.
 - [x] Добавить ветку обработки с обновлением пользователя через UsersRepository и затем SSE.
 
 ```ts
 await users.activateBusiness(Number(data.userId));
-sse.emitPaymentCompleted(data.userId);
+sse.emitPaymentProcessed(data.userId);
 ```
 
 - [x] Тест: при ошибке записи пользователя SSE не отправляется; после успеха payload ровно `{ userId, paymentStatus: 'completed' }`; существующие ветки изображений сохраняются.

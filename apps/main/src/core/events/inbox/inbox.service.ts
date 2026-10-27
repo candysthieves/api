@@ -7,11 +7,11 @@ import { UsersService } from '../../../modules/user-accounts/application/service
 import type {
   AvatarImageEvent,
   ImageEvent,
-  PaymentCompletedEvent,
+  PaymentResultEvent,
 } from '@libs/contracts';
 import { EventStoreService } from '../event-store.service.js';
 
-// Применяет результаты обработки файлов и успешных платежей.
+// Применяет результаты обработки файлов и платежей.
 @Injectable()
 export class InboxService {
   constructor(
@@ -23,7 +23,7 @@ export class InboxService {
   ) {}
 
   async accept(
-    event: ImageEvent | AvatarImageEvent | PaymentCompletedEvent,
+    event: ImageEvent | AvatarImageEvent | PaymentResultEvent,
   ): Promise<void> {
     // Сохраняем событие до подтверждения сообщения в RabbitMQ.
     await this.prismaService.inboxEvent.upsert({
@@ -39,9 +39,14 @@ export class InboxService {
     await this.eventStoreService.run('inboxEvent', async (event) => {
       switch (event.type) {
         case 'payment.completed': {
-          const data = event.data as PaymentCompletedEvent['data'];
+          const data = event.data as PaymentResultEvent['data'];
           await this.usersService.activateBusiness(Number(data.userId));
-          this.sseService.emitPaymentCompleted(data.userId);
+          this.sseService.emitPaymentProcessed(data.userId, 'completed');
+          break;
+        }
+        case 'payment.canceled': {
+          const data = event.data as PaymentResultEvent['data'];
+          this.sseService.emitPaymentProcessed(data.userId, 'canceled');
           break;
         }
         case 'avatar.image.updated':

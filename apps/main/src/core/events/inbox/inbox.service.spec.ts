@@ -67,10 +67,30 @@ describe('InboxService payment completion', () => {
     });
     expect(received).toEqual([
       {
-        type: 'payment-completed',
+        type: 'payment-processed',
         data: { userId: '42', paymentStatus: 'completed' },
       },
     ]);
+    subscription.unsubscribe();
+  });
+
+  it('emits cancellation without changing the user account status', async () => {
+    event = {
+      type: 'payment.canceled',
+      data: { userId: '42', paymentStatus: 'canceled' },
+    };
+    const received: unknown[] = [];
+    const subscription = sse
+      .getEvents()
+      .subscribe((value) => received.push(value));
+    await inbox.processPending();
+    expect(received).toEqual([
+      {
+        type: 'payment-processed',
+        data: { userId: '42', paymentStatus: 'canceled' },
+      },
+    ]);
+    expect(repository.update).not.toHaveBeenCalled();
     subscription.unsubscribe();
   });
 

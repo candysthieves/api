@@ -14,9 +14,11 @@ describe('GetCurrentSubscriptionQueryHandler', () => {
     'returns the scheduled charge date %s independently of paid access',
     async (nextChargeDate) => {
       const repository = {
-        findCurrentSubscription: jest
-          .fn()
-          .mockResolvedValue({ expirationDate, nextChargeDate }),
+        findCurrentSubscription: jest.fn().mockResolvedValue({
+          expirationDateSeconds: expirationDate.getTime() / 1000,
+          nextChargeDateSeconds:
+            nextChargeDate === null ? null : nextChargeDate.getTime() / 1000,
+        }),
       };
       const handler = new GetCurrentSubscriptionQueryHandler(
         repository as unknown as ConstructorParameters<

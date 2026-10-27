@@ -195,10 +195,43 @@ describe('PaymentStatusService', () => {
 
   it('marks the subscription Failed on cancellation without granting Business', async () => {
     provider.getPayment.mockResolvedValue({ status: 'canceled' });
+    store.save.mockImplementation(() => {
+      expect(payment.status).toBe('canceled');
+      expect(subscriptionStatus).toBe('Failed');
+      return Promise.resolve();
+    });
     await service.process('external-id');
     expect(payment.status).toBe('canceled');
     expect(subscriptionStatus).toBe('Failed');
     expect(payment.paymentDate).toBeNull();
+    expect(store.save).toHaveBeenCalledWith({
+      eventId: 'local-id',
+      consumer: 'MAIN',
+      type: 'payment.canceled',
+      data: { userId: '42', paymentStatus: 'canceled' },
+    });
+    expect(subscriptions.complete).not.toHaveBeenCalled();
+  });
+
+  it('retries cancellation outbox persistence with the same payment ID', async () => {
+    provider.getPayment.mockResolvedValue({ status: 'canceled' });
+    store.save.mockRejectedValueOnce(new Error('outbox unavailable'));
+    await expect(service.process('external-id')).rejects.toThrow(
+      'outbox unavailable',
+    );
+    await service.process('external-id');
+    expect(store.save.mock.calls[0]).toEqual(store.save.mock.calls[1]);
+    expect(store.save.mock.calls[1][0].eventId).toBe(payment.id);
+  });
+
+  it('does not emit cancellation before subscription persistence succeeds', async () => {
+    provider.getPayment.mockResolvedValue({ status: 'canceled' });
+    subscriptions.fail.mockRejectedValueOnce(
+      new Error('subscription unavailable'),
+    );
+    await expect(service.process('external-id')).rejects.toThrow(
+      'subscription unavailable',
+    );
     expect(store.save).not.toHaveBeenCalled();
   });
 

@@ -86,7 +86,10 @@ export class SubscriptionsRepository {
     );
   }
 
-  async addPaymentIdToSubscriptions(id: string, paymentId: string): Promise<void> {
+  async addPaymentIdToSubscriptions(
+    id: string,
+    paymentId: string,
+  ): Promise<void> {
     await executeMutation(
       this.db,
       this.db
@@ -161,7 +164,14 @@ export class SubscriptionsRepository {
   findCurrentSubscription(userId: string, at: Date) {
     return this.db
       .selectFrom('subscriptions')
-      .select(['expirationDate', 'nextChargeDate'])
+      .select([
+        sql<number | null>`toUnixTimestamp(${sql.ref('expirationDate')})`.as(
+          'expirationDateSeconds',
+        ),
+        sql<number | null>`toUnixTimestamp(${sql.ref('nextChargeDate')})`.as(
+          'nextChargeDateSeconds',
+        ),
+      ])
       .where('userId', '=', userId)
       .where('status', '=', 'Done')
       .where('expirationDate', '>', toClickHouseDateTime(at))

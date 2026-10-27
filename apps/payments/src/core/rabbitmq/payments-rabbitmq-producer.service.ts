@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { AmqpConnection } from '@golevelup/nestjs-rabbitmq';
 import type { ChannelWrapper } from 'amqp-connection-manager';
-import type { PaymentCompletedEvent } from '@libs/contracts';
+import type { PaymentResultEvent } from '@libs/contracts';
 
 @Injectable()
 export class PaymentsRabbitMqProducerService {
@@ -11,7 +11,7 @@ export class PaymentsRabbitMqProducerService {
     private readonly config: ConfigService,
   ) {}
 
-  async publishPaymentResult(event: PaymentCompletedEvent): Promise<void> {
+  async publishPaymentResult(event: PaymentResultEvent): Promise<void> {
     if (!this.connection.connected) throw new Error('TRANSPORT_UNAVAILABLE');
     const options: NonNullable<Parameters<ChannelWrapper['publish']>[3]> = {
       persistent: true,

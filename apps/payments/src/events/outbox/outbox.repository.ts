@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { sql, type Kysely, type Updateable } from 'kysely';
-import type { PaymentCompletedEvent } from '@libs/contracts';
+import type { PaymentResultEvent } from '@libs/contracts';
 import { KYSELY_CLICKHOUSE } from '../../database/database.constants.js';
 import { executeMutation } from '../../database/execute-mutation.js';
 import type { PaymentDatabase } from '../../database/types/payment-database.type.js';
@@ -12,7 +12,7 @@ export class OutboxRepository {
     @Inject(KYSELY_CLICKHOUSE) private readonly db: Kysely<PaymentDatabase>,
   ) {}
 
-  async save(event: PaymentCompletedEvent): Promise<void> {
+  async save(event: PaymentResultEvent): Promise<void> {
     const existing = await this.db
       .selectFrom('paymentOutbox')
       .select('eventId')
