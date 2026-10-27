@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { RpcException } from '@nestjs/microservices';
 import type {
   CreatePaymentParams,
@@ -17,6 +17,8 @@ export type YookassaPayment = {
 
 @Injectable()
 export class YookassaService implements IPaymentProvider {
+  private readonly logger = new Logger(YookassaService.name);
+
   constructor(private readonly paymentsConfig: PaymentsConfig) {}
 
   async createPayment(
@@ -59,8 +61,30 @@ export class YookassaService implements IPaymentProvider {
     }
   }
 
-  getPayment(externalPaymentId: string): Promise<YookassaPayment> {
-    return this.request(`/${encodeURIComponent(externalPaymentId)}`);
+  async getPayment(externalPaymentId: string): Promise<YookassaPayment> {
+    this.logger.log({
+      message: 'Requesting YooKassa payment status',
+      externalPaymentId,
+    });
+    try {
+      const payment = await this.request(
+        `/${encodeURIComponent(externalPaymentId)}`,
+      );
+      this.logger.log({
+        message: 'YooKassa payment status response',
+        externalPaymentId,
+        responsePaymentId: payment.id,
+        status: payment.status,
+        paymentMethodSaved: payment.payment_method?.saved ?? false,
+      });
+      return payment;
+    } catch (error) {
+      this.logger.error({
+        message: 'YooKassa payment status request failed',
+        externalPaymentId,
+      });
+      throw error;
+    }
   }
 
   createAutoRenewalPayment(
@@ -95,7 +119,14 @@ export class YookassaService implements IPaymentProvider {
       },
       signal: AbortSignal.timeout(4_000),
     });
-    if (!response.ok) throw new Error(`YOOKASSA_HTTP_${response.status}`);
+    if (!response.ok) {
+      this.logger.error({
+        message: 'YooKassa API returned an HTTP error',
+        method: init.method ?? 'GET',
+        status: response.status,
+      });
+      throw new Error(`YOOKASSA_HTTP_${response.status}`);
+    }
     return (await response.json()) as YookassaPayment;
   }
 }

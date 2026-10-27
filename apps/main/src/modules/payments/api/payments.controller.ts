@@ -3,11 +3,14 @@ import {
   Controller,
   HttpCode,
   HttpStatus,
+  Logger,
   Param,
   Post,
+  Req,
   UseGuards,
 } from '@nestjs/common';
 import { CommandBus } from '@nestjs/cqrs';
+import type { Request } from 'express';
 import {
   ApiTags,
   ApiOperation,
@@ -27,6 +30,8 @@ import { AcceptYookassaWebhookCommand } from '../application/use-cases/accept-yo
 @ApiTags('Payments')
 @Controller('payments')
 export class PaymentsController {
+  private readonly logger = new Logger(PaymentsController.name);
+
   constructor(private readonly commandBus: CommandBus) {}
 
   @Post('webhooks/yookassa')
@@ -36,7 +41,13 @@ export class PaymentsController {
     description:
       'Notification persisted for processing, or unrelated event ignored',
   })
-  acceptYookassaWebhook(@Body() dto: YookassaWebhookDto): Promise<void> {
+  acceptYookassaWebhook(
+    @Body() dto: YookassaWebhookDto,
+    @Req() request: Request,
+  ): Promise<void> {
+    this.logger.log(
+      `YooKassa webhook payload: ${JSON.stringify(request.body)}`,
+    );
     return this.commandBus.execute(
       new AcceptYookassaWebhookCommand(dto.event, dto.object.id),
     );
