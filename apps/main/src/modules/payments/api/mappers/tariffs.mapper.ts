@@ -4,7 +4,7 @@ import { TariffViewType } from '@main/modules/payments/api/view-types/tariff-vie
 export class TariffsMapper {
   static toView(tariff: PaymentTariff): TariffViewType {
     return {
-      id: tariff.id,
+      id: String(tariff.id),
       tariff_name: tariff.tariff_name,
       durationDays: tariff.durationDays,
       price: Number(tariff.price),
