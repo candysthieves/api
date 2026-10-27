@@ -9,7 +9,6 @@ export class TariffsMapper {
       durationDays: tariff.durationDays,
       price: Number(tariff.price),
       currency: 'USD',
-      priceUnit: 'CENT',
     };
   }
 

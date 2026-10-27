@@ -12,13 +12,10 @@ export class TariffViewType {
 
   @ApiProperty({
     example: 100,
-    description: 'Price in the unit specified by priceUnit.',
+    description: 'Price in USD cents.',
   })
   price!: number;
 
   @ApiProperty({ example: 'USD' })
   currency!: string;
-
-  @ApiProperty({ example: 'CENT', enum: ['CENT'] })
-  priceUnit!: 'CENT';
 }
