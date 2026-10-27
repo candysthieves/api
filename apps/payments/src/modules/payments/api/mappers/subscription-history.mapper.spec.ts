@@ -20,7 +20,7 @@ describe('SubscriptionHistoryMapper', () => {
       date: '2026-10-27T10:00:00.000Z',
       paymentDate: '2026-10-27T10:01:00.000Z',
       subscriptionEndDate: '2026-10-27T10:06:00.000Z',
-      priceInMinorUnits: 100,
+      price: 100,
       currency: 'USD',
       subscriptionName: 'Test - 5 minutes',
       subscriptionType: 'Business',

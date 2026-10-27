@@ -51,7 +51,7 @@ describe('GetSubscriptionHistoryQueryHandler pagination', () => {
     ]);
     expect(result).toMatchObject({ totalCount: 5, page: 2, pageSize: 2 });
     expect(result.items[0]).toMatchObject({
-      priceInMinorUnits: 100,
+      price: 100,
       paymentDate: null,
     });
   });

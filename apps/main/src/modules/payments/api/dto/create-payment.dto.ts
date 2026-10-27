@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
 import { IsEnum, IsInt, Min } from 'class-validator';
 
 export const PAYMENT_PROVIDERS = ['STRIPE', 'YOOKASSA'] as const;
@@ -6,11 +7,14 @@ export type PaymentProvider = (typeof PAYMENT_PROVIDERS)[number];
 
 export class CreatePaymentDto {
   @ApiProperty({
-    description: 'Integer ID of the tariff to purchase',
+    description: 'Positive integer tariff ID; numeric strings are also accepted.',
     example: 1,
-    type: 'integer',
-    minimum: 1,
+    oneOf: [
+      { type: 'integer', minimum: 1 },
+      { type: 'string', example: '1' },
+    ],
   })
+  @Type(() => Number)
   @IsInt()
   @Min(1)
   tariffId!: number;

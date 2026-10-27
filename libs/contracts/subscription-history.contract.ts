@@ -6,7 +6,7 @@ export type SubscriptionHistoryItemContract = {
   date: string;
   paymentDate: string | null;
   subscriptionEndDate: string | null;
-  priceInMinorUnits: number;
+  price: number;
   currency: 'USD';
   subscriptionName: string;
   subscriptionType: string;

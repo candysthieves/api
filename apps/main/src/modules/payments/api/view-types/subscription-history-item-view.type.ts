@@ -35,7 +35,7 @@ export class SubscriptionHistoryItemViewType implements SubscriptionHistoryItemC
   subscriptionEndDate!: string | null;
 
   @ApiProperty({ example: 999, description: 'Payment amount in minor units.' })
-  priceInMinorUnits!: number;
+  price!: number;
 
   @ApiProperty({ example: 'USD', enum: ['USD'] })
   currency!: 'USD';

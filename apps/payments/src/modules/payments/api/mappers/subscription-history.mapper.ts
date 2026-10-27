@@ -18,7 +18,7 @@ export class SubscriptionHistoryMapper {
       date: new Date(row.createdAtSeconds * 1000).toISOString(),
       paymentDate: paymentDate?.toISOString() ?? null,
       subscriptionEndDate,
-      priceInMinorUnits: Number(row.amount),
+      price: Number(row.amount),
       currency: 'USD',
       subscriptionName: row.subscriptionName,
       subscriptionType: row.subscriptionType,
