@@ -6,6 +6,7 @@ export type PaymentWebhookEvent = {
 };
 
 export type PaymentCompletedEvent = {
+  /** Internal payment ID; also used for deduplication and the SSE paymentId. */
   eventId: string;
   consumer: 'MAIN';
   type: 'payment.completed';

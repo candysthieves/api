@@ -17,6 +17,7 @@ import { UsersService } from '../../../modules/user-accounts/application/service
 import type { InboxEvent } from '../../../generated/prisma/client.js';
 
 describe('InboxService payment completion', () => {
+  const paymentId = 'fb79ce65-2c9e-401d-9554-0328ed13d155';
   const repository = { update: jest.fn() };
   const posts = { updateImage: jest.fn() };
   let event: Partial<InboxEvent>;
@@ -26,6 +27,7 @@ describe('InboxService payment completion', () => {
   beforeEach(() => {
     jest.resetAllMocks();
     event = {
+      eventId: paymentId,
       type: 'payment.completed',
       data: { userId: '42', paymentStatus: 'completed' },
     };
@@ -66,7 +68,7 @@ describe('InboxService payment completion', () => {
     expect(received).toEqual([
       {
         type: 'payment-completed',
-        data: { userId: '42', paymentStatus: 'completed' },
+        data: { paymentId, paymentStatus: 'completed' },
       },
     ]);
     subscription.unsubscribe();

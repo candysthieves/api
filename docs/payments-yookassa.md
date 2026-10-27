@@ -54,10 +54,10 @@ Webhook принимает стандартный объект ЮKassa с `type`
 
 ```text
 event: payment-completed
-data: {"userId":"42","paymentStatus":"completed"}
+data: {"paymentId":"fb79ce65-2c9e-401d-9554-0328ed13d155","paymentStatus":"completed"}
 ```
 
-Статус успешной оплаты в SSE — `completed`. Поле пользователя имеет значение `Business`, это отдельное поле от статуса оплаты в SSE.
+`paymentId` — внутренний ID платежа, возвращаемый при создании оплаты. Статус успешной оплаты в SSE — `completed`. Поле пользователя имеет значение `Business`, это отдельное поле от статуса оплаты в SSE.
 
 ## Обработка и повторы
 
