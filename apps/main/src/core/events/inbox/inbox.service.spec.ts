@@ -68,7 +68,7 @@ describe('InboxService payment completion', () => {
     expect(received).toEqual([
       {
         type: 'payment-completed',
-        data: { paymentId, paymentStatus: 'completed' },
+        data: { userId: '42', paymentStatus: 'completed' },
       },
     ]);
     subscription.unsubscribe();

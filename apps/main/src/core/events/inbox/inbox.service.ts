@@ -41,7 +41,7 @@ export class InboxService {
         case 'payment.completed': {
           const data = event.data as PaymentCompletedEvent['data'];
           await this.usersService.activateBusiness(Number(data.userId));
-          this.sseService.emitPaymentCompleted(event.eventId);
+          this.sseService.emitPaymentCompleted(data.userId);
           break;
         }
         case 'avatar.image.updated':

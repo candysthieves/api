@@ -21,9 +21,9 @@ export class SseService {
     });
   }
 
-  emitPaymentCompleted(paymentId: string): void {
+  emitPaymentCompleted(userId: string): void {
     this.emit(SseEventEnum.PAYMENT_COMPLETED, {
-      paymentId,
+      userId,
       paymentStatus: 'completed',
     });
   }

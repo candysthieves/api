@@ -12,7 +12,7 @@ export function ApiSseEvents() {
     ApiResponse({
       status: 200,
       description:
-        'Post events contain postId. payment-completed is emitted after the user is updated to Business and contains the internal paymentId and paymentStatus: completed.',
+        'Post events contain postId. payment-completed is emitted after the user is updated to Business and contains userId as a string and paymentStatus: completed.',
       schema: {
         type: 'object',
         properties: {
@@ -36,9 +36,9 @@ export function ApiSseEvents() {
               },
               {
                 type: 'object',
-                required: ['paymentId', 'paymentStatus'],
+                required: ['userId', 'paymentStatus'],
                 properties: {
-                  paymentId: { type: 'string', format: 'uuid' },
+                  userId: { type: 'string', example: '42' },
                   paymentStatus: { type: 'string', enum: ['completed'] },
                 },
               },
