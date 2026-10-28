@@ -117,7 +117,7 @@ export class YookassaService implements IPaymentProvider {
         'Content-Type': 'application/json',
         ...init.headers,
       },
-      signal: AbortSignal.timeout(4_000),
+      signal: AbortSignal.timeout(10_000),
     });
     if (!response.ok) {
       this.logger.error({

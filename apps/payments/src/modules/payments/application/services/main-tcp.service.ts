@@ -20,7 +20,7 @@ export class MainTcpService {
           { cmd: SET_USER_PERSONAL },
           { userId },
         )
-        .pipe(timeout(5_000)),
+        .pipe(timeout(10_000)),
     );
     if (result?.success !== true)
       throw new Error('USER_STATUS_UPDATE_NOT_CONFIRMED');

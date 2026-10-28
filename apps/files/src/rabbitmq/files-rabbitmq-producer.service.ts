@@ -17,7 +17,7 @@ export class FilesRabbitMqProducerService {
     if (!this.connection.connected) throw new Error('TRANSPORT_UNAVAILABLE');
     const options: NonNullable<Parameters<ChannelWrapper['publish']>[3]> = {
       persistent: true,
-      timeout: 5_000,
+      timeout: 10_000,
       messageId: event.eventId,
       contentType: 'application/json',
       type: event.type,

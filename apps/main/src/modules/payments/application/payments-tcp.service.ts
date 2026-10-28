@@ -46,7 +46,7 @@ export class PaymentsTcpService {
     const result = await lastValueFrom(
       this.paymentsClient
         .send<RpcResponse<PaymentTariff[]>>({ cmd: 'get-tariffs' }, { type })
-        .pipe(timeout(5_000)),
+        .pipe(timeout(10_000)),
     );
 
     if (result.error || !result.data) {
@@ -65,7 +65,7 @@ export class PaymentsTcpService {
           { cmd: 'get-subscription-types' },
           {},
         )
-        .pipe(timeout(5_000)),
+        .pipe(timeout(10_000)),
     );
 
     if (result.error || !result.data) {
@@ -92,7 +92,7 @@ export class PaymentsTcpService {
     return lastValueFrom(
       this.paymentsClient
         .send<RpcResponse<boolean>>({ cmd: 'cancel-subscription' }, { userId })
-        .pipe(timeout(5_000)),
+        .pipe(timeout(15_000)),
     );
   }
 
@@ -105,7 +105,7 @@ export class PaymentsTcpService {
           { cmd: 'get-subscription-history' },
           payload,
         )
-        .pipe(timeout(5_000)),
+        .pipe(timeout(10_000)),
     );
   }
 
@@ -118,7 +118,7 @@ export class PaymentsTcpService {
           { cmd: 'get-current-subscription' },
           { userId },
         )
-        .pipe(timeout(5_000)),
+        .pipe(timeout(10_000)),
     );
   }
 }

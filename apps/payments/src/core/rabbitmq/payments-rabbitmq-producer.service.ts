@@ -17,7 +17,7 @@ export class PaymentsRabbitMqProducerService {
       persistent: true,
       messageId: event.eventId,
       type: event.type,
-      timeout: 5_000,
+      timeout: 10_000,
     };
     await this.connection.publish(
       '',

@@ -20,7 +20,7 @@ export class MainRabbitMqProducerService {
       persistent: true,
       messageId: event.eventId,
       type: event.type,
-      timeout: 5_000,
+      timeout: 10_000,
     };
     await this.connection.publish(
       '',
@@ -42,7 +42,7 @@ export class MainRabbitMqProducerService {
               `${this.config.getOrThrow<string>('RABBITMQ_FILES_TO_MAIN_QUEUE')}.post-images.results`,
             );
           })(),
-        ).pipe(timeout(5_000)),
+        ).pipe(timeout(10_000)),
       );
       return true;
     } catch {
@@ -56,7 +56,7 @@ export class MainRabbitMqProducerService {
     if (!this.connection.connected) throw new Error('TRANSPORT_UNAVAILABLE');
     const options: NonNullable<Parameters<ChannelWrapper['publish']>[3]> = {
       persistent: true,
-      timeout: 5_000,
+      timeout: 10_000,
       messageId: event.eventId,
       contentType: event.mimeType,
       type: 'post.image.process',
