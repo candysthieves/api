@@ -5,6 +5,8 @@ import ms from 'ms';
 @Injectable()
 export class AppConfig {
   readonly port: number;
+  readonly mainTcpHost: string;
+  readonly mainTcpPort: number;
   readonly appUrl: string;
   readonly googleCallbackUrl: string;
   readonly githubCallbackUrl: string;
@@ -33,6 +35,8 @@ export class AppConfig {
 
   constructor(@Inject(ConfigService) configService: ConfigService) {
     this.port = Number(configService.getOrThrow<string>('PORT'));
+    this.mainTcpHost = configService.get<string>('MAIN_TCP_HOST', '127.0.0.1');
+    this.mainTcpPort = Number(configService.get<number>('MAIN_TCP_PORT', 4004));
     this.appUrl = configService.getOrThrow<string>('APP_URL');
     this.googleCallbackUrl = `${this.appUrl}/auth/google/callback`;
     this.githubCallbackUrl = `${this.appUrl}/auth/github/callback`;
@@ -82,7 +86,8 @@ export class AppConfig {
         .filter(Boolean),
     );
     this.clientUrl = configService.getOrThrow<string>('CLIENT_URL');
-    this.cookieDomain = configService.get<string>('COOKIE_DOMAIN')?.trim() || undefined;
+    this.cookieDomain =
+      configService.get<string>('COOKIE_DOMAIN')?.trim() || undefined;
     this.unusedFilesCleanupEnabled =
       configService.get<string>('UNUSED_FILES_CLEANUP_ENABLED') === 'true';
   }

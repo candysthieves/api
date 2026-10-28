@@ -1,3 +1,5 @@
+jest.mock('./main-tcp.service.js', () => ({ MainTcpService: class {} }));
+import { SubscriptionExpirationService } from './subscription-expiration.service.js';
 jest.mock(
   '../../infrastructure/repositories/payments/payments.repository.js',
   () => ({ PaymentsRepository: class {} }),
@@ -14,6 +16,7 @@ jest.mock(
   () => ({ TariffsRepository: class {} }),
 );
 import { PaymentStatusService } from './payment-status.service.js';
+import type { PaymentResultEvent } from '@libs/contracts';
 import type { PaymentEntity } from '../../../../database/types/payment-database.type.js';
 
 describe('PaymentStatusService', () => {
@@ -26,13 +29,24 @@ describe('PaymentStatusService', () => {
     findExpired: jest.fn(),
   };
   const provider = { getPayment: jest.fn() };
-  const store = { save: jest.fn() };
+  const store = { save: jest.fn<Promise<void>, [PaymentResultEvent]>() };
   const subscriptions = {
+    findPaidSubscription: jest.fn(),
     complete: jest.fn(),
     fail: jest.fn(),
     findByLastPaymentId: jest.fn(),
   };
   const tariffs = { findTariffById: jest.fn() };
+  let userStatus: string;
+  const main = { setPersonal: jest.fn() };
+  const expiration = new SubscriptionExpirationService(
+    subscriptions as unknown as ConstructorParameters<
+      typeof SubscriptionExpirationService
+    >[0],
+    main as unknown as ConstructorParameters<
+      typeof SubscriptionExpirationService
+    >[1],
+  );
   const service = new PaymentStatusService(
     repository as unknown as ConstructorParameters<
       typeof PaymentStatusService
@@ -45,11 +59,17 @@ describe('PaymentStatusService', () => {
       typeof PaymentStatusService
     >[3],
     tariffs as unknown as ConstructorParameters<typeof PaymentStatusService>[4],
+    expiration,
   );
   beforeEach(() => {
     jest.resetAllMocks();
     jest.useFakeTimers().setSystemTime(paidAt);
     subscriptionStatus = 'Processing';
+    userStatus = 'Business';
+    main.setPersonal.mockImplementation(() => {
+      userStatus = 'Personal';
+      return Promise.resolve();
+    });
     tariffs.findTariffById.mockResolvedValue({ durationDays: 30 });
     payment = {
       id: 'local-id',
@@ -87,7 +107,12 @@ describe('PaymentStatusService', () => {
       return Promise.resolve();
     });
     subscriptions.findByLastPaymentId.mockImplementation(() =>
-      Promise.resolve({ id: 'subscription', status: subscriptionStatus }),
+      Promise.resolve({
+        id: 'subscription',
+        status: subscriptionStatus,
+        userId: '42',
+        provider: 'YOOKASSA',
+      }),
     );
     subscriptions.fail.mockImplementation(() => {
       subscriptionStatus = 'Failed';
@@ -283,5 +308,33 @@ describe('PaymentStatusService', () => {
     );
     expect(subscriptions.complete).not.toHaveBeenCalled();
     expect(store.save).not.toHaveBeenCalled();
+  });
+  it('keeps Processing when main fails and completes cancellation on retry', async () => {
+    provider.getPayment.mockResolvedValue({ status: 'canceled' });
+    main.setPersonal.mockRejectedValueOnce(new Error('main unavailable'));
+    await expect(service.process('external-id')).rejects.toThrow(
+      'main unavailable',
+    );
+    expect(subscriptionStatus).toBe('Processing');
+    expect(userStatus).toBe('Business');
+    expect(store.save).not.toHaveBeenCalled();
+    subscriptions.fail.mockImplementation(() => {
+      expect(userStatus).toBe('Personal');
+      subscriptionStatus = 'Failed';
+      return Promise.resolve();
+    });
+    await service.process('external-id');
+    expect(subscriptionStatus).toBe('Failed');
+    expect(userStatus).toBe('Personal');
+  });
+
+  it('preserves an existing paid period when a new payment is rejected', async () => {
+    provider.getPayment.mockResolvedValue({ status: 'canceled' });
+    subscriptions.findPaidSubscription.mockResolvedValue({
+      id: 'older-paid-subscription',
+    });
+    await service.process('external-id');
+    expect(subscriptionStatus).toBe('Failed');
+    expect(userStatus).toBe('Business');
   });
 });

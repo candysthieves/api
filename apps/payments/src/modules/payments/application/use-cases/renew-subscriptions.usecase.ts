@@ -7,6 +7,7 @@ import { TariffsRepository } from '../../infrastructure/repositories/tariffs/tar
 import { YookassaService } from '../../infrastructure/providers/yookassa/yookassa.service.js';
 import { PaymentFactory } from '../factories/payment.factory.js';
 import { PaymentParamsFactory } from '../factories/payment-params.factory.js';
+import { SubscriptionExpirationService } from '../services/subscription-expiration.service.js';
 import type {
   SubscriptionEntity,
   TariffEntity,
@@ -26,6 +27,7 @@ export class RenewSubscriptionsUseCase implements ICommandHandler<
     private readonly paymentsRepository: PaymentsRepository,
     private readonly tariffsRepository: TariffsRepository,
     private readonly yookassaService: YookassaService,
+    private readonly subscriptionExpirationService: SubscriptionExpirationService,
   ) {}
 
   async execute(): Promise<void> {
@@ -34,11 +36,18 @@ export class RenewSubscriptionsUseCase implements ICommandHandler<
     );
     for (const subscription of subscriptions) {
       try {
+        if (
+          subscription.status === 'Failed' ||
+          subscription.nextChargeDate === null
+        ) {
+          await this.subscriptionExpirationService.expire(subscription.userId);
+          continue;
+        }
         await this.renewSubscription(subscription);
       } catch (error) {
-        console.log(error);
         this.logger.error(
-          `Subscription renewal could not be started: ${subscription.id}`,
+          `Subscription processing failed: ${subscription.id}`,
+          error instanceof Error ? error.stack : String(error),
         );
       }
     }

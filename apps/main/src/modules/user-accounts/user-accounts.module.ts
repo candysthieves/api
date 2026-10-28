@@ -1,4 +1,6 @@
 import { Module } from '@nestjs/common';
+import { UserPaymentStatusController } from './api/controllers/user-payment-status.controller.js';
+import { SetUserPersonalUseCase } from './application/use-cases/users-use-cases/set-user-personal.usecase.js';
 import { CqrsModule } from '@nestjs/cqrs';
 import { EventsModule } from '../../core/events/events.module.js';
 import { AuthSessionService } from './application/services/auth-session.service.js';
@@ -69,6 +71,7 @@ import { ProfileQueryHandler } from './application/query-handler/auth/profile.qu
 @Module({
   imports: [CqrsModule, EventsModule],
   controllers: [
+    UserPaymentStatusController,
     UsersController,
     AuthController,
     SessionsController,
@@ -76,6 +79,7 @@ import { ProfileQueryHandler } from './application/query-handler/auth/profile.qu
     LocationsController,
   ],
   providers: [
+    SetUserPersonalUseCase,
     RegistrationUseCase,
     UpdateMyProfileUseCase,
     UpdateMyAvatarUseCase,

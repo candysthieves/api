@@ -19,6 +19,16 @@ export enum Environment {
 }
 
 export class EnvironmentVariables {
+  @IsString()
+  @IsNotEmpty()
+  MAIN_TCP_HOST = '127.0.0.1';
+
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(65535)
+  MAIN_TCP_PORT = 4004;
+
   get RECAPTCHA_ALLOWED_HOSTNAMES(): string {
     return this._RECAPTCHA_ALLOWED_HOSTNAMES;
   }

@@ -5,6 +5,7 @@ import { OutboxService } from '../../../../events/outbox/outbox.service.js';
 import { SubscriptionsRepository } from '../../infrastructure/repositories/subscriptions/subscriptions.repository.js';
 import { TariffsRepository } from '../../infrastructure/repositories/tariffs/tariffs.repository.js';
 import type { PaymentEntity } from '../../../../database/types/payment-database.type.js';
+import { SubscriptionExpirationService } from './subscription-expiration.service.js';
 
 @Injectable()
 export class PaymentStatusService {
@@ -17,6 +18,7 @@ export class PaymentStatusService {
     private readonly outboxService: OutboxService,
     private readonly subscriptionsRepository: SubscriptionsRepository,
     private readonly tariffsRepository: TariffsRepository,
+    private readonly subscriptionExpirationService: SubscriptionExpirationService,
   ) {}
 
   // Выбирает обработчик результата; для уже успешного платежа повторяет только локальные шаги.
@@ -166,7 +168,7 @@ export class PaymentStatusService {
       payment.id,
     );
     if (!subscription) throw new Error('SUBSCRIPTION_NOT_FOUND');
-    await this.subscriptionsRepository.fail(subscription.id);
+    await this.subscriptionExpirationService.fail(subscription);
     await this.outboxService.save({
       eventId: payment.id,
       consumer: 'MAIN',

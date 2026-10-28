@@ -67,10 +67,16 @@ export class SubscriptionsRepository {
       .selectFrom('subscriptions')
       .selectAll()
       .where('id', 'in', latestIds)
-      .where('status', '=', 'Done')
       .where('provider', '=', 'YOOKASSA')
-      .where('expirationDate', '<=', toClickHouseDateTime(at))
-      .where('nextChargeDate', 'is not', null)
+      .where((eb) =>
+        eb.or([
+          eb.and([
+            eb('status', '=', 'Done'),
+            eb('expirationDate', '<=', toClickHouseDateTime(at)),
+          ]),
+          eb('status', '=', 'Failed'),
+        ]),
+      )
       .execute();
   }
 
@@ -135,18 +141,24 @@ export class SubscriptionsRepository {
     );
   }
 
-  async failExpiredProcessing(): Promise<void> {
-    await executeMutation(
-      this.db,
-      this.db
-        .updateTable('subscriptions')
-        .set({ status: 'Failed' })
-        .where('status', '=', 'Processing')
-        .where(
-          sql<boolean>`coalesce(expiration_date, created_at) < now() - INTERVAL 15 MINUTE`,
-        )
-        .modifyEnd(sql`SETTINGS mutations_sync = 1`),
-    );
+  findExpiredProcessing(): Promise<SubscriptionEntity[]> {
+    return this.db
+      .selectFrom('subscriptions')
+      .selectAll()
+      .where('status', '=', 'Processing')
+      .where(
+        sql<boolean>`coalesce(expiration_date, created_at) < now() - INTERVAL 15 MINUTE`,
+      )
+      .execute();
+  }
+
+  findPaidSubscription(userId: string, at: Date) {
+    return this.db
+      .selectFrom('subscriptions')
+      .select('id')
+      .where('userId', '=', userId)
+      .where('expirationDate', '>', toClickHouseDateTime(at))
+      .executeTakeFirst();
   }
 
   findActiveSubscription(userId: string, at: Date) {

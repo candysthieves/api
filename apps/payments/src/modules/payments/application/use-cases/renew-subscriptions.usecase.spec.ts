@@ -1,3 +1,6 @@
+jest.mock('../services/subscription-expiration.service.js', () => ({
+  SubscriptionExpirationService: class {},
+}));
 jest.mock(
   '../../infrastructure/repositories/subscriptions/subscriptions.repository.js',
   () => ({ SubscriptionsRepository: class {} }),
@@ -28,6 +31,7 @@ describe('RenewSubscriptionsUseCase', () => {
     >(),
     addExternalPaymentId: jest.fn(),
   };
+  const expiration = { expire: jest.fn() };
   const tariffs = { findTariffById: jest.fn() };
   const provider = { createAutoRenewalPayment: jest.fn() };
   let state: string;
@@ -36,6 +40,8 @@ describe('RenewSubscriptionsUseCase', () => {
     userId: '42',
     tariffId: 1,
     lastPaymentId: 'previous',
+    status: 'Done',
+    nextChargeDate: new Date('2026-10-26T12:00:00Z'),
   };
   const usecase = new RenewSubscriptionsUseCase(
     subscriptions as unknown as ConstructorParameters<
@@ -50,6 +56,9 @@ describe('RenewSubscriptionsUseCase', () => {
     provider as unknown as ConstructorParameters<
       typeof RenewSubscriptionsUseCase
     >[3],
+    expiration as unknown as ConstructorParameters<
+      typeof RenewSubscriptionsUseCase
+    >[4],
   );
   beforeEach(() => {
     jest.resetAllMocks();
@@ -174,5 +183,31 @@ describe('RenewSubscriptionsUseCase', () => {
     expect(payments.create).toHaveBeenCalledTimes(1);
     expect(provider.createAutoRenewalPayment).not.toHaveBeenCalled();
     expect(state).toBe('Processing');
+  });
+  it.each([
+    { ...subscription, nextChargeDate: null },
+    { ...subscription, status: 'Failed' },
+  ])(
+    'does not renew an expired cancelled or failed subscription',
+    async (record) => {
+      subscriptions.findDueForYookassa.mockResolvedValue([record]);
+      await usecase.execute();
+      expect(state).toBe('Done');
+      expect(payments.create).not.toHaveBeenCalled();
+      expect(provider.createAutoRenewalPayment).not.toHaveBeenCalled();
+      expect(expiration.expire).toHaveBeenCalledWith('42');
+    },
+  );
+
+  it('leaves cancelled subscription eligible for retry after an expiration failure', async () => {
+    subscriptions.findDueForYookassa.mockResolvedValue([
+      { ...subscription, nextChargeDate: null },
+    ]);
+    expiration.expire.mockRejectedValueOnce(new Error('main unavailable'));
+    await usecase.execute();
+    await usecase.execute();
+    expect(state).toBe('Done');
+    expect(payments.create).not.toHaveBeenCalled();
+    expect(expiration.expire).toHaveBeenCalledTimes(2);
   });
 });
