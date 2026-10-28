@@ -84,7 +84,7 @@ export class PaymentsTcpService {
     return lastValueFrom(
       this.paymentsClient
         .send<RpcResponse<PaymentResult>>({ cmd: 'create-payment' }, payload)
-        .pipe(timeout(5_000)),
+        .pipe(timeout(15_000)),
     );
   }
 
