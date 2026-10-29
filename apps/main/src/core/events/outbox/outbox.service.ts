@@ -6,14 +6,14 @@ import type {
   ImageInputEvent,
   PaymentWebhookEvent,
 } from '@libs/contracts';
-import { PrismaService } from '../../../infrastructure/prisma/prisma.service.js';
+import { OutboxRepository } from './outbox.repository.js';
 import { MainRabbitMqProducerService } from '../../rabbitmq/main-rabbitmq-producer.service.js';
 import { EventStoreService } from '../event-store.service.js';
 
 @Injectable()
 export class OutboxService {
   constructor(
-    private readonly prisma: PrismaService,
+    private readonly outboxRepository: OutboxRepository,
     private readonly events: EventStoreService,
     private readonly producer: MainRabbitMqProducerService,
   ) {}
@@ -25,62 +25,47 @@ export class OutboxService {
       type: 'payment.status.requested',
       data: { externalPaymentId },
     };
-    await this.prisma.outputEvent.create({ data: event });
+    await this.outboxRepository.create(event);
   }
 
   // Сохраняет исходные изображения поста для отправки в files.
   async save(postId: string, files: Express.Multer.File[]): Promise<void> {
     for (const [index, file] of files.entries()) {
-      await this.prisma.outputEvent.create({
+      await this.outboxRepository.create({
+        eventId: randomUUID(),
+        consumer: 'FILES',
+        type: 'post.image.process',
         data: {
-          eventId: randomUUID(),
-          consumer: 'FILES',
-          type: 'post.image.process',
-          data: {
-            postId,
-            index,
-            originalName: file.originalname,
-            mimeType: file.mimetype,
-            size: file.size,
-          },
-          body: new Uint8Array(file.buffer),
+          postId,
+          index,
+          originalName: file.originalname,
+          mimeType: file.mimetype,
+          size: file.size,
         },
+        body: new Uint8Array(file.buffer),
       });
     }
   }
 
   // Сохраняет исходный файл аватара для отправки в files.
   async saveAvatar(userId: number, file: Express.Multer.File): Promise<void> {
-    await this.prisma.outputEvent.create({
+    await this.outboxRepository.create({
+      eventId: randomUUID(),
+      consumer: 'FILES',
+      type: 'avatar.image.process',
       data: {
-        eventId: randomUUID(),
-        consumer: 'FILES',
-        type: 'avatar.image.process',
-        data: {
-          userId,
-          originalName: file.originalname,
-          mimeType: file.mimetype,
-          size: file.size,
-        },
-        body: new Uint8Array(file.buffer),
+        userId,
+        originalName: file.originalname,
+        mimeType: file.mimetype,
+        size: file.size,
       },
+      body: new Uint8Array(file.buffer),
     });
   }
 
   // Завершает отправку изображений, если создание поста не удалось.
   async abort(postId: string): Promise<void> {
-    await this.prisma.outputEvent.updateMany({
-      where: {
-        status: 'UNPROCESSED',
-        data: { path: ['postId'], equals: postId },
-      },
-      data: {
-        status: 'ERROR',
-        completedAt: new Date(),
-        nextAttemptAt: null,
-        lastError: 'POST_CREATION_FAILED',
-      },
-    });
+    await this.outboxRepository.abortPostImages(postId);
   }
 
   @Cron(CronExpression.EVERY_SECOND, { waitForCompletion: true })

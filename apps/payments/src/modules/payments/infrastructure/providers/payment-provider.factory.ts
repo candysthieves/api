@@ -10,7 +10,7 @@ import { IPaymentProvider } from './payment-provider.interface.js';
 export class PaymentProviderFactory {
   constructor(
     private readonly stripeService: StripeService,
-    private readonly yooKassaService: YookassaService,
+    private readonly yookassaService: YookassaService,
   ) {}
 
   getProvider(provider: PaymentProvider): IPaymentProvider {
@@ -18,7 +18,7 @@ export class PaymentProviderFactory {
       case 'STRIPE':
         return this.stripeService;
       case 'YOOKASSA':
-        return this.yooKassaService;
+        return this.yookassaService;
       default:
         throw new RpcException(
           ObjectResult.failure({

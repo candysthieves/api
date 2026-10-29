@@ -28,7 +28,7 @@ interface EventRepository {
 export class EventStoreService {
   private readonly running = new Set<EventTable>();
   // Получает Prisma-клиент для работы с таблицами событий.
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prismaService: PrismaService) {}
 
   // Обрабатывает до десяти ожидающих событий одной таблицы.
   async run(
@@ -39,7 +39,7 @@ export class EventStoreService {
     if (this.running.has(table)) return;
     this.running.add(table);
     try {
-      const repository: EventRepository = this.prisma[table];
+      const repository: EventRepository = this.prismaService[table];
       const events = await repository.findMany({
         where: {
           status: 'UNPROCESSED',
@@ -124,7 +124,7 @@ export class EventStoreService {
 
     // Возвращаем зависшие события в очередь или завершаем после третьей попытки.
     for (const table of EVENT_TABLES) {
-      const repository: EventRepository = this.prisma[table];
+      const repository: EventRepository = this.prismaService[table];
       const staleEventFilter = {
         status: 'PROCESSING' as const,
         processingStartedAt: { lt: processingDeadline },
@@ -162,7 +162,7 @@ export class EventStoreService {
   async cleanup(): Promise<void> {
     // Через час удаляем содержимое завершённых событий.
     for (const table of EVENT_TABLES) {
-      const repository: EventRepository = this.prisma[table];
+      const repository: EventRepository = this.prismaService[table];
       await repository.updateMany({
         where: {
           status: { in: ['OK', 'ERROR'] },

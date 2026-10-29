@@ -1,5 +1,4 @@
 import { CommandHandler, type ICommandHandler } from '@nestjs/cqrs';
-import { Logger } from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
 import { SubscriptionsRepository } from '../../infrastructure/repositories/subscriptions/subscriptions.repository.js';
 import { PaymentsRepository } from '../../infrastructure/repositories/payments/payments.repository.js';
@@ -20,8 +19,6 @@ export class RenewSubscriptionsUseCase implements ICommandHandler<
   RenewSubscriptionsCommand,
   void
 > {
-  private readonly logger = new Logger(RenewSubscriptionsUseCase.name);
-
   constructor(
     private readonly subscriptionsRepository: SubscriptionsRepository,
     private readonly paymentsRepository: PaymentsRepository,
@@ -44,11 +41,8 @@ export class RenewSubscriptionsUseCase implements ICommandHandler<
           continue;
         }
         await this.renewSubscription(subscription);
-      } catch (error) {
-        this.logger.error(
-          `Subscription processing failed: ${subscription.id}`,
-          error instanceof Error ? error.stack : String(error),
-        );
+      } catch {
+        // Continue processing other subscriptions; the failed one can be retried.
       }
     }
   }

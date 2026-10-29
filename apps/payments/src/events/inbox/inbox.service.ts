@@ -18,7 +18,7 @@ export class InboxService {
   @Cron(CronExpression.EVERY_SECOND, { waitForCompletion: true })
   async processPending(): Promise<void> {
     const events = await this.inboxRepository.findPending();
-    const results = await Promise.allSettled(
+    await Promise.allSettled(
       events.map(async (record) => {
         const attempts = (record.attempts ?? 0) + 1;
         await this.inboxRepository.markProcessing(record.eventId, attempts);
@@ -35,7 +35,5 @@ export class InboxService {
         }
       }),
     );
-    const failure = results.find((result) => result.status === 'rejected');
-    if (failure?.status === 'rejected') throw failure.reason;
   }
 }
