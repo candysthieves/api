@@ -29,7 +29,7 @@ describe('Subscription expiration', () => {
     fail: jest.fn(),
     findExpiredProcessing: jest.fn(),
   };
-  const main = { setPersonal: jest.fn() };
+  const main = { setPersonalStatusForUser: jest.fn() };
   const service = new SubscriptionExpirationService(
     repository as unknown as ConstructorParameters<
       typeof SubscriptionExpirationService
@@ -53,7 +53,7 @@ describe('Subscription expiration', () => {
     jest.spyOn(Logger.prototype, 'error').mockImplementation(() => {});
     userStatus = 'Business';
     state = 'Processing';
-    main.setPersonal.mockImplementation(() => {
+    main.setPersonalStatusForUser.mockImplementation(() => {
       userStatus = 'Personal';
       return Promise.resolve();
     });
@@ -76,7 +76,7 @@ describe('Subscription expiration', () => {
     const entered = new Promise<void>((resolve) => {
       started = resolve;
     });
-    main.setPersonal.mockImplementation(async () => {
+    main.setPersonalStatusForUser.mockImplementation(async () => {
       started();
       await pending;
       userStatus = 'Personal';
@@ -92,7 +92,9 @@ describe('Subscription expiration', () => {
   });
 
   it('retains Processing on failure and retries on the next scheduler tick', async () => {
-    main.setPersonal.mockRejectedValueOnce(new Error('unavailable'));
+    main.setPersonalStatusForUser.mockRejectedValueOnce(
+      new Error('unavailable'),
+    );
     await scheduler.failExpiredProcessing();
     expect(state).toBe('Processing');
     expect(userStatus).toBe('Business');
@@ -110,7 +112,7 @@ describe('Subscription expiration', () => {
     expect(state).toBe('Failed');
   });
 
-  it('keeps Business until an older paid period ends, even after failure', async () => {
+  it('keeps Business while the latest subscription still has paid time, even after failure', async () => {
     repository.findPaidSubscription.mockResolvedValueOnce({ id: 'paid' });
     await service.fail(subscription);
     expect(state).toBe('Failed');
@@ -141,7 +143,9 @@ describe('Subscription expiration', () => {
       subscription,
       { ...subscription, id: 'second', userId: '43' },
     ]);
-    main.setPersonal.mockRejectedValueOnce(new Error('unavailable'));
+    main.setPersonalStatusForUser.mockRejectedValueOnce(
+      new Error('unavailable'),
+    );
     await scheduler.failExpiredProcessing();
     expect(repository.fail).not.toHaveBeenCalledWith('subscription');
     expect(repository.fail).toHaveBeenCalledWith('second');

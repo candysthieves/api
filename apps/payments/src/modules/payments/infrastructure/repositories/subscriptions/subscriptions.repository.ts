@@ -157,6 +157,7 @@ export class SubscriptionsRepository {
       .selectFrom('subscriptions')
       .select('id')
       .where('userId', '=', userId)
+      .where('id', 'in', this.latestSubscriptionId(userId))
       .where('expirationDate', '>', toClickHouseDateTime(at))
       .executeTakeFirst();
   }
@@ -166,6 +167,7 @@ export class SubscriptionsRepository {
       .selectFrom('subscriptions')
       .select('id')
       .where('userId', '=', userId)
+      .where('id', 'in', this.latestSubscriptionId(userId))
       .where('status', '=', 'Done')
       .where('expirationDate', '>', toClickHouseDateTime(at))
       .orderBy('createdAt', 'desc')
@@ -185,11 +187,23 @@ export class SubscriptionsRepository {
         ),
       ])
       .where('userId', '=', userId)
+      .where('id', 'in', this.latestSubscriptionId(userId))
       .where('status', '=', 'Done')
       .where('expirationDate', '>', toClickHouseDateTime(at))
       .orderBy('createdAt', 'desc')
       .orderBy('id', 'desc')
       .executeTakeFirst();
+  }
+
+  private latestSubscriptionId(userId: string) {
+    // Select the latest record before checking status or paid access.
+    return this.db
+      .selectFrom('subscriptions')
+      .select('id')
+      .where('userId', '=', userId)
+      .orderBy('createdAt', 'desc')
+      .orderBy('id', 'desc')
+      .limit(1);
   }
 
   async requestCancellation(subscriptionId: string): Promise<void> {
