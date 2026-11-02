@@ -7,11 +7,15 @@ import { PaymentProviderFactory } from '../../infrastructure/providers/payment-p
 import { PaymentParamsFactory } from '../factories/payment-params.factory.js';
 import { PaymentsMapper } from '../../api/mappers/payments.mapper.js';
 import { PaymentViewType } from '../../api/view-types/payment-view.type.js';
+import { randomUUID } from 'node:crypto';
+import { RpcException } from '@nestjs/microservices';
+import { ObjectResult } from '../../../../core/object-result.js';
+import { SubscriptionsRepository } from '../../infrastructure/repositories/subscriptions/subscriptions.repository.js';
 
 export class CreatePaymentCommand {
   constructor(
     public readonly userId: string,
-    public readonly tariffId: string,
+    public readonly tariffId: number,
     public readonly provider: PaymentProvider,
   ) {}
 }
@@ -25,6 +29,7 @@ export class CreatePaymentUseCase implements ICommandHandler<
     private readonly tariffsRepository: TariffsRepository,
     private readonly paymentsRepository: PaymentsRepository,
     private readonly paymentProviderFactory: PaymentProviderFactory,
+    private readonly subscriptionsRepository: SubscriptionsRepository,
   ) {}
 
   async execute({
@@ -32,22 +37,57 @@ export class CreatePaymentUseCase implements ICommandHandler<
     tariffId,
     provider,
   }: CreatePaymentCommand): Promise<PaymentViewType> {
+    const latest = await this.subscriptionsRepository.findLatest(userId);
+    if (latest?.status === 'Processing') {
+      throw new RpcException(
+        ObjectResult.failure({
+          code: 'PAYMENT_CREATION_FAILED',
+          errors: [
+            {
+              field: 'subscription',
+              message: 'The latest subscription is still processing',
+            },
+          ],
+        }),
+      );
+    }
     const tariff = await this.tariffsRepository.findTariffById(tariffId);
 
-    const payment = PaymentFactory.create(userId, tariffId, provider);
-
-    await this.paymentsRepository.create(payment);
-
+    const paymentId = randomUUID();
     const paymentService = this.paymentProviderFactory.getProvider(provider);
+    const subscriptionId = randomUUID();
+    await this.subscriptionsRepository.createProcessing(
+      subscriptionId,
+      userId,
+      tariffId,
+      provider,
+      tariff.durationDays,
+    );
+    if (latest) {
+      await this.subscriptionsRepository.requestCancellation(latest.id);
+    }
 
-    const paymentParams = PaymentParamsFactory.create(payment.id, tariff);
+    const paymentParams = PaymentParamsFactory.create(
+      paymentId,
+      tariff,
+      provider === 'YOOKASSA' ? 'RUB' : 'USD',
+    );
 
     const { paymentUrl, externalPaymentId } =
       await paymentService.createPayment(paymentParams);
 
-    await this.paymentsRepository.updateExternalPaymentId(
-      payment.id,
+    const payment = PaymentFactory.create(
+      userId,
+      tariffId,
+      provider,
       externalPaymentId,
+      Number(tariff.price),
+      paymentId,
+    );
+    await this.paymentsRepository.create(payment);
+    await this.subscriptionsRepository.addPaymentIdToSubscriptions(
+      subscriptionId,
+      payment.id,
     );
 
     return PaymentsMapper.toView(payment.id, paymentUrl);

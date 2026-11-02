@@ -7,12 +7,12 @@ export function ApiSseEvents() {
     ApiOperation({
       summary: 'Subscribe to server-sent events',
       description:
-        'Opens a persistent SSE connection and receives real-time events when posts are created and their media is processed.',
+        'Opens a persistent SSE connection for post updates and payment results.',
     }),
     ApiResponse({
       status: 200,
       description:
-        'post-created is emitted after creation, before image processing completes. post-media-updated reports a saved image. post-deleted reports removal of the entire post after an image publication or processing failure. All contain postId.',
+        'Post events contain postId. payment-processed contains userId as a string and paymentStatus: completed or canceled. Only completed activates Business before emission.',
       schema: {
         type: 'object',
         properties: {
@@ -22,20 +22,30 @@ export function ApiSseEvents() {
               SseEventEnum.POST_CREATED,
               SseEventEnum.POST_MEDIA_UPDATED,
               SseEventEnum.POST_DELETED,
+              SseEventEnum.PAYMENT_PROCESSED,
             ],
             example: SseEventEnum.POST_CREATED,
-            description: 'Post creation or media processing update.',
+            description: 'Post or payment update.',
           },
           data: {
-            type: 'object',
-            properties: {
-              postId: {
-                type: 'string',
-                format: 'uuid',
-                example: '550e8400-e29b-41d4-a716-446655440000',
+            oneOf: [
+              {
+                type: 'object',
+                required: ['postId'],
+                properties: { postId: { type: 'string', format: 'uuid' } },
               },
-            },
-            required: ['postId'],
+              {
+                type: 'object',
+                required: ['userId', 'paymentStatus'],
+                properties: {
+                  userId: { type: 'string', example: '42' },
+                  paymentStatus: {
+                    type: 'string',
+                    enum: ['completed', 'canceled'],
+                  },
+                },
+              },
+            ],
           },
         },
         required: ['type', 'data'],

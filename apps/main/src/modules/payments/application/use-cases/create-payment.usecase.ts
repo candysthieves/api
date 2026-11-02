@@ -13,8 +13,8 @@ import { ErrorStatus } from '../../../../core/exceptions/domain-exception-code.j
 export class CreatePaymentCommand {
   constructor(
     public readonly userId: string,
-    public readonly tariffId: string,
-    public readonly provider: PaymentProvider,
+    public readonly tariffId: number,
+    public readonly paymentProvider: PaymentProvider,
   ) {}
 }
 
@@ -30,7 +30,7 @@ export class CreatePaymentUseCase implements ICommandHandler<
       await this.paymentsTcpService.createPayment({
         userId: command.userId,
         tariffId: command.tariffId,
-        provider: command.provider,
+        provider: command.paymentProvider,
       });
 
     if (response.error || !response.data) {

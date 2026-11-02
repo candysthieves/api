@@ -3,6 +3,7 @@ import { NestExpressApplication } from '@nestjs/platform-express';
 import { AppModule } from './app.module.js';
 import { AppConfig } from './app.config.js';
 import { setupApp } from './setup/app-setup.js';
+import { setupTcp } from './setup/tcp-setup.js';
 import { Logger } from '@nestjs/common';
 import { MainRabbitMqProducerService } from './core/rabbitmq/main-rabbitmq-producer.service.js';
 
@@ -11,13 +12,16 @@ async function bootstrap() {
   const appConfig = app.get<AppConfig>(AppConfig);
 
   setupApp(app);
+  const tcpServer = setupTcp(app);
 
   await app.listen(appConfig.port);
+  await tcpServer.listen();
   const rabbitConnected = await app
     .get(MainRabbitMqProducerService)
     .checkConnection();
   const startupInfo = [
     `Port:       ${appConfig.port}`,
+    `TCP:        ${appConfig.mainTcpHost}:${appConfig.mainTcpPort}`,
     'PostgreSQL: connected',
     `RabbitMQ:   ${rabbitConnected ? 'connected' : 'unavailable'}`,
   ];

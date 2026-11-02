@@ -32,12 +32,15 @@ export class GetCurrentSubscriptionQueryHandler implements IQueryHandler<
       return { expirationDate: null, nextChangeDate: null };
     }
 
-    const expirationDate = subscription.expirationDate.toISOString();
     return {
-      expirationDate,
-      nextChangeDate: subscription.cancellationRequestedAt
-        ? null
-        : expirationDate,
+      expirationDate:
+        subscription.expirationDateSeconds === null
+          ? null
+          : new Date(subscription.expirationDateSeconds * 1000).toISOString(),
+      nextChangeDate:
+        subscription.nextChargeDateSeconds === null
+          ? null
+          : new Date(subscription.nextChargeDateSeconds * 1000).toISOString(),
     };
   }
 }

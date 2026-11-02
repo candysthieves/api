@@ -5,6 +5,7 @@ import type { ImageInputEvent } from '../../../../../libs/contracts/index.js';
 import type { AvatarImageInputEvent } from '../../../../../libs/contracts/index.js';
 import { Injectable } from '@nestjs/common';
 import { firstValueFrom, from, timeout } from 'rxjs';
+import type { PaymentWebhookEvent } from '@libs/contracts';
 
 @Injectable()
 export class MainRabbitMqProducerService {
@@ -12,6 +13,22 @@ export class MainRabbitMqProducerService {
     private readonly connection: AmqpConnection,
     private readonly config: ConfigService,
   ) {}
+
+  async publishPaymentWebhook(event: PaymentWebhookEvent): Promise<void> {
+    if (!this.connection.connected) throw new Error('TRANSPORT_UNAVAILABLE');
+    const options: NonNullable<Parameters<ChannelWrapper['publish']>[3]> = {
+      persistent: true,
+      messageId: event.eventId,
+      type: event.type,
+      timeout: 10_000,
+    };
+    await this.connection.publish(
+      '',
+      this.config.getOrThrow<string>('RABBITMQ_MAIN_TO_PAYMENTS_QUEUE'),
+      event,
+      options,
+    );
+  }
 
   async checkConnection(): Promise<boolean> {
     if (!this.connection.connected) return false;
@@ -25,7 +42,7 @@ export class MainRabbitMqProducerService {
               `${this.config.getOrThrow<string>('RABBITMQ_FILES_TO_MAIN_QUEUE')}.post-images.results`,
             );
           })(),
-        ).pipe(timeout(5_000)),
+        ).pipe(timeout(10_000)),
       );
       return true;
     } catch {
@@ -39,7 +56,7 @@ export class MainRabbitMqProducerService {
     if (!this.connection.connected) throw new Error('TRANSPORT_UNAVAILABLE');
     const options: NonNullable<Parameters<ChannelWrapper['publish']>[3]> = {
       persistent: true,
-      timeout: 5_000,
+      timeout: 10_000,
       messageId: event.eventId,
       contentType: event.mimeType,
       type: 'post.image.process',

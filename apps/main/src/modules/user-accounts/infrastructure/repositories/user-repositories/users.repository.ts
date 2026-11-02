@@ -47,6 +47,14 @@ export class UsersRepository {
     });
   }
 
+  async setPersonal(userId: number): Promise<void> {
+    // Already Personal or deleted users require no further action.
+    await this.prismaUser.updateMany({
+      where: { id: userId, paymentStatus: 'Business' },
+      data: { paymentStatus: 'Personal' },
+    });
+  }
+
   async updateAvatar(
     userId: number,
     image: MediaFile,

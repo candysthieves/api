@@ -1,14 +1,17 @@
 import { Type } from 'class-transformer';
-import {
-  IsInt,
-  IsNotEmpty,
-  IsString,
-  Max,
-  Min,
-} from 'class-validator';
-
+import { IsInt, IsNotEmpty, IsString, Max, Min } from 'class-validator';
 
 export class EnvironmentVariables {
+  @IsString()
+  @IsNotEmpty()
+  MAIN_TCP_HOST = '127.0.0.1';
+
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(65535)
+  MAIN_TCP_PORT = 4004;
+
   @Type(() => Number)
   @IsInt()
   @Min(1)
@@ -53,4 +56,3 @@ export class EnvironmentVariables {
   @IsNotEmpty()
   FRONTEND_URL!: string;
 }
-

@@ -5,6 +5,11 @@ import { CancelSubscriptionCommand } from '../application/use-cases/cancel-subsc
 import { ObjectResult } from '../../../core/object-result.js';
 import { SubscriptionErrorCode } from '@libs/contracts';
 import { GetCurrentSubscriptionQuery } from '../application/query-handler/get-current-subscription.query-handler.js';
+import { GetSubscriptionHistoryQuery } from '../application/query-handler/get-subscription-history.query-handler.js';
+import type {
+  GetSubscriptionHistoryContract,
+  SubscriptionHistoryContract,
+} from '@libs/contracts';
 
 @Controller('subscriptions')
 export class SubscriptionsController {
@@ -26,6 +31,23 @@ export class SubscriptionsController {
         { expirationDate: string | null; nextChangeDate: string | null }
       >(new GetCurrentSubscriptionQuery(payload.userId))
       .then((subscription) => ObjectResult.success(subscription));
+  }
+
+  @MessagePattern({ cmd: 'get-subscription-history' })
+  async getSubscriptionHistory(
+    @Payload() payload: GetSubscriptionHistoryContract,
+  ): Promise<ObjectResult<SubscriptionHistoryContract>> {
+    const history = await this.queryBus.execute<
+      GetSubscriptionHistoryQuery,
+      SubscriptionHistoryContract
+    >(
+      new GetSubscriptionHistoryQuery(
+        payload.userId,
+        payload.page,
+        payload.pageSize,
+      ),
+    );
+    return ObjectResult.success(history);
   }
 
   @MessagePattern({ cmd: 'cancel-subscription' })

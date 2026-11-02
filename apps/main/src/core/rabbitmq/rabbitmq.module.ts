@@ -18,17 +18,32 @@ import { MainRabbitMqProducerService } from './main-rabbitmq-producer.service.js
           durable: true,
           arguments: { 'x-single-active-consumer': true },
         };
+        const paymentInput = config.getOrThrow<string>(
+          'RABBITMQ_MAIN_TO_PAYMENTS_QUEUE',
+        );
+        const paymentResults = config.getOrThrow<string>(
+          'RABBITMQ_PAYMENTS_TO_MAIN_QUEUE',
+        );
         return {
           uri: config.getOrThrow<string>('RABBITMQ_URL'),
           prefetchCount: config.getOrThrow<number>('RABBITMQ_PREFETCH_COUNT'),
           enableDirectReplyTo: false,
           queues: [
+            { name: paymentInput, options: { durable: true } },
+            { name: paymentResults, options: { durable: true } },
             { name: inputEvents, options: imageQueueOptions },
             { name: results, options: { durable: true } },
             { name: avatarInput, options: imageQueueOptions },
             { name: avatarResults, options: { durable: true } },
           ],
           handlers: {
+            paymentResults: {
+              exchange: '',
+              routingKey: paymentResults,
+              queue: paymentResults,
+              queueOptions: { durable: true },
+              deserializer: (body: Buffer) => body,
+            },
             postImageResults: {
               exchange: '',
               routingKey: results,

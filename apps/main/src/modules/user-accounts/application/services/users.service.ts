@@ -4,13 +4,17 @@ import { UsersRepository } from '../../infrastructure/repositories/user-reposito
 
 @Injectable()
 export class UsersService {
-  constructor(private readonly users: UsersRepository) {}
+  constructor(private readonly usersRepository: UsersRepository) {}
+
+  async activateBusiness(userId: number): Promise<void> {
+    await this.usersRepository.update(userId, { paymentStatus: 'Business' });
+  }
 
   updateAvatar(
     userId: number,
     image: MediaFile,
     preview: MediaFile,
   ): Promise<boolean> {
-    return this.users.updateAvatar(userId, image, preview);
+    return this.usersRepository.updateAvatar(userId, image, preview);
   }
 }

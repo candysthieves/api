@@ -1,16 +1,23 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEnum, IsUUID } from 'class-validator';
+import { Type } from 'class-transformer';
+import { IsEnum, IsInt, Min } from 'class-validator';
 
 export const PAYMENT_PROVIDERS = ['STRIPE', 'YOOKASSA'] as const;
 export type PaymentProvider = (typeof PAYMENT_PROVIDERS)[number];
 
 export class CreatePaymentDto {
   @ApiProperty({
-    description: 'UUID of the tariff to purchase',
-    example: '123e4567-e89b-12d3-a456-426614174000',
+    description: 'Positive integer tariff ID; numeric strings are also accepted.',
+    example: 1,
+    oneOf: [
+      { type: 'integer', minimum: 1 },
+      { type: 'string', example: '1' },
+    ],
   })
-  @IsUUID()
-  tariffId!: string;
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  tariffId!: number;
 
   @ApiProperty({
     description: 'Payment provider',

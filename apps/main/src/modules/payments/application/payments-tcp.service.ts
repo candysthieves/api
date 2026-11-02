@@ -5,13 +5,15 @@ import { CreatePaymentContract } from '@libs/contracts';
 import type {
   SubscriptionTypeContract,
   SubscriptionTypeName,
+  SubscriptionHistoryContract,
+  GetSubscriptionHistoryContract,
 } from '@libs/contracts';
 
 export type PaymentTariff = {
-  id: string;
+  id: number;
   tariff_name: string;
   durationDays: number;
-  priceInMinorUnits: string;
+  price: string;
 };
 
 export type PaymentResult = {
@@ -44,7 +46,7 @@ export class PaymentsTcpService {
     const result = await lastValueFrom(
       this.paymentsClient
         .send<RpcResponse<PaymentTariff[]>>({ cmd: 'get-tariffs' }, { type })
-        .pipe(timeout(5_000)),
+        .pipe(timeout(10_000)),
     );
 
     if (result.error || !result.data) {
@@ -63,7 +65,7 @@ export class PaymentsTcpService {
           { cmd: 'get-subscription-types' },
           {},
         )
-        .pipe(timeout(5_000)),
+        .pipe(timeout(10_000)),
     );
 
     if (result.error || !result.data) {
@@ -82,7 +84,7 @@ export class PaymentsTcpService {
     return lastValueFrom(
       this.paymentsClient
         .send<RpcResponse<PaymentResult>>({ cmd: 'create-payment' }, payload)
-        .pipe(timeout(5_000)),
+        .pipe(timeout(15_000)),
     );
   }
 
@@ -90,7 +92,20 @@ export class PaymentsTcpService {
     return lastValueFrom(
       this.paymentsClient
         .send<RpcResponse<boolean>>({ cmd: 'cancel-subscription' }, { userId })
-        .pipe(timeout(5_000)),
+        .pipe(timeout(15_000)),
+    );
+  }
+
+  getSubscriptionHistory(
+    payload: GetSubscriptionHistoryContract,
+  ): Promise<RpcResponse<SubscriptionHistoryContract>> {
+    return lastValueFrom(
+      this.paymentsClient
+        .send<RpcResponse<SubscriptionHistoryContract>>(
+          { cmd: 'get-subscription-history' },
+          payload,
+        )
+        .pipe(timeout(10_000)),
     );
   }
 
@@ -103,7 +118,7 @@ export class PaymentsTcpService {
           { cmd: 'get-current-subscription' },
           { userId },
         )
-        .pipe(timeout(5_000)),
+        .pipe(timeout(10_000)),
     );
   }
 }

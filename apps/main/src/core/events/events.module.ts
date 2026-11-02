@@ -1,5 +1,6 @@
 import { EventStoreService } from './event-store.service.js';
 import { OutboxService } from './outbox/outbox.service.js';
+import { OutboxRepository } from './outbox/outbox.repository.js';
 import { Module } from '@nestjs/common';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { ConfigService } from '@nestjs/config';
@@ -23,7 +24,12 @@ import { RabbitMqModule } from '../rabbitmq/rabbitmq.module.js';
       },
     ]),
   ],
-  providers: [EventStoreService, OutboxService, FilesTcpService],
+  providers: [
+    EventStoreService,
+    OutboxService,
+    OutboxRepository,
+    FilesTcpService,
+  ],
   exports: [OutboxService, EventStoreService, FilesTcpService, RabbitMqModule],
 })
 export class EventsModule {}

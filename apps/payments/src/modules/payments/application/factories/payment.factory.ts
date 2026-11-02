@@ -8,16 +8,22 @@ import {
 
 export class PaymentFactory {
   static create(
-    userExternalPaymentId: string,
-    tariffId: string,
+    userId: string,
+    tariffId: number,
     provider: PaymentProvider,
+    externalPaymentId: string | null,
+    amount: number,
+    id = randomUUID(),
     status: PaymentStatus = 'pending',
   ): Insertable<PaymentsTable> & { id: string } {
     return {
-      id: randomUUID(),
+      id,
       provider,
       tariffId,
-      userExternalPaymentId,
+      userId,
+      externalPaymentId,
+      amount,
+      paymentMethodId: null,
       paymentDate: null,
       status: status,
     };

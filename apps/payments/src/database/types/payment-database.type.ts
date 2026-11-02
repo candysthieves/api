@@ -1,10 +1,12 @@
 import { Generated, Selectable } from 'kysely';
 import type { SubscriptionTypeName } from '@libs/contracts';
+import type { PaymentEventTable } from '../../events/payment-event.type.js';
 
 export type { SubscriptionTypeName } from '@libs/contracts';
 
 export type PaymentProvider = 'STRIPE' | 'YOOKASSA';
-export type PaymentStatus = 'pending' | 'succeeded' | 'failed' | 'refunded';
+export type SubscriptionStatus = 'Processing' | 'Done' | 'Failed';
+export type PaymentStatus = 'pending' | 'succeeded' | 'canceled' | 'failed';
 
 export interface SubscriptionTypeTable {
   id: number;
@@ -17,8 +19,12 @@ export interface SubscriptionTypeTable {
 export interface PaymentsTable {
   id: Generated<string>;
   provider: PaymentProvider;
-  userExternalPaymentId: string;
-  tariffId: string;
+  userId: string;
+  externalPaymentId: string | null;
+  /** Tariff price in USD cents. */
+  amount: number;
+  paymentMethodId: string | null;
+  tariffId: number;
   paymentDate: Date | null;
   status: PaymentStatus;
   createdAt: Generated<Date>;
@@ -27,10 +33,12 @@ export interface PaymentsTable {
 export interface SubscriptionTable {
   id: Generated<string>;
   userId: string;
-  tariffId: string;
-  lastPaymentId: string;
-  expirationDate: Date;
-  cancellationRequestedAt: Date | null;
+  tariffId: number;
+  lastPaymentId: string | null;
+  provider: PaymentProvider | null;
+  status: SubscriptionStatus;
+  expirationDate: Date | null;
+  nextChargeDate: Date | null;
   createdAt: Generated<Date>;
 }
 
@@ -40,17 +48,19 @@ export interface BonusesTable {
 }
 
 export interface TariffTable {
-  id: Generated<string>;
+  id: number;
   name: string;
   subscriptionTypeId: number;
   durationDays: number;
-  priceInMinorUnits: string;
+  price: string;
   createdAt: Generated<Date>;
   updatedAt: Date | null;
   deletedAt: Date | null;
 }
 
 export interface PaymentDatabase {
+  paymentInbox: PaymentEventTable;
+  paymentOutbox: PaymentEventTable;
   payments: PaymentsTable;
   subscriptions: SubscriptionTable;
   subscription_types: SubscriptionTypeTable;
