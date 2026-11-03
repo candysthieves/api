@@ -42,12 +42,9 @@ export class NotificationsController {
   @MessagePattern({ cmd: 'mark-notifications-as-read' })
   async markNotificationsAsRead(
     @Payload() dto: MarkNotificationsAsReadContract,
-  ): Promise<ObjectResult<boolean>> {
+  ): Promise<void> {
     await this.commandBus.execute<MarkNotificationsAsReadCommand, void>(
       new MarkNotificationsAsReadCommand(dto),
     );
-
-    return ObjectResult.success(true);
   }
 }
-
