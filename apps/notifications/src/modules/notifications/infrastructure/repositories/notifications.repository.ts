@@ -6,7 +6,7 @@ import ms from 'ms';
 
 @Injectable()
 export class NotificationsRepository {
-  private getNotificationsKey(id: string): string {
+  private getNotificationKey(id: string): string {
     return `notification:${id}`;
   }
 
@@ -17,7 +17,7 @@ export class NotificationsRepository {
   constructor(@Inject(REDIS_CLIENT) private readonly redis: Redis) {}
 
   async create(notification: NotificationModel): Promise<void> {
-    const notificationKey = this.getNotificationsKey(notification.id);
+    const notificationKey = this.getNotificationKey(notification.id);
     const userNotificationsKey = this.getUserNotificationsKey(
       notification.userId,
     );
@@ -44,7 +44,7 @@ export class NotificationsRepository {
   }
 
   async findByIds(ids: string[]): Promise<NotificationModel[]> {
-    const keys: string[] = ids.map((id) => this.getNotificationsKey(id));
+    const keys: string[] = ids.map((id) => this.getNotificationKey(id));
 
     const records = await this.redis.mget(...keys);
 
@@ -62,7 +62,7 @@ export class NotificationsRepository {
 
     for (const notification of notifications) {
       pipeline.set(
-        this.getNotificationsKey(notification.id),
+        this.getNotificationKey(notification.id),
         JSON.stringify(notification),
       );
     }
