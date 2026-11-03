@@ -10,9 +10,7 @@ export class NotificationFactory {
     return {
       id: randomUUID(),
       userId: dto.userId,
-      type:
-        (dto.type as NotificationType) ??
-        NotificationType.SUBSCRIPTION_ACTIVATED,
+      type: dto.type as NotificationType,
       title: dto.title,
       message: dto.message,
       isRead: false,
