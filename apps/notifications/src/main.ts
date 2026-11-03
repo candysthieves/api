@@ -45,6 +45,7 @@ async function bootstrap() {
   const startupInfo = [
     `Port: ${port}`,
     `TCP: ${config.tcpHost}:${config.tcpPort}`,
+    'Redis: connected',
   ];
   const width = Math.max(...startupInfo.map((line) => line.length));
   console.log(

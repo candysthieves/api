@@ -40,15 +40,7 @@ services:
       - clickhouse_data:/var/lib/clickhouse
       - ./docker/clickhouse/users.d/compatibility.xml:/etc/clickhouse-server/users.d/compatibility.xml:ro
     healthcheck:
-      test:
-        - CMD
-        - clickhouse-client
-        - --user
-        - ${CLICKHOUSE_USER:-default}
-        - --password
-        - ${CLICKHOUSE_PASSWORD:-clickhouse}
-        - --query
-        - SELECT 1
+      test: clickhouse-client --user ${CLICKHOUSE_USER:-default} --password ${CLICKHOUSE_PASSWORD:-clickhouse} --query "SELECT 1" || exit 1
       interval: 10s
       timeout: 5s
       retries: 5
@@ -67,8 +59,19 @@ services:
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
 
+  redis:
+    image: redis:7-alpine
+    container_name: redis-notifications
+    restart: unless-stopped
+    command: ['redis-server', '--appendonly', 'yes']
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+
 volumes:
   postgres_data:
   mongo_data:
   rabbitmq_data:
   clickhouse_data:
+  redis_data:
