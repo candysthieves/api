@@ -63,7 +63,15 @@ services:
     image: redis:7-alpine
     container_name: redis-notifications
     restart: unless-stopped
-    command: ['redis-server', '--appendonly', 'yes']
+    command: >
+      redis-server
+      --appendonly yes
+      --appendfsync everysec
+      --save 900 1 --save 300 10 --save 60 10000
+      --maxmemory 256mb
+      --maxmemory-policy noeviction
+      --dir /data
+      --loglevel notice
     ports:
       - "${REDIS_PORT:-6379}:6379"
     volumes:
