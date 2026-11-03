@@ -6,11 +6,11 @@ export enum NotificationType {
 
 export interface NotificationModel {
   id: string;
-  user_id: string;
+  userId: string;
   type: NotificationType;
   title: string;
   message: string;
-  is_read: boolean;
-  read_at: string | null;
-  created_at: string;
+  isRead: boolean;
+  readAt: string | null;
+  createdAt: string;
 }
