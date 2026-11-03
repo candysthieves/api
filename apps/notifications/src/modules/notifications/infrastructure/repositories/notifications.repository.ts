@@ -7,7 +7,7 @@ import ms from 'ms';
 @Injectable()
 export class NotificationsRepository {
   private getNotificationsKey(id: string): string {
-    return `notifications:user:${id}`;
+    return `notification:${id}`;
   }
 
   private getUserNotificationsKey(userId: string): string {
@@ -22,10 +22,12 @@ export class NotificationsRepository {
       notification.userId,
     );
 
+    const score = new Date(notification.createdAt).getTime();
+
     await this.redis
       .multi()
       .set(notificationKey, JSON.stringify(notification))
-      .zadd(userNotificationsKey, notification.createdAt, notification.id)
+      .zadd(userNotificationsKey, score, notification.id)
       .exec();
   }
 
@@ -39,5 +41,32 @@ export class NotificationsRepository {
       oneMonthAgoTimestamp,
       '+inf',
     );
+  }
+
+  async findByIds(ids: string[]): Promise<NotificationModel[]> {
+    const keys: string[] = ids.map((id) => this.getNotificationsKey(id));
+
+    const records = await this.redis.mget(...keys);
+
+    return records
+      .filter((raw) => raw !== null)
+      .map((raw) => JSON.parse(raw) as NotificationModel);
+  }
+
+  async saveMany(notifications: NotificationModel[]): Promise<void> {
+    if (!notifications.length) {
+      return;
+    }
+
+    const pipeline = this.redis.pipeline();
+
+    for (const notification of notifications) {
+      pipeline.set(
+        this.getNotificationsKey(notification.id),
+        JSON.stringify(notification),
+      );
+    }
+
+    await pipeline.exec();
   }
 }

@@ -1,9 +1,13 @@
 import { Controller } from '@nestjs/common';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { MessagePattern, Payload } from '@nestjs/microservices';
-import { CreateNotificationContract } from '@libs/contracts';
+import {
+  CreateNotificationContract,
+  MarkNotificationsAsReadContract,
+} from '@libs/contracts';
 import { CreateNotificationCommand } from '../application/use-cases/create-notification.usecase.js';
 import { GetNotificationsCountQuery } from '../application/query-handler/get-notifications-count.query-handler.js';
+import { MarkNotificationsAsReadCommand } from '../application/use-cases/mark-notifications-as-read.usecase.js';
 import { NotificationsCountViewType } from './view-types/notifications-count-view.type.js';
 import { ObjectResult } from '../../../core/object-result.js';
 
@@ -33,6 +37,17 @@ export class NotificationsController {
     >(new GetNotificationsCountQuery(payload.userId));
 
     return ObjectResult.success(result);
+  }
+
+  @MessagePattern({ cmd: 'mark-notifications-as-read' })
+  async markNotificationsAsRead(
+    @Payload() dto: MarkNotificationsAsReadContract,
+  ): Promise<ObjectResult<boolean>> {
+    await this.commandBus.execute<MarkNotificationsAsReadCommand, void>(
+      new MarkNotificationsAsReadCommand(dto),
+    );
+
+    return ObjectResult.success(true);
   }
 }
 
