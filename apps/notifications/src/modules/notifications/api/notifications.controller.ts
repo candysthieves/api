@@ -24,10 +24,12 @@ export class NotificationsController {
   @MessagePattern({ cmd: 'create-notification' })
   async createNotification(
     @Payload() dto: CreateNotificationContract,
-  ): Promise<void> {
+  ): Promise<ObjectResult<{ success: boolean }>> {
     await this.commandBus.execute<CreateNotificationCommand, void>(
       new CreateNotificationCommand(dto),
     );
+
+    return ObjectResult.success({ success: true });
   }
 
   @MessagePattern({ cmd: 'get-notifications-count' })
@@ -45,10 +47,12 @@ export class NotificationsController {
   @MessagePattern({ cmd: 'mark-notifications-as-read' })
   async markNotificationsAsRead(
     @Payload() dto: MarkNotificationsAsReadContract,
-  ): Promise<void> {
+  ): Promise<ObjectResult<{ success: boolean }>> {
     await this.commandBus.execute<MarkNotificationsAsReadCommand, void>(
       new MarkNotificationsAsReadCommand(dto),
     );
+
+    return ObjectResult.success({ success: true });
   }
 
   @MessagePattern({ cmd: 'get-notifications' })

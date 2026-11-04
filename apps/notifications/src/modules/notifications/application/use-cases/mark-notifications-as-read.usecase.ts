@@ -27,7 +27,7 @@ export class MarkNotificationsAsReadUseCase implements ICommandHandler<
       .map((n) => NotificationFactory.markAsRead(n));
 
     if (toUpdate.length > 0) {
-      await this.notificationsRepository.saveMany(toUpdate);
+      await this.notificationsRepository.saveManyAndMoveToRead(userId, toUpdate);
     }
   }
 }

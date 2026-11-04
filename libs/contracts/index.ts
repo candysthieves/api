@@ -15,3 +15,4 @@ export * from './set-user-personal.contract.js';
 export * from './create-notification.contract.js';
 export * from './mark-notifications-as-read.contract.js';
 export * from './get-notifications.contract.js';
+export * from './paginated-notifications.contract.js';

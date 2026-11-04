@@ -10,83 +10,114 @@ export class NotificationsRepository {
     return `notification:${id}`;
   }
 
-  private getUserNotificationsKey(userId: string): string {
-    return `user:${userId}:notifications`;
+  private getUserUnreadNotificationsKey(userId: string): string {
+    return `user:${userId}:notifications:unread`;
+  }
+
+  private getUserReadNotificationsKey(userId: string): string {
+    return `user:${userId}:notifications:read`;
   }
 
   constructor(@Inject(REDIS_CLIENT) private readonly redis: Redis) {}
 
   async create(notification: NotificationModel): Promise<void> {
     const notificationKey = this.getNotificationKey(notification.id);
-    const userNotificationsKey = this.getUserNotificationsKey(
-      notification.userId,
-    );
+    const unreadKey = this.getUserUnreadNotificationsKey(notification.userId);
 
     const score = new Date(notification.createdAt).getTime();
 
     await this.redis
       .multi()
       .set(notificationKey, JSON.stringify(notification))
-      .zadd(userNotificationsKey, score, notification.id)
+      .zadd(unreadKey, score, notification.id)
       .exec();
   }
 
   async countByUserId(userId: string): Promise<number> {
-    const userNotificationsKey = this.getUserNotificationsKey(userId);
-
+    const unreadKey = this.getUserUnreadNotificationsKey(userId);
     const oneMonthAgoTimestamp = Date.now() - ms('30d');
 
-    return this.redis.zcount(
-      userNotificationsKey,
-      oneMonthAgoTimestamp,
-      '+inf',
-    );
+    return this.redis.zcount(unreadKey, oneMonthAgoTimestamp, '+inf');
   }
 
   async findByIds(ids: string[]): Promise<NotificationModel[]> {
-    const keys: string[] = ids.map((id) => this.getNotificationKey(id));
+    if (!ids.length) {
+      return [];
+    }
 
+    const keys: string[] = ids.map((id) => this.getNotificationKey(id));
     const records = await this.redis.mget(...keys);
 
     return records
-      .filter((raw) => raw !== null)
+      .filter((raw): raw is string => raw !== null)
       .map((raw) => JSON.parse(raw) as NotificationModel);
   }
 
-  async saveMany(notifications: NotificationModel[]): Promise<void> {
+  async saveManyAndMoveToRead(
+    userId: string,
+    notifications: NotificationModel[],
+  ): Promise<void> {
     if (!notifications.length) {
       return;
     }
 
+    const unreadKey = this.getUserUnreadNotificationsKey(userId);
+    const readKey = this.getUserReadNotificationsKey(userId);
+
     const pipeline = this.redis.pipeline();
 
     for (const notification of notifications) {
+      const score = new Date(notification.createdAt).getTime();
       pipeline.set(
         this.getNotificationKey(notification.id),
         JSON.stringify(notification),
       );
+      pipeline.zrem(unreadKey, notification.id);
+      pipeline.zadd(readKey, score, notification.id);
     }
 
     await pipeline.exec();
   }
 
-  async findUserNotificationsByCursorDate(
-    userId: string,
-    pageSize: number,
+  async findBySet(
+    setKey: string,
+    limit: number,
     cursorDate?: string | null,
   ): Promise<string[]> {
-    const key = this.getUserNotificationsKey(userId);
     const oneMonthAgo = Date.now() - ms('30d');
-
     const maxScore = cursorDate ? `(${new Date(cursorDate).getTime()}` : '+inf';
 
     return this.redis.zrevrangebyscore(
-      key,
+      setKey,
       maxScore,
       oneMonthAgo,
       'LIMIT',
       0,
-      pageSize + 1,
+      limit,
+    );
+  }
+
+  async findUnreadIds(
+    userId: string,
+    limit: number,
+    cursorDate?: string | null,
+  ): Promise<string[]> {
+    return this.findBySet(
+      this.getUserUnreadNotificationsKey(userId),
+      limit,
+      cursorDate,
+    );
+  }
+
+  async findReadIds(
+    userId: string,
+    limit: number,
+    cursorDate?: string | null,
+  ): Promise<string[]> {
+    return this.findBySet(
+      this.getUserReadNotificationsKey(userId),
+      limit,
+      cursorDate,
     );
   }
 }
