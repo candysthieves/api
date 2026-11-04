@@ -3,12 +3,15 @@ import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { MessagePattern, Payload } from '@nestjs/microservices';
 import {
   CreateNotificationContract,
+  GetNotificationsContract,
   MarkNotificationsAsReadContract,
 } from '@libs/contracts';
 import { CreateNotificationCommand } from '../application/use-cases/create-notification.usecase.js';
 import { GetNotificationsCountQuery } from '../application/query-handler/get-notifications-count.query-handler.js';
+import { GetNotificationsQuery } from '../application/query-handler/get-notifications.query-handler.js';
 import { MarkNotificationsAsReadCommand } from '../application/use-cases/mark-notifications-as-read.usecase.js';
 import { NotificationsCountViewType } from './view-types/notifications-count-view.type.js';
+import { PaginatedNotificationsViewType } from './view-types/paginated-notifications-view.type.js';
 import { ObjectResult } from '../../../core/object-result.js';
 
 @Controller('notifications')
@@ -46,5 +49,17 @@ export class NotificationsController {
     await this.commandBus.execute<MarkNotificationsAsReadCommand, void>(
       new MarkNotificationsAsReadCommand(dto),
     );
+  }
+
+  @MessagePattern({ cmd: 'get-notifications' })
+  async getNotifications(
+    @Payload() dto: GetNotificationsContract,
+  ): Promise<ObjectResult<PaginatedNotificationsViewType>> {
+    const result = await this.queryBus.execute<
+      GetNotificationsQuery,
+      PaginatedNotificationsViewType
+    >(new GetNotificationsQuery(dto));
+
+    return ObjectResult.success(result);
   }
 }

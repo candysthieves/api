@@ -69,4 +69,24 @@ export class NotificationsRepository {
 
     await pipeline.exec();
   }
+
+  async findUserNotificationsByCursorDate(
+    userId: string,
+    pageSize: number,
+    cursorDate?: string | null,
+  ): Promise<string[]> {
+    const key = this.getUserNotificationsKey(userId);
+    const oneMonthAgo = Date.now() - ms('30d');
+
+    const maxScore = cursorDate ? `(${new Date(cursorDate).getTime()}` : '+inf';
+
+    return this.redis.zrevrangebyscore(
+      key,
+      maxScore,
+      oneMonthAgo,
+      'LIMIT',
+      0,
+      pageSize + 1,
+    );
+  }
 }
