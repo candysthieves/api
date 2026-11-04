@@ -79,7 +79,7 @@ export class NotificationsRepository {
     await pipeline.exec();
   }
 
-  async findBySet(
+  private async findBySet(
     setKey: string,
     limit: number,
     cursorDate?: string | null,

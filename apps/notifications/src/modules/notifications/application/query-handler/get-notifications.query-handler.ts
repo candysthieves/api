@@ -22,110 +22,70 @@ export class GetNotificationsQueryHandler implements IQueryHandler<
   ): Promise<PaginatedNotificationsViewType> {
     const { userId, pageSize = 10, cursor } = query.dto;
 
-    // Парсим курсор вида "read:2026-11-04T..." или "unread:2026-11-04T..."
-    // Для обратной совместимости: если префикса нет, считаем "read"
-    let cursorSection: 'unread' | 'read' = 'unread';
-    let cursorDate: string | null = null;
+    // 1. Понимаем, где находится курсор: в unread или в read
+    const isReadCursor = cursor?.startsWith('read:');
+    const cursorDate = cursor ? cursor.replace(/^(unread:|read:)/, '') : null;
 
-    if (cursor) {
-      if (cursor.startsWith('unread:')) {
-        cursorSection = 'unread';
-        cursorDate = cursor.slice('unread:'.length);
-      } else if (cursor.startsWith('read:')) {
-        cursorSection = 'read';
-        cursorDate = cursor.slice('read:'.length);
-      } else {
-        cursorSection = 'read';
-        cursorDate = cursor;
-      }
-    }
-
-    const selectedIds: string[] = [];
-    let nextCursor: string | null = null;
+    let ids: string[] = [];
     let hasMore = false;
 
-    // 1. Если курсор еще в unread, выбираем сначала непрочитанные
-    if (cursorSection === 'unread') {
-      const unreadIds: string[] =
-        await this.notificationsRepository.findUnreadIds(
-          userId,
-          pageSize + 1,
-          cursorDate,
-        );
-
-      if (unreadIds.length > pageSize) {
-        // Непрочитанных больше pageSize - остаемся в секции unread
-        selectedIds.push(...unreadIds.slice(0, pageSize));
-        hasMore = true;
-      } else {
-        // Забираем все оставшиеся непрочитанные
-        selectedIds.push(...unreadIds);
-
-        const neededFromRead = pageSize - selectedIds.length;
-        if (neededFromRead > 0) {
-          // Добираем из прочитанных (с самого начала, т.к. только перешли)
-          const readIds: string[] =
-            await this.notificationsRepository.findReadIds(
-              userId,
-              neededFromRead + 1,
-              null,
-            );
-
-          if (readIds.length > neededFromRead) {
-            selectedIds.push(...readIds.slice(0, neededFromRead));
-            hasMore = true;
-          } else {
-            selectedIds.push(...readIds);
-            hasMore = false;
-          }
-        }
-      }
-    } else {
-      // 2. Курсор уже в секции прочитанных
-      const readIds: string[] = await this.notificationsRepository.findReadIds(
+    if (!isReadCursor) {
+      // Ищем в непрочитанных
+      ids = await this.notificationsRepository.findUnreadIds(
         userId,
         pageSize + 1,
         cursorDate,
       );
 
-      if (readIds.length > pageSize) {
-        selectedIds.push(...readIds.slice(0, pageSize));
+      if (ids.length > pageSize) {
         hasMore = true;
+        ids = ids.slice(0, pageSize);
       } else {
-        selectedIds.push(...readIds);
-        hasMore = false;
+        // Если непрочитанных не хватило — добираем из прочитанных
+        const needed = pageSize - ids.length;
+        const readIds = await this.notificationsRepository.findReadIds(
+          userId,
+          needed + 1,
+        );
+
+        hasMore = readIds.length > needed;
+        ids.push(...readIds.slice(0, needed));
       }
+    } else {
+      // Курсор уже в прочитанных — просто берем из read
+      ids = await this.notificationsRepository.findReadIds(
+        userId,
+        pageSize + 1,
+        cursorDate,
+      );
+
+      hasMore = ids.length > pageSize;
+      ids = ids.slice(0, pageSize);
     }
 
-    if (!selectedIds.length) {
-      return NotificationsMapper.toPaginatedView({
-        orderedIds: [],
-        models: [],
-        nextCursor: null,
-        hasMore: false,
-      });
+    if (!ids.length) {
+      return { items: [], nextCursor: null, hasMore: false };
     }
 
-    // 3. Загружаем модели
-    const notifications =
-      await this.notificationsRepository.findByIds(selectedIds);
-    const notificationMap = new Map(notifications.map((n) => [n.id, n]));
+    // 2. Достаем сущности
+    const notifications = await this.notificationsRepository.findByIds(ids);
+    const map = new Map(notifications.map((n) => [n.id, n]));
+    const items = ids
+      .map((id) => map.get(id))
+      .filter((n): n is NonNullable<typeof n> => Boolean(n))
+      .map((n) => NotificationsMapper.toView(n));
 
-    // 4. Вычисляем nextCursor по последнему элементу
-    if (hasMore && selectedIds.length > 0) {
-      const lastId = selectedIds[selectedIds.length - 1];
-      const lastModel = notificationMap.get(lastId);
-      if (lastModel) {
-        const sectionPrefix = lastModel.isRead ? 'read:' : 'unread:';
-        nextCursor = `${sectionPrefix}${lastModel.createdAt}`;
-      }
-    }
+    // 3. nextCursor по последнему элементу
+    const lastItem = items[items.length - 1];
+    const nextCursor =
+      hasMore && lastItem
+        ? `${lastItem.isRead ? 'read:' : 'unread:'}${lastItem.createdAt}`
+        : null;
 
-    return NotificationsMapper.toPaginatedView({
-      orderedIds: selectedIds,
-      models: notifications,
+    return {
+      items,
       nextCursor,
       hasMore,
-    });
+    };
   }
 }
