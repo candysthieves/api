@@ -10,11 +10,16 @@ import {
 import { GetNotificationsQueryHandler } from './application/query-handler/get-notifications.query-handler.js';
 import { MarkNotificationsAsReadUseCase } from './application/use-cases/mark-notifications-as-read.usecase.js';
 import { CreateNotificationUseCase } from './application/use-cases/create-notification.usecase.js';
+import { NotificationsGateway } from './api/notifications.gateway.js';
+import { GetNotificationsCountQueryHandler } from './application/query-handler/get-notifications-count.query-handler.js';
 
 const controllers = [NotificationsController];
-const queryHandlers = [GetNotificationsQueryHandler];
+const queryHandlers = [
+  GetNotificationsQueryHandler,
+  GetNotificationsCountQueryHandler,
+];
 const useCases = [MarkNotificationsAsReadUseCase, CreateNotificationUseCase];
-const services = [NotificationsTcpService];
+const services = [NotificationsTcpService, NotificationsGateway];
 
 @Module({
   imports: [

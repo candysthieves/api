@@ -16,3 +16,4 @@ export * from './create-notification.contract.js';
 export * from './mark-notifications-as-read.contract.js';
 export * from './get-notifications.contract.js';
 export * from './paginated-notifications.contract.js';
+export * from './notifications-count.contract.js';

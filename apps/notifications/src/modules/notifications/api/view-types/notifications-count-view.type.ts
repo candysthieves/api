@@ -1,3 +1,1 @@
-export interface NotificationsCountViewType {
-  count: number;
-}
+export type { NotificationsCountContract as NotificationsCountViewType } from '@libs/contracts';

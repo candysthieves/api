@@ -5,14 +5,11 @@ import cookieParser from 'cookie-parser';
 import { DomainExceptionFilter } from '../core/exceptions/domain-exception.filter.js';
 import { DomainError } from '../core/exceptions/domain-error.js';
 import { DomainExceptions } from '../core/exceptions/domain-exceptions.js';
+import { ALLOWED_ORIGINS } from './allowed-origins.js';
 
 export function setupApp(app: NestExpressApplication): void {
   app.enableCors({
-    origin: [
-      'https://lumosapp.net',
-      'https://dev.lumosapp.net:3000',
-      'http://localhost:3000',
-    ],
+    origin: ALLOWED_ORIGINS,
     credentials: true,
   });
   app.use(cookieParser());
