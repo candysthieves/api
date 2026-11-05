@@ -16,6 +16,12 @@ import { PaymentsRabbitMqProducerService } from './payments-rabbitmq-producer.se
         const outbox = config.getOrThrow<string>(
           'RABBITMQ_PAYMENTS_TO_MAIN_QUEUE',
         );
+        const notificationsInbox = config.getOrThrow<string>(
+          'RABBITMQ_NOTIFICATIONS_TO_PAYMENTS_QUEUE',
+        );
+        const notificationsOutbox = config.getOrThrow<string>(
+          'RABBITMQ_PAYMENTS_TO_NOTIFICATIONS_QUEUE',
+        );
         return {
           uri: config.getOrThrow<string>('RABBITMQ_URL'),
           prefetchCount: 10,
@@ -23,6 +29,8 @@ import { PaymentsRabbitMqProducerService } from './payments-rabbitmq-producer.se
           queues: [
             { name: inbox, options: { durable: true } },
             { name: outbox, options: { durable: true } },
+            { name: notificationsInbox, options: { durable: true } },
+            { name: notificationsOutbox, options: { durable: true } },
           ],
           handlers: {
             paymentStatusRequests: {

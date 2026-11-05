@@ -12,3 +12,7 @@ export * from './subscription-error-code.contract.js';
 export * from './payment-event.contract.js';
 export * from './subscription-history.contract.js';
 export * from './set-user-personal.contract.js';
+export * from './create-notification.contract.js';
+export * from './mark-notifications-as-read.contract.js';
+export * from './get-notifications.contract.js';
+export * from './paginated-notifications.contract.js';

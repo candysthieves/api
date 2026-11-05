@@ -1,4 +1,4 @@
-export enum DomainExceptionCode {
+﻿export enum DomainExceptionCode {
   // Common
   NotFound = 1,
   BadRequest = 2,
@@ -67,4 +67,7 @@ export enum ErrorStatus {
   SUBSCRIPTION_NOT_FOUND = 94,
   SUBSCRIPTION_CANCELLATION_FAILED = 95,
   SUBSCRIPTION_RETRIEVAL_FAILED = 96,
+
+  // Notifications
+  NOTIFICATIONS_SERVICE_UNAVAILABLE = 97,
 }

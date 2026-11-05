@@ -1,4 +1,4 @@
-import {
+﻿import {
   IsBoolean,
   IsInt,
   IsNotEmpty,
@@ -154,6 +154,16 @@ export class EnvironmentVariables {
   @Min(1)
   @Max(65535)
   PAYMENTS_TCP_PORT!: number;
+
+  @IsString()
+  @IsNotEmpty()
+  NOTIFICATIONS_TCP_HOST = '127.0.0.1';
+
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(65535)
+  NOTIFICATIONS_TCP_PORT = 3011;
 
   @IsOptional()
   @Transform(({ value }) => value === 'true' || value === true)
