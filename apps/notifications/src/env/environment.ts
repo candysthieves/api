@@ -31,4 +31,12 @@ export class EnvironmentVariables {
   @IsOptional()
   @IsString()
   REDIS_PASSWORD?: string;
+
+  @IsString()
+  @IsNotEmpty()
+  RABBITMQ_URL!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  RABBITMQ_PAYMENTS_TO_NOTIFICATIONS_QUEUE!: string;
 }

@@ -9,6 +9,8 @@ export class NotificationsConfig {
   readonly redisHost: string;
   readonly redisPort: number;
   readonly redisPassword?: string;
+  readonly rabbitmqUrl: string;
+  readonly rabbitmqPaymentsToNotificationsQueue: string;
 
   constructor(configService: ConfigService) {
     this.port = configService.getOrThrow<number>('PORT');
@@ -18,5 +20,9 @@ export class NotificationsConfig {
     this.redisPort = configService.getOrThrow<number>('REDIS_PORT');
     this.redisPassword =
       configService.get<string>('REDIS_PASSWORD') || undefined;
+    this.rabbitmqUrl = configService.getOrThrow<string>('RABBITMQ_URL');
+    this.rabbitmqPaymentsToNotificationsQueue = configService.getOrThrow<string>(
+      'RABBITMQ_PAYMENTS_TO_NOTIFICATIONS_QUEUE',
+    );
   }
 }

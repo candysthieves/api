@@ -15,6 +15,10 @@ export class PaymentsConfig {
   readonly frontendUrl: string;
   readonly yookassaShopId: string;
   readonly yookassaSecretKey: string;
+  readonly rabbitmqUrl: string;
+  readonly rabbitmqMainToPaymentsQueue: string;
+  readonly rabbitmqPaymentsToMainQueue: string;
+  readonly rabbitmqPaymentsToNotificationsQueue: string;
 
   constructor(configService: ConfigService) {
     this.port = configService.getOrThrow<number>('PORT');
@@ -37,6 +41,16 @@ export class PaymentsConfig {
     this.yookassaShopId = configService.getOrThrow<string>('YOOKASSA_SHOP_ID');
     this.yookassaSecretKey = configService.getOrThrow<string>(
       'YOOKASSA_SECRET_KEY',
+    );
+    this.rabbitmqUrl = configService.getOrThrow<string>('RABBITMQ_URL');
+    this.rabbitmqMainToPaymentsQueue = configService.getOrThrow<string>(
+      'RABBITMQ_MAIN_TO_PAYMENTS_QUEUE',
+    );
+    this.rabbitmqPaymentsToMainQueue = configService.getOrThrow<string>(
+      'RABBITMQ_PAYMENTS_TO_MAIN_QUEUE',
+    );
+    this.rabbitmqPaymentsToNotificationsQueue = configService.getOrThrow<string>(
+      'RABBITMQ_PAYMENTS_TO_NOTIFICATIONS_QUEUE',
     );
   }
 }

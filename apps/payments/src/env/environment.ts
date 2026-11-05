@@ -55,4 +55,20 @@ export class EnvironmentVariables {
   @IsString()
   @IsNotEmpty()
   FRONTEND_URL!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  RABBITMQ_URL!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  RABBITMQ_MAIN_TO_PAYMENTS_QUEUE!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  RABBITMQ_PAYMENTS_TO_MAIN_QUEUE!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  RABBITMQ_PAYMENTS_TO_NOTIFICATIONS_QUEUE!: string;
 }
