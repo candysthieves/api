@@ -6,6 +6,7 @@ import {
   GetNotificationsContract,
   MarkNotificationsAsReadContract,
   PaginatedNotificationsContract,
+  NotificationsCountContract,
 } from '@libs/contracts';
 
 export type RpcResponse<T> = {
@@ -40,6 +41,19 @@ export class NotificationsTcpService {
         result.error.errors?.[0]?.message ?? 'Failed to create notification',
       );
     }
+  }
+
+  async getNotificationsCount(
+    userId: string,
+  ): Promise<RpcResponse<NotificationsCountContract>> {
+    return lastValueFrom(
+      this.notificationsClient
+        .send<RpcResponse<NotificationsCountContract>>(
+          { cmd: 'get-notifications-count' },
+          { userId },
+        )
+        .pipe(timeout(10_000)),
+    );
   }
 
   async getNotifications(
