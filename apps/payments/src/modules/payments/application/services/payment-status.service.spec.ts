@@ -38,7 +38,10 @@ describe('PaymentStatusService', () => {
   };
   const tariffs = { findTariffById: jest.fn() };
   let userStatus: string;
-  const main = { setPersonal: jest.fn() };
+  const main = {
+    setPersonal: jest.fn(),
+    setPersonalStatusForUser: jest.fn(),
+  };
   const expiration = new SubscriptionExpirationService(
     subscriptions as unknown as ConstructorParameters<
       typeof SubscriptionExpirationService
@@ -67,6 +70,10 @@ describe('PaymentStatusService', () => {
     subscriptionStatus = 'Processing';
     userStatus = 'Business';
     main.setPersonal.mockImplementation(() => {
+      userStatus = 'Personal';
+      return Promise.resolve();
+    });
+    main.setPersonalStatusForUser.mockImplementation(() => {
       userStatus = 'Personal';
       return Promise.resolve();
     });
@@ -112,6 +119,7 @@ describe('PaymentStatusService', () => {
         status: subscriptionStatus,
         userId: '42',
         provider: 'YOOKASSA',
+        expirationDate: paidAt,
       }),
     );
     subscriptions.fail.mockImplementation(() => {
@@ -158,7 +166,7 @@ describe('PaymentStatusService', () => {
     await service.process('external-id');
     expect(subscriptions.complete).not.toHaveBeenCalled();
     expect(tariffs.findTariffById).not.toHaveBeenCalled();
-    expect(store.save).toHaveBeenCalledTimes(1);
+    expect(store.save).toHaveBeenCalledTimes(2);
     expect(repository.updateStatus).not.toHaveBeenCalled();
     expect(payment.paymentDate).toEqual(paidAt);
   });
@@ -171,7 +179,7 @@ describe('PaymentStatusService', () => {
       await service.process('external-id');
       expect(payment.status).toBe('succeeded');
       expect(subscriptionStatus).toBe('Done');
-      expect(store.save).toHaveBeenCalledTimes(1);
+      expect(store.save).toHaveBeenCalledTimes(2);
     },
   );
 
@@ -195,7 +203,7 @@ describe('PaymentStatusService', () => {
     );
     expect(provider.getPayment).toHaveBeenCalledTimes(1);
     expect(subscriptionStatus).toBe('Done');
-    expect(store.save).toHaveBeenCalledTimes(1);
+    expect(store.save).toHaveBeenCalledTimes(2);
   });
 
   it('recovers an outbox failure from the saved succeeded payment', async () => {
@@ -311,7 +319,9 @@ describe('PaymentStatusService', () => {
   });
   it('keeps Processing when main fails and completes cancellation on retry', async () => {
     provider.getPayment.mockResolvedValue({ status: 'canceled' });
-    main.setPersonal.mockRejectedValueOnce(new Error('main unavailable'));
+    main.setPersonalStatusForUser.mockRejectedValueOnce(
+      new Error('main unavailable'),
+    );
     await expect(service.process('external-id')).rejects.toThrow(
       'main unavailable',
     );

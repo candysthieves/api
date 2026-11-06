@@ -1,6 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
-import type { PaymentResultEvent } from '@libs/contracts';
+import type {
+  PaymentNotificationEvent,
+  PaymentResultEvent,
+} from '@libs/contracts';
 import { OutboxRepository } from './outbox.repository.js';
 import { PaymentsRabbitMqProducerService } from '../../core/rabbitmq/payments-rabbitmq-producer.service.js';
 
@@ -11,7 +14,7 @@ export class OutboxService {
     private readonly producer: PaymentsRabbitMqProducerService,
   ) {}
 
-  save(event: PaymentResultEvent): Promise<void> {
+  save(event: PaymentResultEvent | PaymentNotificationEvent): Promise<void> {
     return this.outboxRepository.save(event);
   }
 
@@ -23,8 +26,15 @@ export class OutboxService {
         const attempts = (record.attempts ?? 0) + 1;
         await this.outboxRepository.markProcessing(record.eventId, attempts);
         try {
-          const event = JSON.parse(record.data!) as PaymentResultEvent;
-          await this.producer.publishPaymentResult(event);
+          const event = JSON.parse(record.data!) as
+            PaymentResultEvent | PaymentNotificationEvent;
+
+          if (event.consumer === 'NOTIFICATIONS') {
+            await this.producer.publishNotificationEvent(event);
+          } else {
+            await this.producer.publishPaymentResult(event);
+          }
+
           await this.outboxRepository.markCompleted(record.eventId);
         } catch (error) {
           await this.outboxRepository.markFailed(

@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { RabbitMQModule } from '@golevelup/nestjs-rabbitmq';
 import { NotificationsConfig } from '../../notifications.config.js';
+import { NotificationsRabbitMqProducerService } from './notifications-rabbitmq-producer.service.js';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { NotificationsConfig } from '../../notifications.config.js';
       },
     }),
   ],
-  exports: [RabbitMQModule],
+  providers: [NotificationsRabbitMqProducerService],
+  exports: [RabbitMQModule, NotificationsRabbitMqProducerService],
 })
 export class RabbitMqModule {}
