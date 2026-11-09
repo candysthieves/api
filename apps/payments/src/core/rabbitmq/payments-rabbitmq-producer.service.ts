@@ -2,7 +2,10 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { AmqpConnection } from '@golevelup/nestjs-rabbitmq';
 import type { ChannelWrapper } from 'amqp-connection-manager';
-import type { PaymentResultEvent } from '@libs/contracts';
+import type {
+  PaymentNotificationEvent,
+  PaymentResultEvent,
+} from '@libs/contracts';
 
 @Injectable()
 export class PaymentsRabbitMqProducerService {
@@ -22,6 +25,26 @@ export class PaymentsRabbitMqProducerService {
     await this.connection.publish(
       '',
       this.config.getOrThrow<string>('RABBITMQ_PAYMENTS_TO_MAIN_QUEUE'),
+      event,
+      options,
+    );
+  }
+
+  async publishNotificationEvent(
+    event: PaymentNotificationEvent,
+  ): Promise<void> {
+    if (!this.connection.connected) throw new Error('TRANSPORT_UNAVAILABLE');
+    const options: NonNullable<Parameters<ChannelWrapper['publish']>[3]> = {
+      persistent: true,
+      messageId: event.eventId,
+      type: event.type,
+      timeout: 10_000,
+    };
+    await this.connection.publish(
+      '',
+      this.config.getOrThrow<string>(
+        'RABBITMQ_PAYMENTS_TO_NOTIFICATIONS_QUEUE',
+      ),
       event,
       options,
     );

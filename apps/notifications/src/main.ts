@@ -46,6 +46,7 @@ async function bootstrap() {
     `Port: ${port}`,
     `TCP: ${config.tcpHost}:${config.tcpPort}`,
     'Redis: connected',
+    'RabbitMQ: connected',
   ];
   const width = Math.max(...startupInfo.map((line) => line.length));
   console.log(

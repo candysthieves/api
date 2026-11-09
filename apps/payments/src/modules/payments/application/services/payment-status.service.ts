@@ -96,6 +96,7 @@ export class PaymentStatusService {
   private async processSucceededPayment(payment: PaymentEntity): Promise<void> {
     await this.completeSubscription(payment);
     await this.savePaymentCompletedEvent(payment);
+    await this.savePaymentNotificationEvent(payment);
   }
 
   // Продлевает связанную подписку, если она ещё не завершена, используя сохранённую дату оплаты.
@@ -130,6 +131,12 @@ export class PaymentStatusService {
       type: 'payment.canceled',
       data: { userId: payment.userId, paymentStatus: 'canceled' },
     });
+    await this.outboxService.save({
+      eventId: `${payment.id}:notification`,
+      consumer: 'NOTIFICATIONS',
+      type: 'payment.canceled',
+      data: { userId: payment.userId, paymentId: payment.id },
+    });
   }
 
   // Сохраняет событие успешной оплаты для main с постоянным eventId для повторных попыток.
@@ -141,6 +148,34 @@ export class PaymentStatusService {
       consumer: 'MAIN',
       type: 'payment.completed',
       data: { userId: payment.userId, paymentStatus: 'completed' },
+    });
+  }
+
+  // Сохраняет событие успешной оплаты для notifications с датами подписки.
+  private async savePaymentNotificationEvent(
+    payment: PaymentEntity,
+  ): Promise<void> {
+    const subscription = await this.subscriptionsRepository.findByLastPaymentId(
+      payment.id,
+    );
+    if (!subscription) return;
+
+    await this.outboxService.save({
+      eventId: `${payment.id}:notification`,
+      consumer: 'NOTIFICATIONS',
+      type: 'payment.completed',
+      data: {
+        userId: payment.userId,
+        paymentId: payment.id,
+        subscriptionId: subscription.id,
+        paidAt: new Date(payment.paymentDate ?? Date.now()).toISOString(),
+        expirationDate: new Date(
+          subscription.expirationDate ?? Date.now(),
+        ).toISOString(),
+        nextChargeDate: subscription.nextChargeDate
+          ? new Date(subscription.nextChargeDate).toISOString()
+          : null,
+      },
     });
   }
 }
