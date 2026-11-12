@@ -84,6 +84,8 @@ export class NotificationsRepository {
     limit: number,
     cursorDate?: string | null,
   ): Promise<string[]> {
+    if (limit <= 0) return [];
+
     const oneMonthAgo = Date.now() - ms('30d');
     const maxScore = cursorDate ? `(${new Date(cursorDate).getTime()}` : '+inf';
 

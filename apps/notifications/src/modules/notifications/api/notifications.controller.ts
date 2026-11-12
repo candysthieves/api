@@ -5,6 +5,10 @@ import {
   CreateNotificationContract,
   GetNotificationsContract,
   MarkNotificationsAsReadContract,
+  SAVE_NOTIFICATION_SESSION,
+  REMOVE_NOTIFICATION_SESSION,
+  type NotificationSessionContract,
+  type NotificationSessionResult,
 } from '@libs/contracts';
 import { CreateNotificationCommand } from '../application/use-cases/create-notification.usecase.js';
 import { GetNotificationsCountQuery } from '../application/query-handler/get-notifications-count.query-handler.js';
@@ -13,6 +17,8 @@ import { MarkNotificationsAsReadCommand } from '../application/use-cases/mark-no
 import { NotificationsCountViewType } from './view-types/notifications-count-view.type.js';
 import { PaginatedNotificationsViewType } from './view-types/paginated-notifications-view.type.js';
 import { ObjectResult } from '../../../core/object-result.js';
+import { SaveNotificationSessionCommand } from '../application/use-cases/save-notification-session.usecase.js';
+import { RemoveNotificationSessionCommand } from '../application/use-cases/remove-notification-session.usecase.js';
 
 @Controller('notifications')
 export class NotificationsController {
@@ -20,6 +26,26 @@ export class NotificationsController {
     private readonly commandBus: CommandBus,
     private readonly queryBus: QueryBus,
   ) {}
+
+  @MessagePattern({ cmd: SAVE_NOTIFICATION_SESSION })
+  async saveSession(
+    @Payload() dto: NotificationSessionContract,
+  ): Promise<ObjectResult<NotificationSessionResult>> {
+    await this.commandBus.execute<SaveNotificationSessionCommand, void>(
+      new SaveNotificationSessionCommand(dto),
+    );
+    return ObjectResult.success({ success: true });
+  }
+
+  @MessagePattern({ cmd: REMOVE_NOTIFICATION_SESSION })
+  async removeSession(
+    @Payload() dto: NotificationSessionContract,
+  ): Promise<ObjectResult<NotificationSessionResult>> {
+    await this.commandBus.execute<RemoveNotificationSessionCommand, void>(
+      new RemoveNotificationSessionCommand(dto),
+    );
+    return ObjectResult.success({ success: true });
+  }
 
   @MessagePattern({ cmd: 'create-notification' })
   async createNotification(

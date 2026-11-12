@@ -6,6 +6,7 @@ import { SubscriptionsRepository } from '../../infrastructure/repositories/subsc
 import { TariffsRepository } from '../../infrastructure/repositories/tariffs/tariffs.repository.js';
 import type { PaymentEntity } from '../../../../database/types/payment-database.type.js';
 import { SubscriptionExpirationService } from './subscription-expiration.service.js';
+import { PaymentNotificationFactory } from '../factories/payment-notification.factory.js';
 
 @Injectable()
 export class PaymentStatusService {
@@ -160,22 +161,19 @@ export class PaymentStatusService {
     );
     if (!subscription) return;
 
-    await this.outboxService.save({
-      eventId: `${payment.id}:notification`,
-      consumer: 'NOTIFICATIONS',
-      type: 'payment.completed',
-      data: {
-        userId: payment.userId,
-        paymentId: payment.id,
-        subscriptionId: subscription.id,
-        paidAt: new Date(payment.paymentDate ?? Date.now()).toISOString(),
-        expirationDate: new Date(
-          subscription.expirationDate ?? Date.now(),
-        ).toISOString(),
-        nextChargeDate: subscription.nextChargeDate
-          ? new Date(subscription.nextChargeDate).toISOString()
-          : null,
-      },
+    if (!payment.paymentDate || !subscription.expirationDate) {
+      throw new Error('COMPLETED_SUBSCRIPTION_DATES_MISSING');
+    }
+    const events = PaymentNotificationFactory.create({
+      userId: payment.userId,
+      paymentId: payment.id,
+      subscriptionId: subscription.id,
+      paidAt: payment.paymentDate,
+      expirationDate: subscription.expirationDate,
+      nextChargeDate: subscription.nextChargeDate,
     });
+    for (const event of events) {
+      await this.outboxService.save(event);
+    }
   }
 }

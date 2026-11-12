@@ -16,7 +16,10 @@ jest.mock(
   () => ({ TariffsRepository: class {} }),
 );
 import { PaymentStatusService } from './payment-status.service.js';
-import type { PaymentResultEvent } from '@libs/contracts';
+import type {
+  PaymentResultEvent,
+  PaymentNotificationEvent,
+} from '@libs/contracts';
 import type { PaymentEntity } from '../../../../database/types/payment-database.type.js';
 
 describe('PaymentStatusService', () => {
@@ -29,7 +32,12 @@ describe('PaymentStatusService', () => {
     findExpired: jest.fn(),
   };
   const provider = { getPayment: jest.fn() };
-  const store = { save: jest.fn<Promise<void>, [PaymentResultEvent]>() };
+  const store = {
+    save: jest.fn<
+      Promise<void>,
+      [PaymentResultEvent | PaymentNotificationEvent]
+    >(),
+  };
   const subscriptions = {
     findPaidSubscription: jest.fn(),
     complete: jest.fn(),
@@ -120,6 +128,7 @@ describe('PaymentStatusService', () => {
         userId: '42',
         provider: 'YOOKASSA',
         expirationDate: paidAt,
+        nextChargeDate: paidAt,
       }),
     );
     subscriptions.fail.mockImplementation(() => {
@@ -166,7 +175,7 @@ describe('PaymentStatusService', () => {
     await service.process('external-id');
     expect(subscriptions.complete).not.toHaveBeenCalled();
     expect(tariffs.findTariffById).not.toHaveBeenCalled();
-    expect(store.save).toHaveBeenCalledTimes(2);
+    expect(store.save).toHaveBeenCalledTimes(5);
     expect(repository.updateStatus).not.toHaveBeenCalled();
     expect(payment.paymentDate).toEqual(paidAt);
   });
@@ -179,7 +188,7 @@ describe('PaymentStatusService', () => {
       await service.process('external-id');
       expect(payment.status).toBe('succeeded');
       expect(subscriptionStatus).toBe('Done');
-      expect(store.save).toHaveBeenCalledTimes(2);
+      expect(store.save).toHaveBeenCalledTimes(5);
     },
   );
 
@@ -203,7 +212,7 @@ describe('PaymentStatusService', () => {
     );
     expect(provider.getPayment).toHaveBeenCalledTimes(1);
     expect(subscriptionStatus).toBe('Done');
-    expect(store.save).toHaveBeenCalledTimes(2);
+    expect(store.save).toHaveBeenCalledTimes(5);
   });
 
   it('recovers an outbox failure from the saved succeeded payment', async () => {
@@ -224,6 +233,33 @@ describe('PaymentStatusService', () => {
     });
     await service.process('external-id');
     expect(payment.paymentMethodId).toBeNull();
+  });
+
+  it('recovers partial creation of the four notification events with stable IDs and deadlines', async () => {
+    const persisted = new Map<
+      string,
+      PaymentResultEvent | PaymentNotificationEvent
+    >();
+    let failOnce = true;
+    store.save.mockImplementation((event) => {
+      if (event.eventId === 'local-id:notification:2' && failOnce) {
+        failOnce = false;
+        return Promise.reject(new Error('outbox unavailable'));
+      }
+      if (!persisted.has(event.eventId)) persisted.set(event.eventId, event);
+      return Promise.resolve();
+    });
+    await expect(service.process('external-id')).rejects.toThrow(
+      'outbox unavailable',
+    );
+    expect(persisted.size).toBe(3);
+    const first = persisted.get('local-id:notification:0');
+    jest.setSystemTime(new Date('2026-10-27T12:00:00Z'));
+    await service.process('external-id');
+    expect(persisted.size).toBe(5);
+    expect(persisted.get('local-id:notification:0')).toEqual(first);
+    expect(subscriptions.complete).toHaveBeenCalledTimes(1);
+    expect(provider.getPayment).toHaveBeenCalledTimes(1);
   });
 
   it('marks the subscription Failed on cancellation without granting Business', async () => {

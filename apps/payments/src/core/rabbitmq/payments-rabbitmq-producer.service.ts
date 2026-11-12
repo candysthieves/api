@@ -10,21 +10,22 @@ import type {
 @Injectable()
 export class PaymentsRabbitMqProducerService {
   constructor(
-    private readonly connection: AmqpConnection,
-    private readonly config: ConfigService,
+    private readonly amqpConnection: AmqpConnection,
+    private readonly configService: ConfigService,
   ) {}
 
   async publishPaymentResult(event: PaymentResultEvent): Promise<void> {
-    if (!this.connection.connected) throw new Error('TRANSPORT_UNAVAILABLE');
+    if (!this.amqpConnection.connected)
+      throw new Error('TRANSPORT_UNAVAILABLE');
     const options: NonNullable<Parameters<ChannelWrapper['publish']>[3]> = {
       persistent: true,
       messageId: event.eventId,
       type: event.type,
       timeout: 10_000,
     };
-    await this.connection.publish(
+    await this.amqpConnection.publish(
       '',
-      this.config.getOrThrow<string>('RABBITMQ_PAYMENTS_TO_MAIN_QUEUE'),
+      this.configService.getOrThrow<string>('RABBITMQ_PAYMENTS_TO_MAIN_QUEUE'),
       event,
       options,
     );
@@ -33,16 +34,17 @@ export class PaymentsRabbitMqProducerService {
   async publishNotificationEvent(
     event: PaymentNotificationEvent,
   ): Promise<void> {
-    if (!this.connection.connected) throw new Error('TRANSPORT_UNAVAILABLE');
+    if (!this.amqpConnection.connected)
+      throw new Error('TRANSPORT_UNAVAILABLE');
     const options: NonNullable<Parameters<ChannelWrapper['publish']>[3]> = {
       persistent: true,
       messageId: event.eventId,
       type: event.type,
       timeout: 10_000,
     };
-    await this.connection.publish(
+    await this.amqpConnection.publish(
       '',
-      this.config.getOrThrow<string>(
+      this.configService.getOrThrow<string>(
         'RABBITMQ_PAYMENTS_TO_NOTIFICATIONS_QUEUE',
       ),
       event,

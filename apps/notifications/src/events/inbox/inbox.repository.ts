@@ -18,8 +18,6 @@ export class InboxRepository {
 
   async save(event: PaymentNotificationEvent): Promise<void> {
     const key = this.getKey(event.eventId);
-    const exists = await this.redis.exists(key);
-    if (exists) return;
 
     const record: NotificationEventRecord = {
       eventId: event.eventId,

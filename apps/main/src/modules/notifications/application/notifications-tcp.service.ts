@@ -7,6 +7,10 @@ import {
   MarkNotificationsAsReadContract,
   PaginatedNotificationsContract,
   NotificationsCountContract,
+  SAVE_NOTIFICATION_SESSION,
+  REMOVE_NOTIFICATION_SESSION,
+  type NotificationSessionContract,
+  type NotificationSessionResult,
 } from '@libs/contracts';
 
 export type RpcResponse<T> = {
@@ -25,6 +29,37 @@ export class NotificationsTcpService {
     @Inject(NOTIFICATIONS_TCP_SERVICE)
     private readonly notificationsClient: ClientProxy,
   ) {}
+
+  // Передаёт регистрацию и продление соединения в микросервис notifications.
+  saveSession(userId: string, socketId: string): Promise<void> {
+    return this.updateSession(SAVE_NOTIFICATION_SESSION, { userId, socketId });
+  }
+
+  // Передаёт удаление отключённого соединения в микросервис notifications.
+  removeSession(userId: string, socketId: string): Promise<void> {
+    return this.updateSession(REMOVE_NOTIFICATION_SESSION, {
+      userId,
+      socketId,
+    });
+  }
+
+  private async updateSession(
+    command:
+      typeof SAVE_NOTIFICATION_SESSION | typeof REMOVE_NOTIFICATION_SESSION,
+    payload: NotificationSessionContract,
+  ): Promise<void> {
+    const result = await lastValueFrom(
+      this.notificationsClient
+        .send<
+          RpcResponse<NotificationSessionResult>,
+          NotificationSessionContract
+        >({ cmd: command }, payload)
+        .pipe(timeout(10_000)),
+    );
+    if (result?.error || result?.data?.success !== true) {
+      throw new Error('Notification session update failed');
+    }
+  }
 
   async createNotification(payload: CreateNotificationContract): Promise<void> {
     const result = await lastValueFrom(

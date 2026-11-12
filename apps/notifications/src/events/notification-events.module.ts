@@ -7,9 +7,10 @@ import { OutboxRepository } from './outbox/outbox.repository.js';
 import { OutboxService } from './outbox/outbox.service.js';
 import { NotificationEventsConsumer } from './notification-events.consumer.js';
 import { RabbitMqModule } from '../core/rabbitmq/rabbitmq.module.js';
+import { NotificationsModule } from '../modules/notifications/notifications.module.js';
 
 @Module({
-  imports: [CqrsModule, ScheduleModule, RabbitMqModule],
+  imports: [CqrsModule, ScheduleModule, RabbitMqModule, NotificationsModule],
   providers: [
     InboxRepository,
     InboxService,

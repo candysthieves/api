@@ -28,6 +28,7 @@ import { GetCurrentSubscriptionQueryHandler } from './application/query-handler/
 import { GetSubscriptionHistoryQueryHandler } from './application/query-handler/get-subscription-history.query-handler.js';
 import { RenewSubscriptionsUseCase } from './application/use-cases/renew-subscriptions.usecase.js';
 import { SubscriptionsScheduler } from './application/subscriptions.scheduler.js';
+import { OutboxModule } from '../../events/outbox/outbox.module.js';
 
 const controllers = [
   TariffsController,
@@ -69,6 +70,7 @@ const providers = [
 
 @Module({
   imports: [
+    OutboxModule,
     CqrsModule,
     ClientsModule.registerAsync([
       {

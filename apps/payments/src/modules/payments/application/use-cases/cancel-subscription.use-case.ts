@@ -1,5 +1,6 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { SubscriptionsRepository } from '../../infrastructure/repositories/subscriptions/subscriptions.repository.js';
+import { OutboxService } from '../../../../events/outbox/outbox.service.js';
 
 export class CancelSubscriptionCommand {
   constructor(public readonly userId: string) {}
@@ -13,6 +14,7 @@ export class CancelSubscriptionUseCase implements ICommandHandler<
 > {
   constructor(
     private readonly subscriptionsRepository: SubscriptionsRepository,
+    private readonly outboxService: OutboxService,
   ) {}
 
   async execute({ userId }: CancelSubscriptionCommand): Promise<boolean> {
@@ -28,6 +30,12 @@ export class CancelSubscriptionUseCase implements ICommandHandler<
 
     // Запрашиваем отмену найденной подписки по её ID.
     await this.subscriptionsRepository.requestCancellation(subscription.id);
+    await this.outboxService.save({
+      eventId: `${subscription.id}:notifications:cancel`,
+      consumer: 'NOTIFICATIONS',
+      type: 'subscription.notifications.canceled',
+      data: { userId, subscriptionId: subscription.id },
+    });
 
     return true;
   }

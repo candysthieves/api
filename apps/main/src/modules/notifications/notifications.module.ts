@@ -12,8 +12,9 @@ import { MarkNotificationsAsReadUseCase } from './application/use-cases/mark-not
 import { CreateNotificationUseCase } from './application/use-cases/create-notification.usecase.js';
 import { NotificationsGateway } from './api/notifications.gateway.js';
 import { GetNotificationsCountQueryHandler } from './application/query-handler/get-notifications-count.query-handler.js';
+import { NotificationDeliveryController } from './api/notification-delivery.controller.js';
 
-const controllers = [NotificationsController];
+const controllers = [NotificationsController, NotificationDeliveryController];
 const queryHandlers = [
   GetNotificationsQueryHandler,
   GetNotificationsCountQueryHandler,

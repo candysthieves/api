@@ -4,12 +4,15 @@ import { CommandBus } from '@nestjs/cqrs';
 import type { PaymentNotificationEvent } from '@libs/contracts';
 import { InboxRepository } from './inbox.repository.js';
 import { CreateNotificationCommand } from '../../modules/notifications/application/use-cases/create-notification.usecase.js';
+import { ScheduledNotificationsRepository } from '../../modules/notifications/infrastructure/repositories/scheduled-notifications.repository.js';
+import { ScheduledNotificationFactory } from '../../modules/notifications/application/factories/scheduled-notification.factory.js';
 
 @Injectable()
 export class InboxService {
   constructor(
     private readonly inboxRepository: InboxRepository,
     private readonly commandBus: CommandBus,
+    private readonly scheduledNotificationsRepository: ScheduledNotificationsRepository,
   ) {}
 
   accept(event: PaymentNotificationEvent): Promise<void> {
@@ -39,6 +42,19 @@ export class InboxService {
   }
 
   private async handleEvent(event: PaymentNotificationEvent): Promise<void> {
+    if (event.type === 'payment.notification.scheduled') {
+      await this.scheduledNotificationsRepository.save(
+        ScheduledNotificationFactory.create(event),
+      );
+      return;
+    }
+    if (event.type === 'subscription.notifications.canceled') {
+      await this.scheduledNotificationsRepository.disableNextCharge(
+        event.data.userId,
+        event.data.subscriptionId,
+      );
+      return;
+    }
     if (event.type === 'payment.canceled') {
       await this.commandBus.execute(
         new CreateNotificationCommand({

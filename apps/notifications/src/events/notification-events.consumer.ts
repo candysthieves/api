@@ -7,12 +7,7 @@ import { InboxService } from './inbox/inbox.service.js';
 export class NotificationEventsConsumer {
   constructor(private readonly inboxService: InboxService) {}
 
-  @RabbitSubscribe({
-    exchange: '',
-    routingKey: 'payments-to-notifications',
-    queue: 'payments-to-notifications',
-    queueOptions: { durable: true },
-  })
+  @RabbitSubscribe({ name: 'paymentNotifications' })
   async handlePaymentNotification(
     event: PaymentNotificationEvent,
   ): Promise<void> {

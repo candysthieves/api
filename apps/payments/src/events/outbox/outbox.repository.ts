@@ -53,6 +53,7 @@ export class OutboxRepository {
         ]),
       )
       .orderBy('createdAt')
+      .orderBy('eventId')
       .limit(10)
       .execute();
   }

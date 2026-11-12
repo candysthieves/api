@@ -18,3 +18,6 @@ export * from './mark-notifications-as-read.contract.js';
 export * from './get-notifications.contract.js';
 export * from './paginated-notifications.contract.js';
 export * from './notifications-count.contract.js';
+export * from './notification-title.contract.js';
+export * from './deliver-notification.contract.js';
+export * from './notification-session.contract.js';

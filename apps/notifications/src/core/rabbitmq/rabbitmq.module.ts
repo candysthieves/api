@@ -8,7 +8,7 @@ import { NotificationsRabbitMqProducerService } from './notifications-rabbitmq-p
     RabbitMQModule.forRootAsync({
       inject: [NotificationsConfig],
       useFactory: (config: NotificationsConfig) => {
-        const inbox = config.rabbitmqPaymentsToNotificationsQueue;
+        const paymentsQueue = config.rabbitmqPaymentsToNotificationsQueue;
         const outbox = config.rabbitmqNotificationsToPaymentsQueue;
 
         return {
@@ -16,9 +16,18 @@ import { NotificationsRabbitMqProducerService } from './notifications-rabbitmq-p
           prefetchCount: 10,
           enableDirectReplyTo: false,
           queues: [
-            { name: inbox, options: { durable: true } },
+            { name: paymentsQueue, options: { durable: true } },
             { name: outbox, options: { durable: true } },
           ],
+          // Настройки для @RabbitSubscribe({ name: 'paymentNotifications' })
+          handlers: {
+            paymentNotifications: {
+              exchange: '',
+              routingKey: paymentsQueue,
+              queue: paymentsQueue,
+              queueOptions: { durable: true },
+            },
+          },
         };
       },
     }),
