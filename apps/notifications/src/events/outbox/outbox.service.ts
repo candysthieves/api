@@ -10,7 +10,11 @@ export class OutboxService {
     private readonly producer: NotificationsRabbitMqProducerService,
   ) {}
 
-  save(event: { eventId: string; type: string; [key: string]: unknown }): Promise<void> {
+  save(event: {
+    eventId: string;
+    type: string;
+    [key: string]: unknown;
+  }): Promise<void> {
     return this.outboxRepository.save(event);
   }
 

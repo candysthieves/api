@@ -8,9 +8,10 @@ export class GetNotificationsCountQuery {
 }
 
 @QueryHandler(GetNotificationsCountQuery)
-export class GetNotificationsCountQueryHandler
-  implements IQueryHandler<GetNotificationsCountQuery, NotificationsCountViewType>
-{
+export class GetNotificationsCountQueryHandler implements IQueryHandler<
+  GetNotificationsCountQuery,
+  NotificationsCountViewType
+> {
   constructor(
     private readonly notificationsRepository: NotificationsRepository,
   ) {}
@@ -23,4 +24,3 @@ export class GetNotificationsCountQueryHandler
     return NotificationsMapper.toCountView(count);
   }
 }
-

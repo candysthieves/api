@@ -4,99 +4,87 @@ import { Redis } from 'ioredis';
 import { NotificationModel } from '../../../../database/models/notification.model.js';
 import ms from 'ms';
 
+type NotificationRecord = { key: string; notification: NotificationModel };
+
 @Injectable()
 export class NotificationsRepository {
   private getNotificationKey(id: string): string {
     return `notification:${id}`;
   }
 
-  private getUserUnreadNotificationsKey(userId: string): string {
-    return `user:${userId}:notifications:unread`;
-  }
-
-  private getUserReadNotificationsKey(userId: string): string {
-    return `user:${userId}:notifications:read`;
+  private getUserNotificationsKey(userId: string): string {
+    return `user:${userId}:notifications`;
   }
 
   constructor(@Inject(REDIS_CLIENT) private readonly redis: Redis) {}
 
   async create(notification: NotificationModel): Promise<void> {
     const notificationKey = this.getNotificationKey(notification.id);
-    const unreadKey = this.getUserUnreadNotificationsKey(notification.userId);
+    const userKey = this.getUserNotificationsKey(notification.userId);
 
-    const score = new Date(notification.createdAt).getTime();
+    const timeToExecute = new Date(notification.createdAt).getTime();
 
     await this.redis
       .multi()
       .set(notificationKey, JSON.stringify(notification))
-      .zadd(unreadKey, score, notification.id)
+      .zadd(userKey, timeToExecute, notificationKey)
       .exec();
   }
 
   async countByUserId(userId: string): Promise<number> {
-    const unreadKey = this.getUserUnreadNotificationsKey(userId);
-    const oneMonthAgoTimestamp = Date.now() - ms('30d');
-
-    return this.redis.zcount(unreadKey, oneMonthAgoTimestamp, '+inf');
+    const notifications = await this.findByUserId(userId);
+    return notifications.filter((notification) => !notification.isRead).length;
   }
 
-  async findByIds(ids: string[]): Promise<NotificationModel[]> {
-    if (!ids.length) {
+  async findByUserId(userId: string): Promise<NotificationModel[]> {
+    // Общий индекс (Sorted Set): "user:42:notifications", score — дата создания.
+    const keys = await this.redis.zrevrangebyscore(
+      this.getUserNotificationsKey(userId),
+      Date.now(),
+      Date.now() - ms('30d'),
+    );
+    const records = await this.findByKeys(keys);
+    return records.map((record) => record.notification);
+  }
+
+  async findByIds(
+    userId: string,
+    ids: string[],
+  ): Promise<NotificationRecord[]> {
+    if (!ids.length) return [];
+    const now = Date.now();
+    const keys = await this.redis.zrevrangebyscore(
+      this.getUserNotificationsKey(userId),
+      now,
+      now - ms('30d'),
+    );
+    return this.findByKeys(
+      keys.filter((key) => ids.includes(key.split(':').at(-1)!)),
+    );
+  }
+
+  private async findByKeys(keys: string[]): Promise<NotificationRecord[]> {
+    if (!keys.length) {
       return [];
     }
 
-    const keys: string[] = ids.map((id) => this.getNotificationKey(id));
-    const records = await this.redis.mget(...keys);
-
-    return records
-      .filter((raw): raw is string => raw !== null)
-      .map((raw) => JSON.parse(raw) as NotificationModel);
+    const values = await this.redis.mget(...keys);
+    const records: NotificationRecord[] = [];
+    for (let index = 0; index < keys.length; index++) {
+      const raw = values[index];
+      if (raw === null) continue;
+      records.push({
+        key: keys[index],
+        notification: JSON.parse(raw) as NotificationModel,
+      });
+    }
+    return records;
   }
 
-  async saveManyAndMoveToRead(
-    userId: string,
-    notifications: NotificationModel[],
-  ): Promise<void> {
-    if (!notifications.length) {
-      return;
-    }
-
-    const unreadKey = this.getUserUnreadNotificationsKey(userId);
-    const readKey = this.getUserReadNotificationsKey(userId);
-
-    const pipeline = this.redis.pipeline();
-
-    for (const notification of notifications) {
-      const score = new Date(notification.createdAt).getTime();
-      pipeline.set(
-        this.getNotificationKey(notification.id),
-        JSON.stringify(notification),
-      );
-      pipeline.zrem(unreadKey, notification.id);
-      pipeline.zadd(readKey, score, notification.id);
-    }
-
-    await pipeline.exec();
-  }
-
-  private async findBySet(
-    setKey: string,
-    limit: number,
-    cursorDate?: string | null,
-  ): Promise<string[]> {
-    if (limit <= 0) return [];
-
-    const oneMonthAgo = Date.now() - ms('30d');
-    const maxScore = cursorDate ? `(${new Date(cursorDate).getTime()}` : '+inf';
-
-    return this.redis.zrevrangebyscore(
-      setKey,
-      maxScore,
-      oneMonthAgo,
-      'LIMIT',
-      0,
-      limit,
-    );
+  async save(key: string, notification: NotificationModel): Promise<void> {
+    // Исходный JSON: "1800000000000:42:payment-123:notification-456" или "notification:notification-456".
+    // Меняем запись по найденному ключу; индекс не меняется.
+    await this.redis.set(key, JSON.stringify(notification));
   }
 
   async findUnreadIds(
@@ -104,11 +92,7 @@ export class NotificationsRepository {
     limit: number,
     cursorDate?: string | null,
   ): Promise<string[]> {
-    return this.findBySet(
-      this.getUserUnreadNotificationsKey(userId),
-      limit,
-      cursorDate,
-    );
+    return this.findIdsByReadStatus(userId, false, limit, cursorDate);
   }
 
   async findReadIds(
@@ -116,10 +100,25 @@ export class NotificationsRepository {
     limit: number,
     cursorDate?: string | null,
   ): Promise<string[]> {
-    return this.findBySet(
-      this.getUserReadNotificationsKey(userId),
-      limit,
-      cursorDate,
-    );
+    return this.findIdsByReadStatus(userId, true, limit, cursorDate);
+  }
+
+  private async findIdsByReadStatus(
+    userId: string,
+    isRead: boolean,
+    limit: number,
+    cursorDate?: string | null,
+  ): Promise<string[]> {
+    if (limit <= 0) return [];
+    const notifications = await this.findByUserId(userId);
+    const before = cursorDate ? new Date(cursorDate).getTime() : Infinity;
+    return notifications
+      .filter(
+        (notification) =>
+          notification.isRead === isRead &&
+          new Date(notification.createdAt).getTime() < before,
+      )
+      .slice(0, limit)
+      .map((notification) => notification.id);
   }
 }

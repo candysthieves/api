@@ -64,7 +64,8 @@ export class UsersMapper {
       city?: City | null;
     },
   ): MyProfileType {
-    const country = locations?.country !== undefined ? locations.country : user.country;
+    const country =
+      locations?.country !== undefined ? locations.country : user.country;
     const city = locations?.city !== undefined ? locations.city : user.city;
 
     return {

@@ -165,7 +165,7 @@ export class SubscriptionsRepository {
   findActiveSubscription(userId: string, at: Date) {
     return this.db
       .selectFrom('subscriptions')
-      .select('id')
+      .select(['id', 'lastPaymentId'])
       .where('userId', '=', userId)
       .where('id', 'in', this.latestSubscriptionId(userId))
       .where('status', '=', 'Done')

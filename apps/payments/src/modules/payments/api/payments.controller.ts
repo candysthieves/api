@@ -22,4 +22,3 @@ export class PaymentsController {
     return ObjectResult.success(payment);
   }
 }
-

@@ -42,8 +42,7 @@ export type PaymentNotificationScheduledEvent = {
     paymentId: string;
     subscriptionId: string;
     paidAt: number;
-    executeAt: number | null;
-    enabledToExecute: boolean;
+    executeAt: number;
     type: NotificationType;
     title: NotificationTitle;
     message: string;
@@ -54,5 +53,5 @@ export type SubscriptionNotificationCanceledEvent = {
   eventId: string;
   consumer: 'NOTIFICATIONS';
   type: 'subscription.notifications.canceled';
-  data: { userId: string; subscriptionId: string };
+  data: { userId: string; paymentId: string };
 };

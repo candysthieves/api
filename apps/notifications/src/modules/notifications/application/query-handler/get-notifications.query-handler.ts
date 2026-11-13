@@ -22,70 +22,28 @@ export class GetNotificationsQueryHandler implements IQueryHandler<
   ): Promise<PaginatedNotificationsViewType> {
     const { userId, pageSize = 10, cursor } = query.dto;
 
-    // 1. Понимаем, где находится курсор: в unread или в read
     const isReadCursor = cursor?.startsWith('read:');
     const cursorDate = cursor ? cursor.replace(/^(unread:|read:)/, '') : null;
+    const before = cursorDate ? new Date(cursorDate).getTime() : Infinity;
+    const notifications =
+      await this.notificationsRepository.findByUserId(userId);
 
-    let ids: string[] = [];
-    let hasMore = false;
-
-    if (!isReadCursor) {
-      // Ищем в непрочитанных
-      ids = await this.notificationsRepository.findUnreadIds(
-        userId,
-        pageSize + 1,
-        cursorDate,
-      );
-
-      if (ids.length > pageSize) {
-        hasMore = true;
-        ids = ids.slice(0, pageSize);
-      } else {
-        // Если непрочитанных не хватило — добираем из прочитанных
-        const needed = pageSize - ids.length;
-        const readIds = await this.notificationsRepository.findReadIds(
-          userId,
-          needed + 1,
-        );
-
-        hasMore = readIds.length > needed;
-        ids.push(...readIds.slice(0, needed));
-      }
-    } else {
-      // Курсор уже в прочитанных — просто берем из read
-      ids = await this.notificationsRepository.findReadIds(
-        userId,
-        pageSize + 1,
-        cursorDate,
-      );
-
-      hasMore = ids.length > pageSize;
-      ids = ids.slice(0, pageSize);
-    }
-
-    if (!ids.length) {
-      return { items: [], nextCursor: null, hasMore: false };
-    }
-
-    // 2. Достаем сущности
-    const notifications = await this.notificationsRepository.findByIds(ids);
-    const map = new Map(notifications.map((n) => [n.id, n]));
-    const items = ids
-      .map((id) => map.get(id))
-      .filter((n): n is NonNullable<typeof n> => Boolean(n))
-      .map((n) => NotificationsMapper.toView(n));
-
-    // 3. nextCursor по последнему элементу
+    const unread = notifications.filter((notification) => !notification.isRead);
+    const read = notifications.filter((notification) => notification.isRead);
+    const beforeCursor = (notification: (typeof notifications)[number]) =>
+      new Date(notification.createdAt).getTime() < before;
+    const ordered = isReadCursor
+      ? read.filter(beforeCursor)
+      : [...unread.filter(beforeCursor), ...read];
+    const hasMore = ordered.length > pageSize;
+    const items = ordered
+      .slice(0, pageSize)
+      .map((notification) => NotificationsMapper.toView(notification));
     const lastItem = items[items.length - 1];
     const nextCursor =
       hasMore && lastItem
         ? `${lastItem.isRead ? 'read:' : 'unread:'}${lastItem.createdAt}`
         : null;
-
-    return {
-      items,
-      nextCursor,
-      hasMore,
-    };
+    return { items, nextCursor, hasMore };
   }
 }

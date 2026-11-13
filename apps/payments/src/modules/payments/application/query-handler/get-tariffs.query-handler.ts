@@ -15,7 +15,9 @@ export class GetTariffsQueryHandler implements IQueryHandler<
 > {
   constructor(private readonly tariffsRepository: TariffsQueryRepository) {}
 
-  async execute({ subscriptionType }: GetTariffQuery): Promise<TariffViewType[]> {
+  async execute({
+    subscriptionType,
+  }: GetTariffQuery): Promise<TariffViewType[]> {
     const tariffs = await this.tariffsRepository.getTariffs(subscriptionType);
     return TariffsMapper.toViews(tariffs);
   }

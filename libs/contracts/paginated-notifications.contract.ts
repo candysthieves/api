@@ -3,6 +3,7 @@ export enum NotificationType {
 }
 
 export type NotificationItemContract = {
+  /** Public notification UUID; independent of the payment event ID. */
   id: string;
   type: NotificationType;
   title: string;

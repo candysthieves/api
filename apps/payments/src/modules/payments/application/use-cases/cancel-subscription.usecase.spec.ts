@@ -29,6 +29,7 @@ describe('CancelSubscriptionUseCase notification cancellation', () => {
     jest.resetAllMocks();
     subscriptions.findActiveSubscription.mockResolvedValue({
       id: 'subscription',
+      lastPaymentId: 'payment',
     });
   });
 
@@ -60,10 +61,10 @@ describe('CancelSubscriptionUseCase notification cancellation', () => {
     );
     expect(outbox.save.mock.calls[0]).toEqual(outbox.save.mock.calls[1]);
     expect(outbox.save).toHaveBeenLastCalledWith({
-      eventId: 'subscription:notifications:cancel',
+      eventId: 'payment:notifications:cancel',
       consumer: 'NOTIFICATIONS',
       type: 'subscription.notifications.canceled',
-      data: { userId: '42', subscriptionId: 'subscription' },
+      data: { userId: '42', paymentId: 'payment' },
     });
   });
 });

@@ -10,7 +10,11 @@ export class NotificationsRabbitMqProducerService {
     private readonly config: ConfigService,
   ) {}
 
-  async publishToPayments(event: { eventId: string; type: string; [key: string]: unknown }): Promise<void> {
+  async publishToPayments(event: {
+    eventId: string;
+    type: string;
+    [key: string]: unknown;
+  }): Promise<void> {
     if (!this.connection.connected) throw new Error('TRANSPORT_UNAVAILABLE');
     const options: NonNullable<Parameters<ChannelWrapper['publish']>[3]> = {
       persistent: true,
@@ -20,7 +24,9 @@ export class NotificationsRabbitMqProducerService {
     };
     await this.connection.publish(
       '',
-      this.config.getOrThrow<string>('RABBITMQ_NOTIFICATIONS_TO_PAYMENTS_QUEUE'),
+      this.config.getOrThrow<string>(
+        'RABBITMQ_NOTIFICATIONS_TO_PAYMENTS_QUEUE',
+      ),
       event,
       options,
     );

@@ -22,7 +22,8 @@ export function ApiGetNotifications() {
       type: PaginatedNotificationsViewType,
     }),
     ApiBadRequestResponse({
-      description: 'Invalid query parameters (pageSize must be between 1 and 50).',
+      description:
+        'Invalid query parameters (pageSize must be between 1 and 50).',
     }),
     ApiUnauthorizedResponse({
       description: 'Access token is missing, invalid or expired.',

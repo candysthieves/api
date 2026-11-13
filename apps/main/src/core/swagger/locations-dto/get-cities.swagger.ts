@@ -5,7 +5,8 @@ export function ApiGetCities() {
   return applyDecorators(
     ApiOperation({
       summary: 'Get cities by country ID',
-      description: 'Returns a list of cities for the specified country ID with names in Russian and English.',
+      description:
+        'Returns a list of cities for the specified country ID with names in Russian and English.',
     }),
     ApiParam({
       name: 'countryId',

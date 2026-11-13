@@ -37,4 +37,3 @@ export class TariffsController {
     return ObjectResult.success(types);
   }
 }
-

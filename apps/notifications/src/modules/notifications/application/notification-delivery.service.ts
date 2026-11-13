@@ -8,6 +8,7 @@ import {
 } from '@libs/contracts';
 import { NotificationSocketsRepository } from '../infrastructure/repositories/notification-sockets.repository.js';
 import type { NotificationModel } from '../../../database/models/notification.model.js';
+import { NotificationsMapper } from '../api/mappers/notifications.mapper.js';
 
 // DI-токен TCP-клиента для передачи уведомлений в микросервис main.
 export const MAIN_NOTIFICATIONS_TCP_CLIENT = 'MAIN_NOTIFICATIONS_TCP_CLIENT';
@@ -30,7 +31,8 @@ export class NotificationDeliveryService {
     );
     if (!socketId) return;
 
-    const { userId, ...item } = notification;
+    const userId = notification.userId;
+    const item = NotificationsMapper.toView(notification);
     const result = await lastValueFrom(
       this.main
         .send<DeliverNotificationResult, DeliverNotificationContract>(

@@ -30,12 +30,14 @@ export class CancelSubscriptionUseCase implements ICommandHandler<
 
     // Запрашиваем отмену найденной подписки по её ID.
     await this.subscriptionsRepository.requestCancellation(subscription.id);
-    await this.outboxService.save({
-      eventId: `${subscription.id}:notifications:cancel`,
-      consumer: 'NOTIFICATIONS',
-      type: 'subscription.notifications.canceled',
-      data: { userId, subscriptionId: subscription.id },
-    });
+    if (subscription.lastPaymentId) {
+      await this.outboxService.save({
+        eventId: `${subscription.lastPaymentId}:notifications:cancel`,
+        consumer: 'NOTIFICATIONS',
+        type: 'subscription.notifications.canceled',
+        data: { userId, paymentId: subscription.lastPaymentId },
+      });
+    }
 
     return true;
   }

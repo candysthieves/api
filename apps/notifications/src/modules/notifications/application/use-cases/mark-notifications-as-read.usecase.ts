@@ -20,14 +20,14 @@ export class MarkNotificationsAsReadUseCase implements ICommandHandler<
     const ids: string[] = dto.ids;
     const userId: string = dto.userId;
 
-    const notifications = await this.notificationsRepository.findByIds(ids);
+    const records = await this.notificationsRepository.findByIds(userId, ids);
 
-    const toUpdate = notifications
-      .filter((n) => n.userId === userId && !n.isRead)
-      .map((n) => NotificationFactory.markAsRead(n));
-
-    if (toUpdate.length > 0) {
-      await this.notificationsRepository.saveManyAndMoveToRead(userId, toUpdate);
+    for (const { key, notification } of records) {
+      if (notification.userId !== userId || notification.isRead) continue;
+      await this.notificationsRepository.save(
+        key,
+        NotificationFactory.markAsRead(notification),
+      );
     }
   }
 }

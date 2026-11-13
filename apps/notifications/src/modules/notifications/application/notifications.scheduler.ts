@@ -21,24 +21,13 @@ export class NotificationsScheduler {
       ids.map(async (id) => {
         try {
           const notification =
-            await this.scheduledNotificationsRepository.materialize(
-              id,
-              Date.now(),
-            );
+            await this.scheduledNotificationsRepository.findById(id);
           if (!notification) return;
           await this.notificationDeliveryService.deliver(notification);
-          await this.scheduledNotificationsRepository.complete(id, Date.now());
         } catch (error) {
-          this.logger.error(`Notification execution failed: ${id}`);
-          try {
-            await this.scheduledNotificationsRepository.fail(
-              id,
-              Date.now(),
-              error,
-            );
-          } catch {
-            this.logger.error(`Notification retry could not be saved: ${id}`);
-          }
+          this.logger.error(error);
+        } finally {
+          await this.scheduledNotificationsRepository.removeFromQueue(id);
         }
       }),
     );

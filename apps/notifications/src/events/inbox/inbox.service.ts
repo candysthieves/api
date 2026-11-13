@@ -6,6 +6,7 @@ import { InboxRepository } from './inbox.repository.js';
 import { CreateNotificationCommand } from '../../modules/notifications/application/use-cases/create-notification.usecase.js';
 import { ScheduledNotificationsRepository } from '../../modules/notifications/infrastructure/repositories/scheduled-notifications.repository.js';
 import { ScheduledNotificationFactory } from '../../modules/notifications/application/factories/scheduled-notification.factory.js';
+import { ReplacePaymentNotificationsCommand } from '../../modules/notifications/application/use-cases/replace-payment-notifications.usecase.js';
 
 @Injectable()
 export class InboxService {
@@ -43,15 +44,17 @@ export class InboxService {
 
   private async handleEvent(event: PaymentNotificationEvent): Promise<void> {
     if (event.type === 'payment.notification.scheduled') {
-      await this.scheduledNotificationsRepository.save(
-        ScheduledNotificationFactory.create(event),
+      await this.commandBus.execute(
+        new ReplacePaymentNotificationsCommand(
+          ScheduledNotificationFactory.create(event),
+        ),
       );
       return;
     }
     if (event.type === 'subscription.notifications.canceled') {
-      await this.scheduledNotificationsRepository.disableNextCharge(
+      await this.scheduledNotificationsRepository.deleteFutureByPaymentId(
         event.data.userId,
-        event.data.subscriptionId,
+        event.data.paymentId,
       );
       return;
     }

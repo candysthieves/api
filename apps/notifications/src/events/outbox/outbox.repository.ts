@@ -15,7 +15,10 @@ export class OutboxRepository {
     return `notifications:outbox:event:${eventId}`;
   }
 
-  async save(event: { eventId: string; [key: string]: unknown }): Promise<void> {
+  async save(event: {
+    eventId: string;
+    [key: string]: unknown;
+  }): Promise<void> {
     const key = this.getKey(event.eventId);
     const exists = await this.redis.exists(key);
     if (exists) return;

@@ -3,9 +3,8 @@ import { NotificationsScheduler } from './notifications.scheduler.js';
 describe('NotificationsScheduler', () => {
   const scheduled = {
     findDueIds: jest.fn(),
-    materialize: jest.fn(),
-    complete: jest.fn<Promise<void>, [string, number]>(),
-    fail: jest.fn(),
+    findById: jest.fn(),
+    removeFromQueue: jest.fn(),
   };
   const delivery = { deliver: jest.fn() };
   const scheduler = new NotificationsScheduler(
@@ -20,47 +19,36 @@ describe('NotificationsScheduler', () => {
   beforeEach(() => {
     jest.resetAllMocks();
     scheduled.findDueIds.mockResolvedValue(['first', 'second']);
-    scheduled.materialize.mockImplementation((id: string) =>
+    scheduled.findById.mockImplementation((id: string) =>
       Promise.resolve({ id }),
     );
     delivery.deliver.mockResolvedValue(undefined);
   });
 
-  it('materializes and completes notifications when the delivery boundary reports offline success', async () => {
+  it('findByIds notifications and removes them from the queue when the delivery boundary reports offline success', async () => {
     await scheduler.execute();
-    expect(scheduled.complete.mock.calls.map(([id]) => id)).toEqual([
+    expect(scheduled.removeFromQueue.mock.calls.map(([id]) => id)).toEqual([
       'first',
       'second',
     ]);
-    expect(scheduled.fail).not.toHaveBeenCalled();
-    expect(scheduled.materialize.mock.invocationCallOrder[0]).toBeLessThan(
+    expect(scheduled.findById.mock.invocationCallOrder[0]).toBeLessThan(
       delivery.deliver.mock.invocationCallOrder[0],
     );
   });
 
-  it('does not deliver or complete a notification disabled or removed after selection', async () => {
-    scheduled.materialize.mockResolvedValue(null);
+  it('does not deliver a notification removed after selection', async () => {
+    scheduled.findById.mockResolvedValue(null);
     await scheduler.execute();
     expect(delivery.deliver).not.toHaveBeenCalled();
-    expect(scheduled.complete).not.toHaveBeenCalled();
+    expect(scheduled.removeFromQueue).toHaveBeenCalledTimes(2);
   });
 
-  it('retains failed notifications for retry and continues with other notifications', async () => {
+  it('removes failed notifications from the queue and continues with other notifications', async () => {
     const error = new Error('main unavailable');
     delivery.deliver.mockRejectedValueOnce(error);
     await scheduler.execute();
-    expect(scheduled.fail).toHaveBeenCalledWith(
-      'first',
-      expect.any(Number),
-      error,
-    );
-    expect(scheduled.complete).toHaveBeenCalledWith(
-      'second',
-      expect.any(Number),
-    );
-    expect(scheduled.complete).not.toHaveBeenCalledWith(
-      'first',
-      expect.any(Number),
-    );
+    expect(scheduled.removeFromQueue).toHaveBeenCalledWith('first');
+    expect(scheduled.removeFromQueue).toHaveBeenCalledWith('second');
+    expect(scheduled.removeFromQueue).toHaveBeenCalledTimes(2);
   });
 });

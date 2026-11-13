@@ -78,9 +78,7 @@ export class FilesTcpService {
     timeoutMs: number,
   ): Promise<T> {
     return lastValueFrom(
-      this.filesClient
-        .send<T>({ cmd }, payload)
-        .pipe(timeout(timeoutMs)),
+      this.filesClient.send<T>({ cmd }, payload).pipe(timeout(timeoutMs)),
     );
   }
 

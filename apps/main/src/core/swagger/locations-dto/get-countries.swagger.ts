@@ -5,7 +5,8 @@ export function ApiGetCountries() {
   return applyDecorators(
     ApiOperation({
       summary: 'Get all countries',
-      description: 'Returns a list of all available countries with names in Russian and English.',
+      description:
+        'Returns a list of all available countries with names in Russian and English.',
     }),
     ApiOkResponse({
       description: 'List of countries successfully retrieved.',

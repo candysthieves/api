@@ -7,7 +7,8 @@ export type PaymentProvider = (typeof PAYMENT_PROVIDERS)[number];
 
 export class CreatePaymentDto {
   @ApiProperty({
-    description: 'Positive integer tariff ID; numeric strings are also accepted.',
+    description:
+      'Positive integer tariff ID; numeric strings are also accepted.',
     example: 1,
     oneOf: [
       { type: 'integer', minimum: 1 },

@@ -9,9 +9,10 @@ export class CreateNotificationCommand {
 }
 
 @CommandHandler(CreateNotificationCommand)
-export class CreateNotificationUseCase
-  implements ICommandHandler<CreateNotificationCommand, void>
-{
+export class CreateNotificationUseCase implements ICommandHandler<
+  CreateNotificationCommand,
+  void
+> {
   constructor(
     private readonly notificationsTcpService: NotificationsTcpService,
   ) {}

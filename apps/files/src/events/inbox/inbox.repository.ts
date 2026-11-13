@@ -1,10 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import type {
-  AvatarImageInputEvent,
-  ImageInputEvent,
-} from '@libs/contracts';
+import type { AvatarImageInputEvent, ImageInputEvent } from '@libs/contracts';
 import { InputEvent } from '../schemas/input-event.schema.js';
 import { StoredEvent } from '../schemas/stored-event.schema.js';
 import { MongoEventRepository } from '../mongo-event.repository.js';

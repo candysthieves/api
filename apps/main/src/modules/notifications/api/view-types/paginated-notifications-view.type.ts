@@ -53,9 +53,7 @@ export class NotificationItemViewType implements NotificationItemContract {
   createdAt!: string;
 }
 
-export class PaginatedNotificationsViewType
-  implements PaginatedNotificationsContract
-{
+export class PaginatedNotificationsViewType implements PaginatedNotificationsContract {
   @ApiProperty({
     type: [NotificationItemViewType],
     description: 'List of notifications for the current page',

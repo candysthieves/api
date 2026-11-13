@@ -20,7 +20,8 @@ export function ApiMarkNotificationsAsRead() {
       description: 'Notifications successfully marked as read',
     }),
     ApiBadRequestResponse({
-      description: 'Invalid body parameters (ids must be a non-empty array of UUIDs).',
+      description:
+        'Invalid body parameters (ids must be a non-empty array of UUIDs).',
     }),
     ApiUnauthorizedResponse({
       description: 'Access token is missing, invalid or expired.',

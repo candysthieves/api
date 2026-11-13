@@ -16,6 +16,7 @@ jest.mock(
   () => ({ TariffsRepository: class {} }),
 );
 import { PaymentStatusService } from './payment-status.service.js';
+import { NotificationTitle } from '@libs/contracts';
 import type {
   PaymentResultEvent,
   PaymentNotificationEvent,
@@ -127,8 +128,8 @@ describe('PaymentStatusService', () => {
         status: subscriptionStatus,
         userId: '42',
         provider: 'YOOKASSA',
-        expirationDate: paidAt,
-        nextChargeDate: paidAt,
+        expirationDate: new Date(paidAt.getTime() + 30 * 86_400_000),
+        nextChargeDate: new Date(paidAt.getTime() + 30 * 86_400_000),
       }),
     );
     subscriptions.fail.mockImplementation(() => {
@@ -242,7 +243,11 @@ describe('PaymentStatusService', () => {
     >();
     let failOnce = true;
     store.save.mockImplementation((event) => {
-      if (event.eventId === 'local-id:notification:2' && failOnce) {
+      if (
+        event.eventId ===
+          `local-id:notification:${NotificationTitle.SUBSCRIPTION_EXPIRES_IN_ONE_DAY}` &&
+        failOnce
+      ) {
         failOnce = false;
         return Promise.reject(new Error('outbox unavailable'));
       }
@@ -253,11 +258,17 @@ describe('PaymentStatusService', () => {
       'outbox unavailable',
     );
     expect(persisted.size).toBe(3);
-    const first = persisted.get('local-id:notification:0');
+    const first = persisted.get(
+      `local-id:notification:${NotificationTitle.PAYMENT_SUCCESSFUL}`,
+    );
     jest.setSystemTime(new Date('2026-10-27T12:00:00Z'));
     await service.process('external-id');
     expect(persisted.size).toBe(5);
-    expect(persisted.get('local-id:notification:0')).toEqual(first);
+    expect(
+      persisted.get(
+        `local-id:notification:${NotificationTitle.PAYMENT_SUCCESSFUL}`,
+      ),
+    ).toEqual(first);
     expect(subscriptions.complete).toHaveBeenCalledTimes(1);
     expect(provider.getPayment).toHaveBeenCalledTimes(1);
   });
