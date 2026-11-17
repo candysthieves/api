@@ -4,6 +4,8 @@ import {
   CreatePaymentParams,
   CreatePaymentResult,
   IPaymentProvider,
+  ProviderPaymentInfo,
+  ProviderPaymentStatus,
 } from '../payment-provider.interface.js';
 import Stripe from 'stripe';
 import { PaymentsConfig } from '../../../../../payments.config.js';
@@ -103,5 +105,54 @@ export class StripeService implements IPaymentProvider {
       externalPaymentId: session.id,
       paymentUrl: session.url,
     };
+  }
+
+  async getPayment(sessionId: string): Promise<ProviderPaymentInfo> {
+    try {
+      const session = await this.stripe.checkout.sessions.retrieve(sessionId, {
+        expand: ['payment_intent', 'subscription'],
+      });
+
+      let status: ProviderPaymentStatus = 'pending';
+      if (session.payment_status === 'paid') {
+        status = 'succeeded';
+      } else if (session.status === 'expired') {
+        status = 'canceled';
+      }
+
+      let paymentMethodId: string | null = null;
+      if (
+        session.payment_intent &&
+        typeof session.payment_intent !== 'string'
+      ) {
+        paymentMethodId =
+          typeof session.payment_intent.payment_method === 'string'
+            ? session.payment_intent.payment_method
+            : (session.payment_intent.payment_method?.id ?? null);
+      }
+
+      return {
+        id: session.id,
+        status,
+        paymentMethodId,
+      };
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : 'Failed to retrieve Stripe checkout session';
+
+      throw new RpcException(
+        ObjectResult.failure({
+          code: 'PAYMENT_RETRIEVAL_FAILED',
+          errors: [
+            {
+              field: 'payment',
+              message,
+            },
+          ],
+        }),
+      );
+    }
   }
 }

@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PaymentsRepository } from '../../infrastructure/repositories/payments/payments.repository.js';
-import { YookassaService } from '../../infrastructure/providers/yookassa/yookassa.service.js';
+import { PaymentProviderFactory } from '../../infrastructure/providers/payment-provider.factory.js';
 import { OutboxService } from '../../../../events/outbox/outbox.service.js';
 import { SubscriptionsRepository } from '../../infrastructure/repositories/subscriptions/subscriptions.repository.js';
 import { TariffsRepository } from '../../infrastructure/repositories/tariffs/tariffs.repository.js';
@@ -9,10 +9,10 @@ import { SubscriptionExpirationService } from './subscription-expiration.service
 
 @Injectable()
 export class PaymentStatusService {
-  // Подключает хранилища платежей и подписок, клиент Yookassa и outbox.
+  // Подключает хранилища платежей и подписок, фабрику провайдеров и outbox.
   constructor(
     private readonly paymentsRepository: PaymentsRepository,
-    private readonly yookassaService: YookassaService,
+    private readonly paymentProviderFactory: PaymentProviderFactory,
     private readonly outboxService: OutboxService,
     private readonly subscriptionsRepository: SubscriptionsRepository,
     private readonly tariffsRepository: TariffsRepository,
@@ -31,18 +31,18 @@ export class PaymentStatusService {
     if (payment.status === 'succeeded') {
       return this.processSucceededPayment(payment);
     }
-    //Достаем данные с Yookassa для конкретного платежа
-    const infoFromYookassa = await this.syncPaymentStatus(
+    // Синхронизируем статус платежа с провайдером
+    const updatedPayment = await this.syncPaymentStatus(
       payment,
       externalPaymentId,
     );
-    if (!infoFromYookassa) return;
+    if (!updatedPayment) return;
 
-    //Если статус от Yookassa canceled -> запускаем протокол отмены для платёжки
-    if (infoFromYookassa.status === 'canceled') {
-      return this.processCanceledPayment(infoFromYookassa);
+    // Если статус canceled -> запускаем протокол отмены для платёжки
+    if (updatedPayment.status === 'canceled') {
+      return this.processCanceledPayment(updatedPayment);
     }
-    return this.processSucceededPayment(infoFromYookassa);
+    return this.processSucceededPayment(updatedPayment);
   }
 
   // Отменяет локальные платежи, для которых истёк срок ожидания оплаты.
@@ -57,36 +57,30 @@ export class PaymentStatusService {
     }
   }
 
-  // Сохраняет финальный результат Yookassa
+  // Сохраняет финальный результат провайдера платежей
   private async syncPaymentStatus(
     payment: PaymentEntity,
     externalPaymentId: string,
   ): Promise<PaymentEntity | null> {
-    const infoFromYookassa =
-      await this.yookassaService.getPayment(externalPaymentId);
-    if (
-      infoFromYookassa.status !== 'succeeded' &&
-      infoFromYookassa.status !== 'canceled'
-    ) {
+    const provider = this.paymentProviderFactory.getProvider(payment.provider);
+    const info = await provider.getPayment(externalPaymentId);
+    if (info.status !== 'succeeded' && info.status !== 'canceled') {
       return null;
     }
 
-    const paymentMethodId = infoFromYookassa.payment_method?.saved
-      ? infoFromYookassa.payment_method.id
-      : null;
-    const paymentDate =
-      infoFromYookassa.status === 'succeeded' ? new Date() : null;
+    const paymentMethodId = info.paymentMethodId;
+    const paymentDate = info.status === 'succeeded' ? new Date() : null;
 
     await this.paymentsRepository.updateStatus(
       payment.id,
-      infoFromYookassa.status,
+      info.status,
       paymentMethodId,
       paymentDate,
     );
 
     return {
       ...payment,
-      status: infoFromYookassa.status,
+      status: info.status,
       paymentMethodId,
       paymentDate,
     };

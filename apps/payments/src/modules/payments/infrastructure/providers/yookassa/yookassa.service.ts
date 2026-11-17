@@ -4,6 +4,8 @@ import type {
   CreatePaymentParams,
   CreatePaymentResult,
   IPaymentProvider,
+  ProviderPaymentInfo,
+  ProviderPaymentStatus,
 } from '../payment-provider.interface.js';
 import { PaymentsConfig } from '../../../../../payments.config.js';
 import { ObjectResult } from '../../../../../core/object-result.js';
@@ -59,8 +61,27 @@ export class YookassaService implements IPaymentProvider {
     }
   }
 
-  async getPayment(externalPaymentId: string): Promise<YookassaPayment> {
-    return this.request(`/${encodeURIComponent(externalPaymentId)}`);
+  async getPayment(externalPaymentId: string): Promise<ProviderPaymentInfo> {
+    const payment = await this.request(
+      `/${encodeURIComponent(externalPaymentId)}`,
+    );
+
+    let status: ProviderPaymentStatus = 'pending';
+    if (payment.status === 'succeeded') {
+      status = 'succeeded';
+    } else if (payment.status === 'canceled') {
+      status = 'canceled';
+    }
+
+    const paymentMethodId = payment.payment_method?.saved
+      ? payment.payment_method.id
+      : null;
+
+    return {
+      id: payment.id,
+      status,
+      paymentMethodId,
+    };
   }
 
   createAutoRenewalPayment(

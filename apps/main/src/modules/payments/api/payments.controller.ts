@@ -18,8 +18,12 @@ import { CreatePaymentCommand } from '../application/use-cases/create-payment.us
 import { ApiCreatePayment } from '../../../core/swagger/payments-dto/create-payment.swagger.js';
 import { ApiAcceptYookassaWebhook } from '../../../core/swagger/payments-dto/accept-yookassa-webhook.swagger.js';
 import { ApiSimulateYookassaWebhook } from '../../../core/swagger/payments-dto/simulate-yookassa-webhook.swagger.js';
+import { ApiAcceptStripeWebhook } from '../../../core/swagger/payments-dto/accept-stripe-webhook.swagger.js';
+import { ApiSimulateStripeWebhook } from '../../../core/swagger/payments-dto/simulate-stripe-webhook.swagger.js';
 import { YookassaWebhookDto } from './dto/yookassa-webhook.dto.js';
+import { StripeWebhookDto } from './dto/stripe-webhook.dto.js';
 import { AcceptYookassaWebhookCommand } from '../application/use-cases/accept-yookassa-webhook.usecase.js';
+import { AcceptStripeWebhookCommand } from '../application/use-cases/accept-stripe-webhook.usecase.js';
 
 @ApiTags('Payments')
 @Controller('payments')
@@ -43,6 +47,24 @@ export class PaymentsController {
   ): Promise<void> {
     return this.commandBus.execute(
       new AcceptYookassaWebhookCommand('payment.succeeded', paymentId),
+    );
+  }
+
+  @Post('webhooks/stripe')
+  @HttpCode(HttpStatus.OK)
+  @ApiAcceptStripeWebhook()
+  acceptStripeWebhook(@Body() dto: StripeWebhookDto): Promise<void> {
+    return this.commandBus.execute(
+      new AcceptStripeWebhookCommand(dto.type, dto.data.object.id),
+    );
+  }
+
+  @Post('test/stripe/:sessionId')
+  @HttpCode(HttpStatus.OK)
+  @ApiSimulateStripeWebhook()
+  simulateStripeWebhook(@Param('sessionId') sessionId: string): Promise<void> {
+    return this.commandBus.execute(
+      new AcceptStripeWebhookCommand('checkout.session.completed', sessionId),
     );
   }
 
