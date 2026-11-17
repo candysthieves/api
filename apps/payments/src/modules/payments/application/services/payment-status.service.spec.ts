@@ -29,6 +29,9 @@ describe('PaymentStatusService', () => {
     findExpired: jest.fn(),
   };
   const provider = { getPayment: jest.fn() };
+  const providerFactory = {
+    getProvider: jest.fn().mockReturnValue(provider),
+  };
   const store = { save: jest.fn<Promise<void>, [PaymentResultEvent]>() };
   const subscriptions = {
     findPaidSubscription: jest.fn(),
@@ -54,7 +57,7 @@ describe('PaymentStatusService', () => {
     repository as unknown as ConstructorParameters<
       typeof PaymentStatusService
     >[0],
-    provider as unknown as ConstructorParameters<
+    providerFactory as unknown as ConstructorParameters<
       typeof PaymentStatusService
     >[1],
     store as unknown as ConstructorParameters<typeof PaymentStatusService>[2],

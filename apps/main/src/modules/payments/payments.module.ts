@@ -17,6 +17,7 @@ import { GetCurrentSubscriptionQueryHandler } from './application/query-handler/
 import { GetSubscriptionHistoryQueryHandler } from './application/query-handler/get-subscription-history.query-handler.js';
 import { EventsModule } from '../../core/events/events.module.js';
 import { AcceptYookassaWebhookUseCase } from './application/use-cases/accept-yookassa-webhook.usecase.js';
+import { AcceptStripeWebhookUseCase } from './application/use-cases/accept-stripe-webhook.usecase.js';
 
 const controllers = [
   TariffsController,
@@ -34,6 +35,7 @@ const useCases = [
   CreatePaymentUseCase,
   CancelSubscriptionUseCase,
   AcceptYookassaWebhookUseCase,
+  AcceptStripeWebhookUseCase,
 ];
 const services = [PaymentsTcpService];
 

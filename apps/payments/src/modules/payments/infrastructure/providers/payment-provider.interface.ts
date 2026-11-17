@@ -11,6 +11,15 @@ export type CreatePaymentResult = {
   paymentUrl: string;
 };
 
+export type ProviderPaymentStatus = 'pending' | 'succeeded' | 'canceled';
+
+export type ProviderPaymentInfo = {
+  id: string;
+  status: ProviderPaymentStatus;
+  paymentMethodId: string | null;
+};
+
 export interface IPaymentProvider {
   createPayment(params: CreatePaymentParams): Promise<CreatePaymentResult>;
+  getPayment(externalPaymentId: string): Promise<ProviderPaymentInfo>;
 }
