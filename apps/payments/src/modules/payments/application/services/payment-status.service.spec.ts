@@ -69,6 +69,7 @@ describe('PaymentStatusService', () => {
   );
   beforeEach(() => {
     jest.resetAllMocks();
+    providerFactory.getProvider.mockReturnValue(provider);
     jest.useFakeTimers().setSystemTime(paidAt);
     subscriptionStatus = 'Processing';
     userStatus = 'Business';
@@ -130,8 +131,9 @@ describe('PaymentStatusService', () => {
       return Promise.resolve();
     });
     provider.getPayment.mockResolvedValue({
+      id: 'external-id',
       status: 'succeeded',
-      payment_method: { id: 'saved-method', saved: true },
+      paymentMethodId: 'saved-method',
     });
   });
 
@@ -222,8 +224,9 @@ describe('PaymentStatusService', () => {
 
   it('does not save a method that YooKassa did not mark as saved', async () => {
     provider.getPayment.mockResolvedValue({
+      id: 'external-id',
       status: 'succeeded',
-      payment_method: { id: 'temporary', saved: false },
+      paymentMethodId: null,
     });
     await service.process('external-id');
     expect(payment.paymentMethodId).toBeNull();

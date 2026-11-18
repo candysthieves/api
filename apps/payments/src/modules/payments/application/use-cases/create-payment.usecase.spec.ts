@@ -32,6 +32,7 @@ describe('CreatePaymentUseCase', () => {
   const subscriptions = {
     findLatest: jest.fn(),
     setLastPaymentId: jest.fn(),
+    addPaymentIdToSubscriptions: jest.fn(),
     requestCancellation: jest.fn(),
     createProcessing: jest.fn<
       Promise<void>,
@@ -139,7 +140,7 @@ describe('CreatePaymentUseCase', () => {
       );
       const subscriptionId = subscriptions.createProcessing.mock.calls[0][0];
       expect(subscriptionId).not.toBe('old-subscription');
-      expect(subscriptions.setLastPaymentId).toHaveBeenCalledWith(
+      expect(subscriptions.addPaymentIdToSubscriptions).toHaveBeenCalledWith(
         subscriptionId,
         result.paymentId,
       );
