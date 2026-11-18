@@ -22,7 +22,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        service: [main, files, payments]
+        service: [main, files, payments, notifications]
     steps:
       - uses: actions/checkout@v6
         with:
@@ -66,11 +66,15 @@ jobs:
         env:
           IMAGE_TAG: ${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
         run: |
+          scp -P 22 -i "$HOME/.ssh/lumos_actions" \
+            -o BatchMode=yes -o IdentitiesOnly=yes \
+            -o StrictHostKeyChecking=yes -o ConnectTimeout=15 \
+            docker-compose.vps.yml root@82.114.226.68:/home/api/docker-compose.vps.next.yml
           ssh -p 22 -i "$HOME/.ssh/lumos_actions" \
             -o BatchMode=yes -o IdentitiesOnly=yes \
             -o StrictHostKeyChecking=yes -o ConnectTimeout=15 \
             -o ServerAliveInterval=15 -o ServerAliveCountMax=4 \
-            root@159.194.226.200 "bash -s -- '$IMAGE_TAG'" < scripts/deploy-vps.sh
+            root@82.114.226.68 "bash -s -- '$IMAGE_TAG'" < scripts/deploy-vps.sh
           printf 'Deployed image tag: %s\n' "$IMAGE_TAG" >> "$GITHUB_STEP_SUMMARY"
       - name: Remove SSH key
         if: always()

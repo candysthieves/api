@@ -8,4 +8,6 @@ coverage
 .codegraph
 .codex
 .agents
+.tmp
+.pnpm-store
 apps/main/src/generated/prisma

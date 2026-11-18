@@ -16,6 +16,13 @@ test -f docker-compose.vps.yml
 test -f .main.env
 test -f .files.env
 test -f .payments.env
+test -f .notifications.env
+
+# CI uploads the Compose definition from the same commit as the images.
+base_compose=docker-compose.vps.yml
+if [[ -f docker-compose.vps.next.yml ]]; then
+  base_compose=docker-compose.vps.next.yml
+fi
 
 candidate=$(mktemp /home/api/.compose-release.XXXXXX.yml)
 trap 'rm -f "$candidate"' EXIT
@@ -27,11 +34,13 @@ services:
     image: chites/lumos-files:${image_tag}
   payments:
     image: chites/lumos-payments:${image_tag}
+  notifications:
+    image: chites/lumos-notifications:${image_tag}
 YAML
 
-compose=(docker compose -f docker-compose.vps.yml -f "$candidate")
+compose=(docker compose -f "$base_compose" -f "$candidate")
 "${compose[@]}" config --quiet
-"${compose[@]}" pull main files payments
+"${compose[@]}" pull main files payments notifications redis
 
 # Use production environment from Compose, not the development.local npm script.
 # Failure here leaves the existing application containers running.
@@ -42,16 +51,21 @@ compose=(docker compose -f docker-compose.vps.yml -f "$candidate")
   pnpm run payments:migrate < /dev/null
 
 # Keep the selected images for subsequent manual Compose commands.
+if [[ "$base_compose" != docker-compose.vps.yml ]]; then
+  cp -p docker-compose.vps.yml docker-compose.vps.previous.yml
+  mv "$base_compose" docker-compose.vps.yml
+fi
 if [[ -f docker-compose.release.yml ]]; then
   cp -p docker-compose.release.yml docker-compose.release.previous.yml
 fi
 mv "$candidate" docker-compose.release.yml
 compose=(docker compose -f docker-compose.vps.yml -f docker-compose.release.yml)
-"${compose[@]}" up -d --no-deps --wait --wait-timeout 120 main files payments
+"${compose[@]}" up -d --wait --wait-timeout 120 redis
+"${compose[@]}" up -d --no-deps --wait --wait-timeout 120 main files payments notifications
 
 # Without application healthchecks this catches only immediate crash loops.
 sleep 15
-for service in main files payments; do
+for service in main files payments notifications redis; do
   container_id=$("${compose[@]}" ps -q "$service")
   test -n "$container_id"
   state=$(docker inspect --format '{{.State.Status}} {{.RestartCount}}' "$container_id")

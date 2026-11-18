@@ -31,3 +31,4 @@ jobs:
       - run: pnpm run build:main
       - run: pnpm run build:files
       - run: pnpm run build:payments
+      - run: pnpm run build:notifications
