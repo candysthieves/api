@@ -9,3 +9,7 @@ export interface PaymentEventTable {
   completedAt: number | null;
   lastError: string | null;
 }
+
+export interface PaymentOutboxTable extends PaymentEventTable {
+  consumer: 'MAIN' | 'NOTIFICATIONS';
+}

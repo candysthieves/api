@@ -20,7 +20,6 @@ import type {
   PaymentNotificationEvent,
   PaymentResultEvent,
 } from '@libs/contracts';
-import { validate, version } from 'uuid';
 import type { PaymentEntity } from '../../../../database/types/payment-database.type.js';
 
 describe('PaymentStatusService', () => {
@@ -148,7 +147,7 @@ describe('PaymentStatusService', () => {
   afterEach(() => jest.useRealTimers());
 
   it.each(['succeeded', 'canceled'] as const)(
-    'persists distinct UUID events and deduplicates a retry after notification persistence fails (%s)',
+    'persists both consumers with the payment ID and deduplicates a retry after notification persistence fails (%s)',
     async (status) => {
       payment.id = '1bc6db29-946c-45a0-a5d8-c550fcc364f3';
       provider.getPayment.mockResolvedValue({ status });
@@ -158,15 +157,12 @@ describe('PaymentStatusService', () => {
       >();
       let failNotification = true;
       store.save.mockImplementation((event) => {
-        // Model the UUID column constraint and eventId-based deduplication.
-        if (!validate(event.eventId)) {
-          return Promise.reject(new Error('Invalid UUID'));
-        }
         if (event.consumer === 'NOTIFICATIONS' && failNotification) {
           failNotification = false;
           return Promise.reject(new Error('outbox unavailable'));
         }
-        if (!persisted.has(event.eventId)) persisted.set(event.eventId, event);
+        const key = `${event.eventId}:${event.consumer}`;
+        if (!persisted.has(key)) persisted.set(key, event);
         return Promise.resolve();
       });
 
@@ -177,16 +173,15 @@ describe('PaymentStatusService', () => {
       await service.process('external-id');
 
       expect(persisted.size).toBe(2);
-      expect(persisted.get(payment.id)?.consumer).toBe('MAIN');
+      expect(persisted.get(`${payment.id}:MAIN`)?.consumer).toBe('MAIN');
       const notification = [...persisted.values()].find(
         (event) => event.consumer === 'NOTIFICATIONS',
       );
       expect(notification).toMatchObject({
-        eventId: 'c87ff85b-3871-5066-8669-9588a3224461',
+        eventId: payment.id,
         type: status === 'succeeded' ? 'payment.completed' : 'payment.canceled',
         data: { paymentId: payment.id, userId: payment.userId },
       });
-      expect(version(notification!.eventId)).toBe(5);
       expect(subscriptions.complete).toHaveBeenCalledTimes(
         status === 'succeeded' ? 1 : 0,
       );

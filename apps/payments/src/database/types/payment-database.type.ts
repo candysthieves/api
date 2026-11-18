@@ -1,6 +1,9 @@
 import { Generated, Selectable } from 'kysely';
 import type { SubscriptionTypeName } from '@libs/contracts';
-import type { PaymentEventTable } from '../../events/payment-event.type.js';
+import type {
+  PaymentEventTable,
+  PaymentOutboxTable,
+} from '../../events/payment-event.type.js';
 
 export type { SubscriptionTypeName } from '@libs/contracts';
 
@@ -60,7 +63,7 @@ export interface TariffTable {
 
 export interface PaymentDatabase {
   paymentInbox: PaymentEventTable;
-  paymentOutbox: PaymentEventTable;
+  paymentOutbox: PaymentOutboxTable;
   payments: PaymentsTable;
   subscriptions: SubscriptionTable;
   subscription_types: SubscriptionTypeTable;

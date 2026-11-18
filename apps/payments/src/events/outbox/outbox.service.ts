@@ -24,7 +24,7 @@ export class OutboxService {
     const results = await Promise.allSettled(
       events.map(async (record) => {
         const attempts = (record.attempts ?? 0) + 1;
-        await this.outboxRepository.markProcessing(record.eventId, attempts);
+        await this.outboxRepository.markProcessing(record, attempts);
         try {
           const event = JSON.parse(record.data!) as
             PaymentResultEvent | PaymentNotificationEvent;
@@ -35,13 +35,9 @@ export class OutboxService {
             await this.producer.publishPaymentResult(event);
           }
 
-          await this.outboxRepository.markCompleted(record.eventId);
+          await this.outboxRepository.markCompleted(record);
         } catch (error) {
-          await this.outboxRepository.markFailed(
-            record.eventId,
-            attempts,
-            error,
-          );
+          await this.outboxRepository.markFailed(record, attempts, error);
         }
       }),
     );

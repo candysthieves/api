@@ -7,7 +7,9 @@ import type {
 import { KYSELY_CLICKHOUSE } from '../../database/database.constants.js';
 import { executeMutation } from '../../database/execute-mutation.js';
 import type { PaymentDatabase } from '../../database/types/payment-database.type.js';
-import type { PaymentEventTable } from '../payment-event.type.js';
+import type { PaymentOutboxTable } from '../payment-event.type.js';
+
+type OutboxKey = Pick<PaymentOutboxTable, 'eventId' | 'consumer'>;
 
 @Injectable()
 export class OutboxRepository {
@@ -22,12 +24,14 @@ export class OutboxRepository {
       .selectFrom('paymentOutbox')
       .select('eventId')
       .where('eventId', '=', event.eventId)
+      .where('consumer', '=', event.consumer)
       .executeTakeFirst();
     if (existing) return;
     await this.db
       .insertInto('paymentOutbox')
       .values({
         eventId: event.eventId,
+        consumer: event.consumer,
         data: JSON.stringify(event),
         status: 'UNPROCESSED',
         attempts: 0,
@@ -40,7 +44,7 @@ export class OutboxRepository {
       .execute();
   }
 
-  findPending(): Promise<PaymentEventTable[]> {
+  findPending(): Promise<PaymentOutboxTable[]> {
     return this.db
       .selectFrom('paymentOutbox')
       .selectAll()
@@ -57,8 +61,8 @@ export class OutboxRepository {
       .execute();
   }
 
-  markProcessing(eventId: string, attempts: number): Promise<void> {
-    return this.update(eventId, {
+  markProcessing(key: OutboxKey, attempts: number): Promise<void> {
+    return this.update(key, {
       status: 'PROCESSING',
       attempts,
       processingStartedAt: Date.now(),
@@ -66,8 +70,8 @@ export class OutboxRepository {
     });
   }
 
-  markCompleted(eventId: string): Promise<void> {
-    return this.update(eventId, {
+  markCompleted(key: OutboxKey): Promise<void> {
+    return this.update(key, {
       status: 'OK',
       completedAt: Date.now(),
       processingStartedAt: null,
@@ -75,9 +79,9 @@ export class OutboxRepository {
     });
   }
 
-  markFailed(eventId: string, attempts: number, error: unknown): Promise<void> {
+  markFailed(key: OutboxKey, attempts: number, error: unknown): Promise<void> {
     const exhausted = attempts >= 3;
-    return this.update(eventId, {
+    return this.update(key, {
       status: exhausted ? 'ERROR' : 'UNPROCESSED',
       nextAttemptAt: exhausted ? null : Date.now() + 10_000,
       completedAt: exhausted ? Date.now() : null,
@@ -95,7 +99,7 @@ export class OutboxRepository {
       .execute();
     for (const event of stale) {
       await this.markFailed(
-        event.eventId,
+        event,
         event.attempts ?? 0,
         new Error('PROCESSING_TIMEOUT'),
       );
@@ -123,8 +127,8 @@ export class OutboxRepository {
   }
 
   private async update(
-    eventId: string,
-    data: Updateable<PaymentEventTable>,
+    key: OutboxKey,
+    data: Updateable<Omit<PaymentOutboxTable, 'eventId' | 'consumer'>>,
   ): Promise<void> {
     // Драйверу нужен SQL NULL, а не строковый параметр 'null'.
     const values = Object.fromEntries(
@@ -138,7 +142,8 @@ export class OutboxRepository {
       this.db
         .updateTable('paymentOutbox')
         .set(values)
-        .where('eventId', '=', eventId)
+        .where('eventId', '=', key.eventId)
+        .where('consumer', '=', key.consumer)
         .modifyEnd(sql`SETTINGS mutations_sync = 1`),
     );
   }
