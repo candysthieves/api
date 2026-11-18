@@ -139,6 +139,7 @@ describe('PaymentStatusService', () => {
       return Promise.resolve();
     });
     provider.getPayment.mockResolvedValue({
+      id: 'external-id',
       status: 'succeeded',
       paymentMethodId: 'saved-method',
     });
@@ -273,6 +274,7 @@ describe('PaymentStatusService', () => {
 
   it('does not save a method that YooKassa did not mark as saved', async () => {
     provider.getPayment.mockResolvedValue({
+      id: 'external-id',
       status: 'succeeded',
       paymentMethodId: null,
     });
