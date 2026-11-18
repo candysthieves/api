@@ -47,7 +47,6 @@ export class PaymentsRepository {
     return this.db
       .selectFrom('payments')
       .selectAll()
-      .where('provider', '=', 'YOOKASSA')
       .where('externalPaymentId', '=', externalPaymentId)
       .executeTakeFirst();
   }
@@ -85,7 +84,6 @@ export class PaymentsRepository {
     return this.db
       .selectFrom('payments')
       .selectAll()
-      .where('provider', '=', 'YOOKASSA')
       .where('status', '=', 'pending')
       .where('createdAt', '<=', sql<Date>`now() - INTERVAL 15 MINUTE`)
       .execute();
