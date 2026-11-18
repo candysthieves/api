@@ -1,6 +1,6 @@
 # $schema: https://raw.githubusercontent.com/compose-spec/compose-spec/main/schema/compose-spec.json
-# Linux VPS. Runtime settings are read from .main.env and .files.env.
-# Requires Docker Compose >= 2.30.0 (env_file format: raw).
+# Linux VPS. Runtime settings are read from each service's env file.
+# Requires Docker Compose with up --wait support.
 name: lumosapp
 
 services:
@@ -29,8 +29,11 @@ services:
     environment:
       NODE_ENV: production
       PORT: '6666'
+      NOTIFICATIONS_TCP_HOST: '127.0.0.1'
+      NOTIFICATIONS_TCP_PORT: '3011'
     depends_on:
       - files
+      - notifications
     logging:
       driver: json-file
       options:
@@ -52,3 +55,57 @@ services:
       options:
         max-size: '10m'
         max-file: '3'
+
+  notifications:
+    image: chites/lumos-notifications:latest
+    network_mode: host
+    restart: unless-stopped
+    init: true
+    env_file:
+      - path: ./.notifications.env
+    environment:
+      NODE_ENV: production
+      PORT: '3010'
+      TCP_HOST: '127.0.0.1'
+      TCP_PORT: '3011'
+      REDIS_HOST: '127.0.0.1'
+      REDIS_PORT: '6379'
+    depends_on:
+      redis:
+        condition: service_healthy
+    logging:
+      driver: json-file
+      options:
+        max-size: '10m'
+        max-file: '3'
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command:
+      - redis-server
+      - --appendonly
+      - 'yes'
+      - --appendfsync
+      - everysec
+      - --maxmemory
+      - 256mb
+      - --maxmemory-policy
+      - noeviction
+    ports:
+      - '127.0.0.1:6379:6379'
+    volumes:
+      - notifications_redis_data:/data
+    healthcheck:
+      test: [CMD, redis-cli, ping]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    logging:
+      driver: json-file
+      options:
+        max-size: '10m'
+        max-file: '3'
+
+volumes:
+  notifications_redis_data:

@@ -1,79 +1,65 @@
 # CI/CD: GitHub Actions → Docker Hub → VPS
 
-## Что настроено
+## Сервисы и сервер
 
-- `.github/workflows/ci.yml`: сборка main, files и payments на push в developer/main и на PR.
-- `.github/workflows/deploy.yml`: ручной запуск только с ref `developer`, повторная сборка через CI, публикация трёх образов, SSH-деплой.
-- Тесты не запускаются по решению пользователя.
-- Docker Hub: `chites/lumos-main`, `chites/lumos-files` и `chites/lumos-payments`.
-- Тег: полный SHA коммита, run ID и номер попытки. `latest` не перезаписывается.
-- VPS: `root@159.194.226.200:22`, каталог `/home/api`.
-- `scripts/deploy-vps.sh`: pull трёх образов, Prisma migrations, обновление main/files/payments, проверка состояния контейнеров.
-- Параллельные деплои ограничены concurrency в Actions и flock на VPS.
+CI собирает main, files, payments и notifications на push в developer/main и на PR. Deploy запускается вручную через Actions → Deploy → Run workflow; выбирайте developer. Workflow технически допускает и другие ветки. Тесты в CI не запускаются.
 
-## Первое включение
+Образы: `chites/lumos-main`, `chites/lumos-files`, `chites/lumos-payments`, `chites/lumos-notifications`. Тег выпуска: `<commit SHA>-<run ID>-<attempt>`; latest workflow не обновляет.
 
-1. Добавить эти файлы в ветку `developer` вместе с кодом, который требуется выпустить.
-2. Добавить workflows также в default branch (`main`), чтобы GitHub показывал кнопку ручного запуска. Скрипт деплоя должен присутствовать в developer.
-3. Проверить четыре Repository secrets в Settings → Secrets and variables → Actions:
+Новый VPS: `root@82.114.226.68:22`, домен `137326.zetalink.ru`, каталог `/home/api`. Приложения используют host network. PostgreSQL, MongoDB, ClickHouse и RabbitMQ обслуживаются отдельно и должны быть доступны до деплоя. VPS Compose добавляет Redis с постоянным томом, AOF и портом `127.0.0.1:6379`.
 
-   | Имя                | Значение                                             |
-   | ------------------ | ---------------------------------------------------- |
-   | VPS_SSH_KEY        | Полный приватный SSH-ключ с BEGIN/END                |
-   | VPS_KNOWN_HOSTS    | Проверенная строка `159.194.226.200 ssh-ed25519 ...` |
-   | DOCKERHUB_USERNAME | `chites`                                             |
-   | DOCKERHUB_TOKEN    | Docker Hub token с правом публикации этих образов    |
+## Подготовка сервера
 
-4. На VPS уже должны находиться `/home/api/docker-compose.vps.yml`, `.main.env` и `.files.env`. Payments не требует отдельного env-файла: Compose задаёт `NODE_ENV=production` и `PORT=3003`. Настройте reverse proxy на порт `3003`; свободен ли порт, проверяется при запуске контейнера. Docker Compose должен поддерживать `up --wait --wait-timeout`; ориентир проекта — версия 2.30 или новее. Bash и flock должны быть установлены.
-5. Открыть Actions → Deploy → Run workflow → выбрать **developer** → Run workflow.
-6. Проверить jobs CI, images и deploy. Итоговый тег записывается в Summary.
+Требуются Docker с Compose, поддерживающим `up --wait --wait-timeout`, Bash и flock. В `/home/api` должны быть текущий `docker-compose.vps.yml` и четыре файла окружения:
 
-Ручной запуск из main или другой ветки завершится ошибкой до сборки и доступа к VPS.
+- `.main.env`: настройки main и подключений к существующим сервисам;
+- `.files.env`: MongoDB, S3 и настройки files;
+- `.payments.env`: ClickHouse, RabbitMQ и настройки payments;
+- `.notifications.env`: RabbitMQ URL и обе очереди, как в payments.
 
-## Что происходит на сервере
+Файл `.notifications.env` создаётся и хранится на сервере. Перенесите реальные значения `RABBITMQ_URL`, `RABBITMQ_PAYMENTS_TO_NOTIFICATIONS_QUEUE` и `RABBITMQ_NOTIFICATIONS_TO_PAYMENTS_QUEUE` из конфигурации payments. Если этих параметров ещё нет, заполните их в обоих файлах. Имена очередей должны совпадать. Пароли не входят в репозиторий или образ.
 
-Исходный `docker-compose.vps.yml` не перезаписывается. Скрипт создаёт дополнительный Compose-файл с тремя image, скачивает образы и запускает:
+Compose задаёт notifications HTTP-порт `3010`, TCP `127.0.0.1:3011` и Redis `127.0.0.1:6379`. Main получает тот же адрес TCP через Compose. Отдельный публичный маршрут notifications не нужен: клиентские запросы обслуживает main. Проверьте, что порты свободны. Не задавайте `REDIS_PASSWORD` для Redis из этого Compose: он публикует порт только на loopback хоста и не использует пароль.
 
-```bash
-pnpm exec prisma migrate deploy --config apps/main/prisma.config.ts
-```
+Main слушает `6666`, payments — `3003`. Существующий reverse proxy и TLS должны направлять запросы на нужный сервис; workflow их не изменяет. Публичные URL и callback URL в env и у внешних провайдеров проверяются отдельно.
 
-Команда выполняется в одноразовом контейнере нового main с серверным окружением. Скрипт npm `prisma:migrate:deploy` намеренно не используется: он задаёт `NODE_ENV=development.local`.
+## GitHub Actions secrets
 
-При ошибке миграции обновление контейнеров не начинается. Успешные миграции не откатываются автоматически. Изменения схемы должны быть совместимы со старой версией приложения, которая работает во время миграции. Если существующая БД создана через db push без истории migrations, сначала нужна отдельная настройка baseline.
+| Имя | Значение |
+| --- | --- |
+| `VPS_SSH_KEY` | Приватный ключ, чей публичный ключ разрешён в `/root/.ssh/authorized_keys` нового VPS |
+| `VPS_KNOWN_HOSTS` | Проверенная запись `82.114.226.68 ssh-ed25519 ...` нового сервера |
+| `DOCKERHUB_USERNAME` | `chites` |
+| `DOCKERHUB_TOKEN` | Токен с правом публикации всех четырёх образов, включая notifications |
 
-После миграции выбранные образы сохраняются в `docker-compose.release.yml`, а предыдущий такой файл — в `docker-compose.release.previous.yml`, если он существовал. Затем выполняется up для main/files/payments. При ошибке запуска автоматического отката нет; release-файл отражает запрошенную версию, а реальные контейнеры нужно проверить через ps.
+При смене VPS замените `VPS_KNOWN_HOSTS`. Старый `VPS_SSH_KEY` можно сохранить, если соответствующий публичный ключ установлен на новом сервере. Пароль root не заменяет ключ в workflow. Для приватных образов серверу также нужен доступ к Docker Hub.
 
-Для последующих ручных команд обязательно указывать оба файла:
+## Что делает Deploy
+
+1. Выполняет CI и публикует четыре образа с единым тегом.
+2. Загружает Compose из того же коммита на VPS как `docker-compose.vps.next.yml`.
+3. `scripts/deploy-vps.sh` берёт flock, проверяет env-файлы и Compose, скачивает образы приложений и Redis.
+4. Запускает Prisma migrations в одноразовом main и ClickHouse migrations в одноразовом payments. При ошибке миграции приложения не обновляются; выполненные миграции автоматически не откатываются.
+5. Сохраняет прежние Compose и release-файлы, активирует новый Compose и `docker-compose.release.yml`, запускает Redis и ждёт его healthcheck, затем запускает четыре приложения.
+6. Через 15 секунд проверяет состояние контейнеров. Автоматического отката нет. Release-файл отражает выбранный выпуск, фактическое состояние проверяется через ps.
+
+Существующая БД без истории Prisma migrations требует отдельной настройки baseline. Миграции выполняются с production env из Compose. Параллельные запуски ограничены concurrency в Actions и flock на сервере.
+
+Для ручной проверки всегда указывайте оба Compose-файла:
 
 ```bash
 cd /home/api
 docker compose -f docker-compose.vps.yml -f docker-compose.release.yml ps
-docker compose -f docker-compose.vps.yml -f docker-compose.release.yml up -d main files payments
+docker compose -f docker-compose.vps.yml -f docker-compose.release.yml logs --tail=100 notifications
+docker compose -f docker-compose.vps.yml -f docker-compose.release.yml up -d
 ```
 
-Запуск только базового Compose использует прежние теги latest.
+Базовый Compose без release-файла использует latest, который CI не публикует. Не удаляйте Redis volume: в нём хранятся уведомления. Проверка состояния контейнеров не заменяет проверку HTTP, WebSocket, S3 и бизнес-сценариев.
 
-## Границы проверки
+## Обработка изображений
 
-В текущем Compose нет healthcheck приложений. Deploy проверяет running/healthy через Compose и через 15 секунд — running без перезапусков. Это проверка запуска контейнеров, а не доступности всех HTTP-методов, RabbitMQ, MongoDB или S3. При пересоздании контейнеров возможен короткий простой.
-
-Перед включением CI локальная сборка main/files прошла. Выполненный до просьбы отключить тесты прогон: 69 passed, 5 failed (устаревший mock/ожидания InboxService). Тесты не изменены и не являются условием деплоя.
-
-## Документация
-
-- [Ручной запуск GitHub Actions](https://docs.github.com/en/actions/how-tos/manage-workflow-runs/manually-run-a-workflow)
-- [Compose в production](https://docs.docker.com/compose/how-tos/production/)
-- [Prisma migrate deploy](https://www.prisma.io/docs/orm/reference/prisma-cli-reference#migrate-deploy)
-
-## Post image concurrency
-
-Set `POST_IMAGE_CONCURRENCY=5` in the server's `.files.env`.
-The default is 5; the value must be a positive integer.
-This limits concurrent post image processing from the MongoDB inbox.
-The first deployment requires an updated files image supporting this variable.
-Later value changes only require recreating the container:
+`POST_IMAGE_CONCURRENCY=5` в `.files.env` ограничивает параллельную обработку изображений из MongoDB inbox. Значение по умолчанию — 5, допустимо положительное целое. После изменения пересоздайте files с обоими Compose-файлами:
 
 ```bash
-docker compose -f docker-compose.vps.yml up -d --force-recreate files
+docker compose -f docker-compose.vps.yml -f docker-compose.release.yml up -d --force-recreate files
 ```

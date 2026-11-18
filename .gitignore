@@ -61,3 +61,5 @@ report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 /apps/files/src/**/*.js.map
 /.main.env
 /.files.env
+/.payments.env
+/.notifications.env
