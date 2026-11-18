@@ -16,7 +16,11 @@ jest.mock(
   () => ({ TariffsRepository: class {} }),
 );
 import { PaymentStatusService } from './payment-status.service.js';
-import type { PaymentResultEvent } from '@libs/contracts';
+import type {
+  PaymentNotificationEvent,
+  PaymentResultEvent,
+} from '@libs/contracts';
+import { validate, version } from 'uuid';
 import type { PaymentEntity } from '../../../../database/types/payment-database.type.js';
 
 describe('PaymentStatusService', () => {
@@ -32,7 +36,12 @@ describe('PaymentStatusService', () => {
   const providerFactory = {
     getProvider: jest.fn().mockReturnValue(provider),
   };
-  const store = { save: jest.fn<Promise<void>, [PaymentResultEvent]>() };
+  const store = {
+    save: jest.fn<
+      Promise<void>,
+      [PaymentResultEvent | PaymentNotificationEvent]
+    >(),
+  };
   const subscriptions = {
     findPaidSubscription: jest.fn(),
     complete: jest.fn(),
@@ -138,6 +147,52 @@ describe('PaymentStatusService', () => {
   });
 
   afterEach(() => jest.useRealTimers());
+
+  it.each(['succeeded', 'canceled'] as const)(
+    'persists distinct UUID events and deduplicates a retry after notification persistence fails (%s)',
+    async (status) => {
+      payment.id = '1bc6db29-946c-45a0-a5d8-c550fcc364f3';
+      provider.getPayment.mockResolvedValue({ status });
+      const persisted = new Map<
+        string,
+        PaymentResultEvent | PaymentNotificationEvent
+      >();
+      let failNotification = true;
+      store.save.mockImplementation((event) => {
+        // Model the UUID column constraint and eventId-based deduplication.
+        if (!validate(event.eventId)) {
+          return Promise.reject(new Error('Invalid UUID'));
+        }
+        if (event.consumer === 'NOTIFICATIONS' && failNotification) {
+          failNotification = false;
+          return Promise.reject(new Error('outbox unavailable'));
+        }
+        if (!persisted.has(event.eventId)) persisted.set(event.eventId, event);
+        return Promise.resolve();
+      });
+
+      await expect(service.process('external-id')).rejects.toThrow(
+        'outbox unavailable',
+      );
+      await service.process('external-id');
+      await service.process('external-id');
+
+      expect(persisted.size).toBe(2);
+      expect(persisted.get(payment.id)?.consumer).toBe('MAIN');
+      const notification = [...persisted.values()].find(
+        (event) => event.consumer === 'NOTIFICATIONS',
+      );
+      expect(notification).toMatchObject({
+        eventId: 'c87ff85b-3871-5066-8669-9588a3224461',
+        type: status === 'succeeded' ? 'payment.completed' : 'payment.canceled',
+        data: { paymentId: payment.id, userId: payment.userId },
+      });
+      expect(version(notification!.eventId)).toBe(5);
+      expect(subscriptions.complete).toHaveBeenCalledTimes(
+        status === 'succeeded' ? 1 : 0,
+      );
+    },
+  );
 
   it('completes the subscription found by lastPaymentId using the saved payment date before publishing Business', async () => {
     store.save.mockImplementation(() => {

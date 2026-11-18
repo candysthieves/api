@@ -1,5 +1,5 @@
 export type PaymentNotificationCompletedEvent = {
-  /** Internal payment ID; also used for deduplication. */
+  /** Stable UUID v5 derived from the payment ID; used for deduplication. */
   eventId: string;
   consumer: 'NOTIFICATIONS';
   type: 'payment.completed';
@@ -14,7 +14,7 @@ export type PaymentNotificationCompletedEvent = {
 };
 
 export type PaymentNotificationCanceledEvent = {
-  /** Internal payment ID; also used for deduplication. */
+  /** Stable UUID v5 derived from the payment ID; used for deduplication. */
   eventId: string;
   consumer: 'NOTIFICATIONS';
   type: 'payment.canceled';
