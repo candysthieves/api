@@ -3,6 +3,7 @@ import {
   Controller,
   HttpCode,
   HttpStatus,
+  Logger,
   Param,
   Post,
   UseGuards,
@@ -28,6 +29,8 @@ import { AcceptStripeWebhookCommand } from '../application/use-cases/accept-stri
 @ApiTags('Payments')
 @Controller('payments')
 export class PaymentsController {
+  private readonly logger = new Logger(PaymentsController.name);
+
   constructor(private readonly commandBus: CommandBus) {}
 
   @Post('webhooks/yookassa')
@@ -54,6 +57,9 @@ export class PaymentsController {
   @HttpCode(HttpStatus.OK)
   @ApiAcceptStripeWebhook()
   acceptStripeWebhook(@Body() dto: StripeWebhookDto): Promise<void> {
+    this.logger.log(
+      `Received Stripe webhook: type=${dto?.type}, objectId=${dto?.data?.object?.id}`,
+    );
     return this.commandBus.execute(
       new AcceptStripeWebhookCommand(dto.type, dto.data.object.id),
     );
@@ -63,6 +69,7 @@ export class PaymentsController {
   @HttpCode(HttpStatus.OK)
   @ApiSimulateStripeWebhook()
   simulateStripeWebhook(@Param('sessionId') sessionId: string): Promise<void> {
+    this.logger.log(`Simulating Stripe webhook for sessionId=${sessionId}`);
     return this.commandBus.execute(
       new AcceptStripeWebhookCommand('checkout.session.completed', sessionId),
     );
