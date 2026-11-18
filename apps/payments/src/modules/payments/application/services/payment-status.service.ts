@@ -6,6 +6,7 @@ import { SubscriptionsRepository } from '../../infrastructure/repositories/subsc
 import { TariffsRepository } from '../../infrastructure/repositories/tariffs/tariffs.repository.js';
 import type { PaymentEntity } from '../../../../database/types/payment-database.type.js';
 import { SubscriptionExpirationService } from './subscription-expiration.service.js';
+import { paymentNotificationEventId } from './payment-notification-event-id.js';
 
 @Injectable()
 export class PaymentStatusService {
@@ -126,7 +127,7 @@ export class PaymentStatusService {
       data: { userId: payment.userId, paymentStatus: 'canceled' },
     });
     await this.outboxService.save({
-      eventId: `${payment.id}:notification`,
+      eventId: paymentNotificationEventId(payment.id),
       consumer: 'NOTIFICATIONS',
       type: 'payment.canceled',
       data: { userId: payment.userId, paymentId: payment.id },
@@ -155,7 +156,7 @@ export class PaymentStatusService {
     if (!subscription) return;
 
     await this.outboxService.save({
-      eventId: `${payment.id}:notification`,
+      eventId: paymentNotificationEventId(payment.id),
       consumer: 'NOTIFICATIONS',
       type: 'payment.completed',
       data: {
