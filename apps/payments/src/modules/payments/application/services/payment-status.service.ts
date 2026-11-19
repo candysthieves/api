@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { PaymentsRepository } from '../../infrastructure/repositories/payments/payments.repository.js';
 import { PaymentProviderFactory } from '../../infrastructure/providers/payment-provider.factory.js';
 import { OutboxService } from '../../../../events/outbox/outbox.service.js';
@@ -9,6 +9,8 @@ import { SubscriptionExpirationService } from './subscription-expiration.service
 
 @Injectable()
 export class PaymentStatusService {
+  private readonly logger = new Logger(PaymentStatusService.name);
+
   // Подключает хранилища платежей и подписок, фабрику провайдеров и outbox.
   constructor(
     private readonly paymentsRepository: PaymentsRepository,
@@ -21,12 +23,20 @@ export class PaymentStatusService {
 
   // Выбирает обработчик результата; для уже успешного платежа повторяет только локальные шаги.
   async process(externalPaymentId: string): Promise<void> {
+    this.logger.log(`Looking up payment by externalPaymentId=${externalPaymentId}`);
     // Находим платёж
     const payment =
       await this.paymentsRepository.findByExternalPaymentId(externalPaymentId);
     if (!payment) {
+      this.logger.error(
+        `Payment not found in ClickHouse repository for externalPaymentId=${externalPaymentId}`,
+      );
       throw new Error('PAYMENT_NOT_FOUND');
     }
+
+    this.logger.log(
+      `Found payment: id=${payment.id}, provider=${payment.provider}, status=${payment.status}`,
+    );
 
     if (payment.status === 'succeeded') {
       return this.processSucceededPayment(payment);
@@ -36,7 +46,16 @@ export class PaymentStatusService {
       payment,
       externalPaymentId,
     );
-    if (!updatedPayment) return;
+    if (!updatedPayment) {
+      this.logger.warn(
+        `Provider status is neither succeeded nor canceled yet for payment ${payment.id}`,
+      );
+      return;
+    }
+
+    this.logger.log(
+      `Payment ${payment.id} synchronized to status=${updatedPayment.status}`,
+    );
 
     // Если статус canceled -> запускаем протокол отмены для платёжки
     if (updatedPayment.status === 'canceled') {
