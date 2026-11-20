@@ -58,10 +58,10 @@ export class PaymentsController {
   @ApiAcceptStripeWebhook()
   acceptStripeWebhook(@Body() dto: StripeWebhookDto): Promise<void> {
     this.logger.log(
-      `Received Stripe webhook: type=${dto?.type}, objectId=${dto?.data?.object?.id}`,
+      `[Stripe Webhook] Received payload: ${JSON.stringify(dto)}`,
     );
     return this.commandBus.execute(
-      new AcceptStripeWebhookCommand(dto.type, dto.data.object.id),
+      new AcceptStripeWebhookCommand(dto?.type, dto?.data?.object?.id),
     );
   }
 
@@ -69,7 +69,7 @@ export class PaymentsController {
   @HttpCode(HttpStatus.OK)
   @ApiSimulateStripeWebhook()
   simulateStripeWebhook(@Param('sessionId') sessionId: string): Promise<void> {
-    this.logger.log(`Simulating Stripe webhook for sessionId=${sessionId}`);
+    this.logger.log(`[Stripe Test Webhook] Simulating for sessionId=${sessionId}`);
     return this.commandBus.execute(
       new AcceptStripeWebhookCommand('checkout.session.completed', sessionId),
     );
